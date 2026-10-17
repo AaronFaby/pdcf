@@ -5,10 +5,10 @@ import { ROSTER, moveFor, createMatch, tick } from '../engine.mjs';
 import { CEL_STATES, celFor, measureAtlas } from '../cels.mjs';
 import { buildSheet, buildCel } from '../scripts/build-cels.mjs';
 
-test('all 240 authored cels match their source, with expanded moves for the two featured fighters', async () => {
+test('all 288 authored cels match their source, with 48 dedicated drawings for every fighter', async () => {
   assert.deepEqual(Object.values(CEL_STATES).flat(), Array.from({ length: 48 }, (_, i) => i));
   for (const { id } of ROSTER) {
-    const count = ['mickey', 'popeye'].includes(id) ? 48 : 36;
+    const count = 48;
     const source = await readFile(new URL(`../assets/cels/${id}.svg`, import.meta.url), 'utf8');
     assert.equal(source, buildSheet(id), `${id}: committed artwork matches its authoring source`);
     assert.equal((source.match(/data-cel=/g) || []).length, count);
@@ -17,14 +17,14 @@ test('all 240 authored cels match their source, with expanded moves for the two 
     for (const [animation, frames] of Object.entries(CEL_STATES)) {
       for (const [i, index] of frames.entries()) {
         const cel = celFor({ id }, { animation, progress: (i + .1) / frames.length });
-        if (index < count) assert.equal(cel, index); else assert.ok(cel < count);
+        assert.equal(cel, index);
       }
     }
   }
 });
 
-test('punch, kick, and special impact drawings follow the actual damage windows', () => {
-  for (const { id } of ROSTER) for (const kind of ['punch', 'kick', 'special']) {
+test('punch, kick, throw, and special impact drawings follow the actual damage windows', () => {
+  for (const { id } of ROSTER) for (const kind of ['punch', 'kick', 'throw', 'special']) {
     const f = { id, attack: { kind, time: 0 } }, move = moveFor(f, kind), frames = CEL_STATES[kind];
     assert.equal(celFor(f), frames[0]);
     f.attack.time = move.active;

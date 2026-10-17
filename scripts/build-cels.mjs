@@ -36,6 +36,34 @@ export function exposure(id, index) {
       if (action === 2) { pose.feet[1] = [35, -47]; pose.knees[1] = [52, -99]; }
       pose.lean += 10; pose.ear = -28;
     }
+    if (id === 'minnie') {
+      pose.skirt = [14, 33, 19][n]; pose.tail = [12, -24, -9][n];
+      if (action === 0) { pose.front = [35, -202]; pose.back = [-79, -217]; pose.feet[1] = [64, -47]; }
+      if (action === 1) { pose.front = [[42, -225], [142, -259], [108, -151]][n]; pose.back[0] -= 17; pose.lean += 4; }
+      if (action === 2) { pose.feet[1] = [68, -82]; pose.knees[1] = [28, -116]; pose.front[1] -= 19; }
+      if (action === 3) { pose.feet[1][1] -= 24; pose.back = [-76, -239]; pose.lean -= 8; }
+    }
+    if (id === 'oswald') {
+      pose.ear = [-39, -52, -21][n];
+      if (action === 0) { pose.feet = [[-98, 0], [88, -36]]; pose.knees = [[-71, -42], [41, -78]]; pose.lean += 5; }
+      if (action === 1) { pose.front[0] += 16; pose.back[1] -= 15; pose.ear = [17, -38, 25][n]; }
+      if (action === 2) { pose.front[0] += n === 1 ? 12 : 0; pose.feet[1] = [62, -65]; pose.knees[1] = [45, -111]; }
+      if (action === 3) { pose.feet[1][0] += 16; pose.ear = [24, -37, 14][n]; }
+    }
+    if (id === 'felix') {
+      pose.tail = [65, -48, 35][n]; pose.head = [-12, 9, -5][n];
+      if (action === 0) { pose.body[1] += 12; pose.front = [91, -146]; pose.back = [-92, -133]; pose.lean += 5; }
+      if (action === 1) { pose.back = [[-59, -166], [74, -224], [102, -135]][n]; pose.lean += 8; }
+      if (action === 2) { pose.feet = [[-69, -59], [61, -61]]; pose.knees = [[-49, -103], [54, -111]]; pose.lean -= 8; }
+      if (action === 3) { pose.back = [-75, -217]; pose.feet[0] = [-78, -65]; pose.knees[0] = [-65, -110]; }
+    }
+    if (id === 'betty') {
+      pose.skirt = [-14, 24, 9][n]; pose.head = [9, -13, -5][n];
+      if (action === 0) { pose.lean -= 8; pose.front = [30, -214]; pose.back = [-55, -181]; pose.feet = [[-58, 0], [49, -25]]; }
+      if (action === 1) { pose.front = [[31, -211], [129, -223], [82, -141]][n]; pose.back[0] -= 8; pose.lean -= 7; }
+      if (action === 2) { pose.front[0] -= 15; pose.feet = [[-38, -49], [41, -66]]; pose.knees = [[-30, -91], [33, -112]]; }
+      if (action === 3) { pose.feet[1][1] -= 15; pose.lean -= 9; pose.front = [37, -222]; }
+    }
     return pose;
   }
   const profile = PROFILES[id];
@@ -264,6 +292,10 @@ function accents(id, pose) {
   let drawing = '';
   if (pose.smear && pose.frame === 19) drawing += line('M45-187Q100-250 174-209 M58-176Q109-218 159-198 M66-163Q112-196 146-188', 4) + path('M69-184 Q126-225 157-204 Q106-202 69-184Z', SHADE, 0);
   if (pose.smear && pose.frame === 22) drawing += line('M34-42Q150-37 184-111 M64-26Q177-39 200-114', 3.5);
+  if (pose.frame >= 36 && pose.frame < 39) drawing += line('M-136-14L-108-17 M-149-31L-112-34 M-128-49L-101-50', 3, SHADE);
+  if (pose.frame === 40) drawing += line('M70-263Q140-291 180-234 M88-123Q134-97 156-138', 3, SHADE);
+  if (pose.frame === 43) drawing += line('M68-208Q120-252 171-215 M81-191Q131-223 161-207', 3, SHADE);
+  if (pose.frame === 46) drawing += line('M51-80Q119-24 189-124 M64-66Q132-14 201-111', 3, SHADE);
   if (pose.accent === 'mickey') drawing += line('M89-244 C133-263 126-228 155-238 C176-249 181-217 204-236', 7, PAPER) + line('M104-254Q133-280 153-257 M148-214Q179-195 204-220', 2.3);
   if (pose.accent === 'minnie') drawing += line('M-73-129Q-16-55 92-87Q149-110 152-162 M-73-119Q-18-43 90-72', 4);
   if (pose.accent === 'oswald') drawing += line('M49-152Q127-195 138-306 M65-142Q148-186 157-296', 4);
@@ -309,7 +341,7 @@ export function buildCel(id, index) {
 export function buildSheet(id) {
   if (!PROFILES[id]) throw new Error('Unknown character: ' + id);
   let drawings = '';
-  const count = id === 'mickey' || id === 'popeye' ? 48 : 36;
+  const count = 48;
   for (let index = 0; index < count; index++) {
     const x = index % 6 * 512, y = Math.floor(index / 6) * 512;
     drawings += `<g data-cel="${index}" transform="translate(${x} ${y})"><clipPath id="cell-${index}"><rect width="512" height="512"/></clipPath><g clip-path="url(#cell-${index})">${buildCel(id, index)}</g></g>\n`;
@@ -320,5 +352,5 @@ export function buildSheet(id) {
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
   await mkdir(new URL('../assets/cels/', import.meta.url), { recursive: true });
   for (const { id } of ROSTER) await writeFile(new URL(`../assets/cels/${id}.svg`, import.meta.url), buildSheet(id));
-  console.log('Authored 240 vector cels, including dash, throw and aerial attacks for the featured fighters.');
+  console.log('Authored 288 vector cels: all six fighters have dash, throw and aerial attacks.');
 }

@@ -5,7 +5,7 @@ let lastFocus;document.addEventListener('pointerdown',()=>{const e=frame.content
 function add(label,action){const b=document.createElement('button');b.textContent=label;b.onclick=()=>{action();refreshHeld();frame.contentWindow.focus();if(lastFocus?.getClientRects().length)lastFocus.focus();};bar.append(b);return b;}
 for(let p=0;p<2;p++){
  add('Connect P'+(p+1),()=>{pads[p]=makePad(p);});add('Disconnect P'+(p+1),()=>{pads[p]=null;});
- for(const [label,key] of [['A',0],['B',1],['X',2],['Y',3],['Guard',4],['Throw',5],['Dash',7],['Start',9],['Up',12],['Down',13],['Left',14],['Right',15]]) {const b=add('P'+(p+1)+' '+label,()=>{if(pads[p]){pads[p].buttons[key].pressed=!pads[p].buttons[key].pressed;pads[p].buttons[key].value=pads[p].buttons[key].pressed?1:0;}});b.dataset.player=p;b.dataset.button=key;b.setAttribute('aria-pressed','false');}
+ for(const [label,key] of [['A',0],['B',1],['X',2],['Y',3],['Guard',4],['Throw',5],['Dash',7],['Reset',8],['Start',9],['Up',12],['Down',13],['Left',14],['Right',15]]) {const b=add('P'+(p+1)+' '+label,()=>{if(pads[p]){pads[p].buttons[key].pressed=!pads[p].buttons[key].pressed;pads[p].buttons[key].value=pads[p].buttons[key].pressed?1:0;}});b.dataset.player=p;b.dataset.button=key;b.setAttribute('aria-pressed','false');}
  add('Release P'+(p+1),()=>{if(pads[p]) pads[p]=makePad(p);});
 }
 add('Local mode',()=>frame.contentDocument.querySelector('[data-mode="local"]').click());
@@ -134,6 +134,34 @@ async function runChecks() {
   await advance(3);await tap(1,9);await advance(45);
   requireCheck(health(1)===92,'Buffered pre-pause kick executed after resume with all attack buttons released');
   passed('Pre-pause buffered attacks are discarded on resume');
+
+  gameElement('back-button').click();
+  frame.contentDocument.querySelector('[data-mode="training"]').click();
+  frame.contentDocument.querySelector('[data-slot="0"]').click();
+  frame.contentDocument.querySelector('[data-fighter="minnie"]').click();
+  gameElement('start-button').click();await advance(3);
+  requireCheck(!gameElement('training-panel').hidden && gameElement('timer').textContent==='∞','Training did not start');
+  await tap(0,2);await advance(35);
+  requireCheck(gameElement('practice-hit').textContent.includes('PUNCH') && gameElement('practice-inputs').textContent.includes('Punch'),'Training did not display a hit and input');
+  await advance(100);requireCheck(health(1)===100,'Training health did not recover');
+  await tap(0,8);requireCheck(gameElement('practice-hit').textContent==='—' && gameElement('practice-inputs').textContent==='Make your first move.','Controller quick reset did not clear practice');
+  setButton(0,2,true);await advance();setButton(0,2,false);
+  for(let i=0;i<10 && gameElement('practice-hit').textContent==='—';i++)await advance();
+  await tap(0,3);await advance(35);
+  requireCheck(gameElement('practice-combo').textContent==='2 HITS' && gameElement('practice-damage').textContent==='17.2','Training combo damage did not match Minnie’s two-hit string');
+  await tap(0,8);
+  await tap(0,9);await tap(0,13);await tap(0,0);
+  requireCheck(gameElement('training-dialog').open,'Could not open practice options from the pause menu');
+  gameElement('dummy-mode').focus();await tap(0,0);
+  await tap(0,13);await tap(0,0);await tap(0,13);await tap(0,0);
+  await tap(0,1);await tap(0,8);
+  requireCheck(gameElement('training-hint').textContent.includes('GUARD') && gameElement('infinite-health').getAttribute('aria-pressed')==='false' && gameElement('infinite-ink').getAttribute('aria-pressed')==='false','Reset lost the practice options');
+  await tap(0,2);await advance(35);
+  requireCheck(gameElement('practice-hit').textContent.includes('BLOCKED'),'Guard dummy did not block');
+  gameElement('back-button').click();frame.contentDocument.querySelector('[data-mode="cpu"]').click();
+  gameElement('start-button').click();await advance(3);
+  requireCheck(gameElement('training-panel').hidden && gameElement('timer').textContent==='60' && gameElement('opponent-tag').textContent==='CPU','Practice settings leaked into a normal match');
+  passed('Training shows hits/inputs, recovers health, and keeps options through controller reset');
   lines.push('ALL CONTROLLER CHECKS PASSED');
  } catch(error) { lines.push('FAIL '+error.message); }
  finally {

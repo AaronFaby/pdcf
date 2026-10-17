@@ -1,4 +1,4 @@
-import { ROSTER, createMatch, tick, cpuInput, SPECIAL_COST } from './engine.mjs';
+import { ROSTER, createMatch, tick, cpuInput, trainingInput, resetTraining, moveFor, SPECIAL_COST } from './engine.mjs';
 import { drawFighter, drawScene } from './art.mjs';
 import { loadCels } from './cels.mjs';
 import { Controllers } from './assets/runtime/controllers.mjs';
@@ -86,13 +86,13 @@ function updateSelection() {
   $('detail-special').textContent = current.special;
   $('preview-name-one').textContent = ROSTER.find(f => f.id === selection[0]).name.toUpperCase();
   $('preview-name-two').textContent = ROSTER.find(f => f.id === selection[1]).name.toUpperCase();
-  $('opponent-label').textContent = mode === 'cpu' ? 'CPU OPPONENT' : 'PLAYER TWO';
+  $('opponent-label').textContent = mode === 'training' ? 'PRACTICE DUMMY' : mode === 'cpu' ? 'CPU OPPONENT' : 'PLAYER TWO';
   for (const button of document.querySelectorAll('.fighter-card')) {
     const id = button.dataset.fighter, chosen = selection[0] === id, opponent = selection[1] === id;
     button.classList.toggle('selected', chosen); button.classList.toggle('opponent-selected', opponent);
     button.setAttribute('aria-pressed', String(selection[slot] === id));
     button.setAttribute('aria-label', `${ROSTER.find(f => f.id === id).name}, ${ROSTER.find(f => f.id === id).style.toLowerCase()}${chosen ? ', player one' : ''}${opponent ? ', opponent' : ''}. Select for ${slot ? 'opponent' : 'player one'}.`);
-    button.querySelector('.card-selection').innerHTML = `${chosen ? '<span class="badge">P1</span>' : ''}${opponent ? `<span class="badge opponent">${mode === 'cpu' ? 'CPU' : 'P2'}</span>` : ''}`;
+    button.querySelector('.card-selection').innerHTML = `${chosen ? '<span class="badge">P1</span>' : ''}${opponent ? `<span class="badge opponent">${mode === 'training' ? 'DUMMY' : mode === 'cpu' ? 'CPU' : 'P2'}</span>` : ''}`;
   }
   for (const button of document.querySelectorAll('.slot')) {
     const active = Number(button.dataset.slot) === slot;
@@ -117,25 +117,66 @@ function updateHUD() {
     $(`wins-${side}`).setAttribute('aria-label', `${f.name}: ${f.wins} rounds won`);
     $(`special-${side}`).textContent = `${f.special.toUpperCase()} ${f.meter >= SPECIAL_COST ? '• READY' : '• BUILD INK'}`;
   });
-  $('timer').textContent = String(Math.ceil(match.time)).padStart(2, '0');
-  $('timer').parentElement.classList.toggle('urgent', match.time < 10);
+  $('timer').textContent = match.training ? '∞' : String(Math.ceil(match.time)).padStart(2, '0');
+  $('timer').parentElement.classList.toggle('urgent', !match.training && match.time < 10);
   $('round-number').textContent = match.round;
+  if (match.training) updatePractice();
 }
+const dummyModes = ['stand', 'guard', 'jump', 'cpu'];
+function practiceSettings() {
+  const t = match.training;
+  $('dummy-mode').textContent = `DUMMY: ${t.dummy.toUpperCase()}`;
+  for (const [id, key, label] of [['infinite-health', 'infiniteHealth', 'HEALTH RECOVERY'], ['infinite-ink', 'infiniteInk', 'UNLIMITED INK']]) {
+    $(id).setAttribute('aria-pressed', String(t[key])); $(id).textContent = `${label}: ${t[key] ? 'ON' : 'OFF'}`;
+  }
+  $('training-hint').textContent = `Dummy: ${t.dummy.toUpperCase()} · ${t.infiniteHealth ? 'Health recovers after each string' : 'Knockouts reset the bout'} · ${t.infiniteInk ? 'Unlimited ink' : 'Normal ink costs'}`;
+}
+function updatePractice() {
+  const t = match.training, hit = t.lastHit;
+  $('practice-hit').textContent = hit ? `${hit.attacker ? 'DUMMY' : 'P1'} ${hit.blocked ? 'BLOCKED' : hit.kind.toUpperCase()} · ${Number(hit.damage.toFixed(1))}` : '—';
+  $('practice-combo').textContent = hit && !hit.blocked ? `${hit.hits} ${hit.hits === 1 ? 'HIT' : 'HITS'}` : '—';
+  $('practice-damage').textContent = hit && !hit.blocked ? Number(hit.comboDamage.toFixed(1)) : '—';
+  const labels = t.inputs.length ? t.inputs : ['Make your first move.'];
+  if ($('practice-inputs').textContent !== labels.join('')) $('practice-inputs').replaceChildren(...labels.map(label => { const li = document.createElement('li'); li.textContent = label; return li; }));
+  const f = match.fighters[0], attack = f.attack;
+  const timings = ['punch', 'kick', 'throw'].map(kind => `${kind.toUpperCase()} ${Math.ceil(moveFor(f, kind).active * 60)}f`).join(' · ');
+  $('practice-timing').textContent = attack ? `${attack.kind.toUpperCase()} · ${attack.time < moveFor(f, attack.kind).active ? 'ANTICIPATION' : attack.time <= moveFor(f, attack.kind).until ? 'ACTIVE' : 'RECOVERY'} | Startup: ${timings}` : `Ready | Startup: ${timings}`;
+}
+function resetPractice() {
+  if (!match?.training) return;
+  resetTraining(match); clearInput(); updateHUD(); audio.play({ type: 'select' }); arena.focus({ preventScroll: true });
+}
+function openPracticeOptions() {
+  if (!match?.training) return;
+  if ($('pause-dialog').open) $('pause-dialog').close();
+  paused = true; clearInput(); audio.pause(); practiceSettings(); $('training-dialog').showModal();
+}
+$('training-options').addEventListener('click', openPracticeOptions);
+$('training-pause-options').addEventListener('click', openPracticeOptions);
+$('training-reset').addEventListener('click', resetPractice);
+$('dummy-mode').addEventListener('click', () => {
+  match.training.dummy = dummyModes[(dummyModes.indexOf(match.training.dummy) + 1) % dummyModes.length];
+  match.ai = { clock: 0, action: {} }; practiceSettings();
+});
+for (const [id, key] of [['infinite-health', 'infiniteHealth'], ['infinite-ink', 'infiniteInk']]) $(id).addEventListener('click', () => { match.training[key] = !match.training[key]; practiceSettings(); });
 function startMatch() {
   if (!celsReady) return;
-  for (const id of ['result-dialog', 'pause-dialog', 'help-dialog', 'settings-dialog']) if ($(id).open) $(id).close();
+  for (const id of ['result-dialog', 'pause-dialog', 'help-dialog', 'settings-dialog', 'training-dialog']) if ($(id).open) $(id).close();
   clearInput(); paused = false; match = createMatch(...selection, mode);
   $('selection').hidden = true; $('game').hidden = false;
   $('name-one').textContent = match.fighters[0].name; $('name-two').textContent = match.fighters[1].name;
-  $('opponent-tag').textContent = mode === 'cpu' ? 'CPU' : 'P2';
-  $('p2-controls').hidden = mode === 'cpu';
-  $('match-announcement').textContent = `Round one. ${match.fighters[0].name} versus ${match.fighters[1].name}.`;
+  $('opponent-tag').textContent = mode === 'training' ? 'DUMMY' : mode === 'cpu' ? 'CPU' : 'P2';
+  $('p2-controls').hidden = mode !== 'local';
+  $('training-panel').hidden = $('training-pause-options').hidden = mode !== 'training';
+  $('match-format').textContent = mode === 'training' ? 'TRAINING' : 'BEST OF THREE';
+  if (match.training) practiceSettings();
+  $('match-announcement').textContent = match.training ? `Training. ${match.fighters[0].name} versus ${match.fighters[1].name}.` : `Round one. ${match.fighters[0].name} versus ${match.fighters[1].name}.`;
   updateHUD(); arena.focus({ preventScroll: true }); window.scrollTo({ top: 0, behavior: 'instant' });
   audio.setScene('fight'); unlockAudio(); lastPhase = ''; lastRound = 0;
 }
 function returnToSelection() {
   match = null; paused = false; clearInput();
-  for (const id of ['result-dialog', 'pause-dialog', 'help-dialog', 'settings-dialog']) if ($(id).open) $(id).close();
+  for (const id of ['result-dialog', 'pause-dialog', 'help-dialog', 'settings-dialog', 'training-dialog']) if ($(id).open) $(id).close();
   audio.setScene('menu');
   $('selection').hidden = false; $('game').hidden = true; $('start-button').focus({ preventScroll: true });
 }
@@ -168,9 +209,9 @@ $('help-button').addEventListener('click', () => {
   if (match) { paused = true; clearInput(); audio.pause(); }
   $('help-dialog').showModal();
 });
-for (const name of ['help', 'settings']) $(name + '-dialog').addEventListener('close', () => {
+for (const name of ['help', 'settings', 'training']) $(name + '-dialog').addEventListener('close', () => {
   clearInput();
-  if (match && !$('pause-dialog').open && !$('help-dialog').open && !$('settings-dialog').open) {
+  if (match && !$('pause-dialog').open && !$('help-dialog').open && !$('settings-dialog').open && !$('training-dialog').open) {
     paused = false; audio.setScene(match.phase === 'matchover' ? 'menu' : 'fight'); arena.focus({ preventScroll: true });
   }
 });
@@ -182,6 +223,7 @@ document.querySelectorAll('[data-close]').forEach(button => button.addEventListe
 
 window.addEventListener('keydown', event => {
   if (!match || event.ctrlKey || event.metaKey || event.altKey) return;
+  if (event.code === 'Backspace' && match.training && !paused && !document.querySelector('dialog[open]')) { event.preventDefault(); resetPractice(); return; }
   if (event.code === 'Escape') {
     if (!document.querySelector('dialog[open]')) { event.preventDefault(); pause(); }
     return;
@@ -221,6 +263,7 @@ function pollControllers() {
   }
   for (const keys of state.menus) {
     const dialog = document.querySelector('dialog[open]');
+    if (keys.reset && match?.training && !paused && !dialog) { resetPractice(); return; }
     if (keys.pause) {
       if (dialog?.id === 'pause-dialog') resume();
       else if (!dialog && match) pause();
@@ -262,15 +305,15 @@ function frame(timestamp) {
     if (!paused && match.phase !== 'matchover') {
       accumulator += delta;
       while (accumulator >= 1 / 120) {
-        tick(match, [input(0), mode === 'cpu' ? cpuInput(match, 1 / 120) : input(1)], 1 / 120);
+        tick(match, [input(0), match.training ? trainingInput(match, 1 / 120) : mode === 'cpu' ? cpuInput(match, 1 / 120) : input(1)], 1 / 120);
         edges.clear(); touchEdges.clear(); accumulator -= 1 / 120;
         match.events.forEach(event => audio.play(event));
       }
       updateHUD();
       if (match.phase !== lastPhase || match.round !== lastRound) {
         lastPhase = match.phase; lastRound = match.round;
-        if (match.phase === 'fight') $('match-announcement').textContent = `Round ${match.round}. Fight!`;
-        if (match.phase === 'roundover') $('match-announcement').textContent = match.roundWinner === null ? 'Round drawn.' : `${match.fighters[match.roundWinner].name} wins the round.`;
+        if (match.phase === 'fight') $('match-announcement').textContent = match.training ? 'Training ready. Practice without a time limit.' : `Round ${match.round}. Fight!`;
+        if (match.phase === 'roundover') $('match-announcement').textContent = match.training ? 'Practice knockout. Resetting the bout.' : match.roundWinner === null ? 'Round drawn.' : `${match.fighters[match.roundWinner].name} wins the round.`;
       }
       if (match.phase === 'matchover' && !$('result-dialog').open) showResult();
     }

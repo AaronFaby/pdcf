@@ -740,6 +740,9 @@ h2 {
   grid-template-columns:1fr 75px 1fr;
   gap:25px;
   pointer-events:none;
+  padding:8px;
+  background:rgba(244,236,217,.94);
+  border:1px solid #25251f44;
 }
 
 .hud-name {
@@ -1315,6 +1318,7 @@ dialog .primary-button {
     right:8px;
     grid-template-columns:1fr 40px 1fr;
     gap:9px;
+    padding:4px;
   }
   .hud-name {
     margin-bottom:3px;
@@ -1409,4 +1413,36 @@ dialog .primary-button {
     transition:none!important;
     scroll-behavior:auto!important;
   }
+}
+
+.mode-picker { flex-wrap:wrap; }
+.training-panel { margin:24px 0; padding:25px; border:1px solid var(--ink); background:#e4dbc6; box-shadow:4px 4px 0 #25251f22; }
+.training-heading { display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap; }
+.training-heading .eyebrow { font-size:9px; margin:0 0 4px; }
+.training-heading h2 { margin:0; font:italic 700 34px Georgia,serif; }
+.training-actions { display:flex; gap:8px; flex-wrap:wrap; }
+.training-panel .secondary-button { padding:12px 15px; font-size:10px; margin:0; }
+#training-hint,.practice-tip { font-size:11px; line-height:1.7; color:var(--muted); }
+.practice-stats { display:grid; grid-template-columns:2fr 1fr 1fr; border-block:1px solid var(--line); margin:16px 0; }
+.practice-stats p { padding:14px 12px; margin:0; font-size:9px; letter-spacing:1px; border-right:1px solid var(--line); }
+.practice-stats p:last-child { border-right:0; }
+.practice-stats strong { display:block; margin-top:7px; font:700 23px var(--display); letter-spacing:0; overflow-wrap:anywhere; }
+.practice-timing { font:11px/1.8 monospace; }
+.input-readout { display:flex; align-items:center; gap:18px; padding:13px 0; }
+.input-readout>span { flex-shrink:0; font-size:10px; font-weight:700; }
+.input-readout small { display:block; font-size:8px; font-weight:400; margin-top:5px; color:var(--muted); }
+.input-readout ol { display:flex; gap:7px; flex-wrap:wrap; list-style:none; padding:0; margin:0; }
+.input-readout li { padding:7px 10px; background:var(--paper); border:1px solid var(--line); font:11px monospace; }
+.input-readout li:first-child { border-color:var(--ink); font-weight:700; }
+.practice-settings { display:grid; gap:10px; margin:22px 0; }
+.practice-settings .secondary-button { width:100%; margin:0; }
+.practice-settings button[aria-pressed=true] { background:var(--ink); color:var(--paper); }
+#training-dialog p { line-height:1.7; }
+@media(max-width:600px) {
+  .training-panel { padding:17px; }
+  .training-heading h2 { font-size:28px; }
+  .practice-stats { grid-template-columns:1fr 1fr; }
+  .practice-stats p:first-child { grid-column:1/-1; border-bottom:1px solid var(--line); border-right:0; }
+  .practice-stats strong { font-size:20px; }
+  .input-readout { align-items:flex-start; flex-direction:column; gap:10px; }
 }

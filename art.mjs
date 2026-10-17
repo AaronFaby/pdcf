@@ -117,7 +117,7 @@ export function drawScene(c, match, image, time, { showcase = false, reducedMoti
     if (!showcase && f.combo >= 2 && f.comboTime > 0) {
       c.save(); c.font = 'italic bold 25px Georgia'; c.textAlign = index ? 'right' : 'left';
       c.strokeStyle = PAPER; c.lineWidth = 5; c.fillStyle = INK;
-      const text = `${f.combo} HIT COMBO!`, x = index ? 1120 : 80;
+      const text = `${f.combo} HITS · ${Number(f.comboDamage.toFixed(1))} DAMAGE`, x = index ? 1120 : 80;
       c.strokeText(text, x, 157); c.fillText(text, x, 157); c.restore();
     }
   }
@@ -139,6 +139,14 @@ export function drawScene(c, match, image, time, { showcase = false, reducedMoti
     if (e.text !== 'SPINACH!') {
       const pts = Array.from({ length: 18 }, (_, i) => { const a = i / 18 * Math.PI * 2, r = i % 2 ? 32 : 52; return [Math.cos(a) * r, Math.sin(a) * r * .65]; });
       path(c, pts, e.blocked ? PAPER : '#e6bd58');
+      if (e.heavy) {
+        c.strokeStyle = INK; c.lineWidth = 4;
+        for (let i = 0; i < 7; i++) {
+          const angle = i / 7 * Math.PI * 2, spread = 59 + (e.max - e.life) * 95;
+          c.beginPath(); c.moveTo(Math.cos(angle) * spread, Math.sin(angle) * spread * .65);
+          c.lineTo(Math.cos(angle) * (spread + 16), Math.sin(angle) * (spread + 16) * .65); c.stroke();
+        }
+      }
     }
     c.fillStyle = INK; c.textAlign = 'center'; c.font = 'italic bold 22px Georgia'; c.fillText(e.text, 0, 7); c.restore();
   }

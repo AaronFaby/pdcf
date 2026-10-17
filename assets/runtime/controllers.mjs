@@ -9,7 +9,7 @@ export function readPad(pad) {
     jump: pressed(pad, 0) || pressed(pad, 12) || y < -.55,
     punch: pressed(pad, 2), kick: pressed(pad, 3), special: pressed(pad, 1),
     throw: pressed(pad, 5), dash: pressed(pad, 7), guard: pressed(pad, 4) || pressed(pad, 13) || y > .55,
-    confirm: pressed(pad, 0), cancel: pressed(pad, 1) || pressed(pad, 8), pause: pressed(pad, 9)
+    confirm: pressed(pad, 0), cancel: pressed(pad, 1) || pressed(pad, 8), pause: pressed(pad, 9), reset: pressed(pad, 8)
   };
 }
 

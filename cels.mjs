@@ -13,8 +13,7 @@ const atlases = new Map();
 
 export function celFor(f, { time = 0, animation, progress = 0, defeatTime, victoryTime, reducedMotion = false } = {}) {
   if (animation) {
-    const fallback = { dash: 'walk', throw: 'punch', airpunch: 'punch', airkick: 'kick' };
-    const frames = CEL_STATES[!['mickey', 'popeye'].includes(f.id) && fallback[animation] ? fallback[animation] : animation];
+    const frames = CEL_STATES[animation];
     if (!frames) throw new Error('Unknown animation: ' + animation);
     return frames[Math.min(frames.length - 1, Math.max(0, Math.floor(progress * frames.length)))];
   }
@@ -24,13 +23,12 @@ export function celFor(f, { time = 0, animation, progress = 0, defeatTime, victo
   if (f.attack) {
     const { kind, time: elapsed } = f.attack, move = moveFor(f, kind);
     if (kind === 'special') return elapsed < move.active * .55 ? 24 : elapsed < move.active ? 25 : elapsed <= move.until ? 26 : 27;
-    const featured = f.id === 'mickey' || f.id === 'popeye';
-    const state = featured && f.attack.air && ['punch', 'kick'].includes(kind) ? 'air' + kind : kind;
-    const frames = CEL_STATES[!featured && state === 'throw' ? 'punch' : state];
+    const state = f.attack.air && ['punch', 'kick'].includes(kind) ? 'air' + kind : kind;
+    const frames = CEL_STATES[state];
     return elapsed < move.active ? frames[0] : elapsed <= move.until ? frames[1] : frames[2];
   }
   if (f.y < 0) return f.vy < -430 ? 12 : f.vy < 100 ? 13 : 14;
-  if (f.dash > 0 && ['mickey', 'popeye'].includes(f.id)) return 36 + Math.min(2, Math.floor((.16 - f.dash) * 19));
+  if (f.dash > 0) return 36 + Math.min(2, Math.floor((.16 - f.dash) * 19));
   if (f.land > 0) return 2;
   if (f.guard) return 16;
   if (Math.abs(f.vx || 0) > 0) {
