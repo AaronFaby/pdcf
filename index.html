@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#eee6d3">
+  <meta name="description" content="Six cartoon legends. One ink-stained ring. A playable rubber-hose fighting game.">
+  <title>Public Domain Cartoon Fighters</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="paper-grain" aria-hidden="true"></div>
+  <header class="masthead">
+    <a class="brand" href="./" aria-label="Public Domain Cartoon Fighters home"><span class="brand-mark" aria-hidden="true">✦</span><span>PUBLIC DOMAIN<br><b>CARTOON FIGHTERS</b></span></a>
+    <span class="edition">AN ALL-INK AFFAIR <span>•</span> EST. 2026</span>
+    <nav aria-label="Game options">
+      <button class="text-button" id="help-button">HOW TO PLAY <span aria-hidden="true">↗</span></button>
+      <button class="icon-button" id="sound-button" aria-label="Turn sound on" aria-pressed="false" title="Turn sound on">♪<span class="sound-state">OFF</span></button>
+    </nav>
+  </header>
+
+  <main>
+    <section id="selection" aria-label="Choose your fighters">
+      <div class="hero">
+        <div class="hero-copy">
+          <p class="eyebrow"><span class="little-star">✦</span> NOW PLAYING IN GLORIOUS BLACK & WHITE</p>
+          <h1>Old-school charm.<br><em>New-school</em><br><span class="title-punch">KNOCKOUTS.</span></h1>
+          <p class="intro">Six cartoon legends. One ink-stained ring.<br>Pick your star and settle it the old-fashioned way.</p>
+          <div class="play-row"><button class="primary-button" id="start-button">LET’S MAKE A SCENE <span aria-hidden="true">→</span></button><span class="play-note">FREE TO PLAY<br>HARD TO PUT DOWN</span></div>
+          <div class="mode-picker" role="group" aria-label="Game mode"><button class="mode active" data-mode="cpu" aria-pressed="true">1 PLAYER <span>VS. CPU</span></button><button class="mode" data-mode="local" aria-pressed="false">2 PLAYERS <span>LOCAL</span></button></div>
+        </div>
+        <div class="feature">
+          <div class="feature-top"><span>THE MAIN EVENT</span><span>01 / INK HARBOR</span></div>
+          <div class="film-frame"><canvas id="showcase" width="1200" height="675" aria-label="An animated preview of the selected fighters on a vintage harbor stage"></canvas><span class="feature-stamp">ALL INK.<br>ALL ATTITUDE.</span><span class="film-corner tl"></span><span class="film-corner tr"></span><span class="film-corner bl"></span><span class="film-corner br"></span></div>
+          <div class="matchup"><span id="preview-name-one">MICKEY MOUSE</span><i>vs.</i><span id="preview-name-two">POPEYE</span></div>
+        </div>
+      </div>
+
+      <section class="casting" aria-labelledby="casting-title">
+        <div class="section-heading"><div><span class="section-number">01 /</span><h2 id="casting-title">PICK YOUR TROUBLE.</h2></div><div class="slot-picker" role="group" aria-label="Choose which player to select"><button class="slot active" data-slot="0" aria-pressed="true"><span class="player-dot">1</span> YOUR FIGHTER</button><button class="slot" data-slot="1" aria-pressed="false"><span class="player-dot">2</span> <span id="opponent-label">CPU OPPONENT</span></button></div></div>
+        <div class="roster" id="roster"></div>
+        <div class="fighter-detail" aria-live="polite"><div><span id="detail-title">THE HEADLINER</span><p id="detail-quote">A little mouse. A big right hook.</p></div><p><span class="detail-label">SIGNATURE MOVE</span><strong id="detail-special">Steamboat blast</strong></p><span class="small-print">6 STARS. ONE BIG BRAWL.</span></div>
+      </section>
+      <footer class="selection-footer"><span>HAND-INKED MISCHIEF. RUBBER-HOSE RIVALRIES.</span><span>KEYBOARD READY <span aria-hidden="true">✦</span> NO DOWNLOAD NEEDED</span></footer>
+    </section>
+
+    <section id="game" hidden aria-label="Fighting arena">
+      <div class="arena-heading"><button class="text-button" id="back-button">← CASTING CALL</button><span>INK HARBOR <span class="divider">/</span> BEST OF THREE</span><button class="text-button" id="pause-button">PAUSE Ⅱ</button></div>
+      <div class="arena-wrap">
+        <canvas id="arena" width="1200" height="675" tabindex="0" aria-label="Fighting arena. Player one uses A D to move, W to jump, S to guard, and F G H to attack. Press Escape to pause."></canvas>
+        <div class="fight-hud" aria-label="Match status"><div class="fighter-hud"><div class="hud-name"><strong id="name-one"></strong><span>P1</span></div><div class="health-track" role="meter" aria-label="Player one health" aria-valuemin="0" aria-valuemax="100" aria-valuenow="100" id="health-one"><div></div></div><div class="hud-under"><div class="round-dots" id="wins-one" aria-label="Player one round wins"></div><div class="special-track" id="meter-one"><div></div></div><span class="meter-label">INK</span></div></div><div class="clock"><span>ROUND <b id="round-number">1</b></span><strong id="timer">60</strong></div><div class="fighter-hud second"><div class="hud-name"><strong id="name-two"></strong><span id="opponent-tag">CPU</span></div><div class="health-track" role="meter" aria-label="Opponent health" aria-valuemin="0" aria-valuemax="100" aria-valuenow="100" id="health-two"><div></div></div><div class="hud-under"><div class="round-dots" id="wins-two" aria-label="Opponent round wins"></div><div class="special-track" id="meter-two"><div></div></div><span class="meter-label">INK</span></div></div></div>
+        <div class="arena-bottom"><span id="special-one"></span><span>THE WATERFRONT WILL NEVER BE THE SAME.</span><span id="special-two"></span></div>
+      </div>
+      <div class="control-strip"><div><b>P1</b><span><kbd>A</kbd><kbd>D</kbd> MOVE <kbd>W</kbd> JUMP <kbd>S</kbd> GUARD</span><span><kbd>F</kbd> PUNCH <kbd>G</kbd> KICK <kbd>H</kbd> SPECIAL</span></div><div id="p2-controls"><b>P2</b><span><kbd>←</kbd><kbd>→</kbd> MOVE <kbd>↑</kbd> JUMP <kbd>↓</kbd> GUARD</span><span><kbd>J</kbd> PUNCH <kbd>K</kbd> KICK <kbd>L</kbd> SPECIAL</span></div><p>Build your ink meter by landing hits.<br>Special moves cost 35 ink.</p></div>
+      <div class="touch-controls" aria-label="Touch controls"><div class="touch-movement"><button data-action="jump" aria-label="Jump">↑</button><button data-action="left" aria-label="Move left">←</button><button data-action="guard" aria-label="Guard">◇</button><button data-action="right" aria-label="Move right">→</button></div><div class="touch-actions"><button data-action="punch">PUNCH</button><button data-action="kick">KICK</button><button data-action="special">SPECIAL</button></div></div>
+      <p id="match-announcement" class="sr-only" aria-live="polite"></p>
+    </section>
+  </main>
+
+  <dialog id="help-dialog" aria-labelledby="help-title"><button class="dialog-close" data-close="help-dialog" aria-label="Close instructions">×</button><p class="eyebrow">A QUICK DRESS REHEARSAL</p><h2 id="help-title">Put ’em up.</h2><p>Win two rounds to take the match. Knock out your opponent or have the most health when the 60-second clock runs out.</p><div class="help-columns"><div><h3>PLAYER ONE</h3><p><kbd>A</kbd> <kbd>D</kbd> Move<br><kbd>W</kbd> Jump · <kbd>S</kbd> Guard<br><kbd>F</kbd> Punch · <kbd>G</kbd> Kick<br><kbd>H</kbd> Signature move</p></div><div><h3>PLAYER TWO</h3><p><kbd>←</kbd> <kbd>→</kbd> Move<br><kbd>↑</kbd> Jump · <kbd>↓</kbd> Guard<br><kbd>J</kbd> Punch · <kbd>K</kbd> Kick<br><kbd>L</kbd> Signature move</p></div></div><p>Hold guard to soften hits. Kicks reach farther than punches. Landing and blocking hits builds <b>ink</b>; a signature move costs <b>35 ink</b>. Popeye’s spinach restores a little health and boosts his punches for six seconds.</p><p class="help-note">Press <kbd>Esc</kbd> to pause. On a touch screen, use the buttons below the arena. Local two-player needs a keyboard.</p><button class="primary-button" data-close="help-dialog">GOT IT. LET’S BRAWL. →</button></dialog>
+  <dialog id="pause-dialog" aria-labelledby="pause-title"><p class="eyebrow">A BRIEF INTERMISSION</p><h2 id="pause-title">Hold that punch.</h2><p>The projector’s still running. Your fight can wait.</p><button class="primary-button" id="resume-button">BACK TO THE BRAWL →</button><button class="secondary-button" id="quit-button">RETURN TO CASTING</button></dialog>
+  <dialog id="result-dialog" aria-labelledby="result-title"><p class="eyebrow">THAT’S A WRAP!</p><canvas id="winner-portrait" width="300" height="280" aria-hidden="true"></canvas><h2 id="result-title">A STAR IS CROWNED.</h2><p id="result-score"></p><button class="primary-button" id="rematch-button">ONE MORE TAKE →</button><button class="secondary-button" id="roster-button">BACK TO CASTING</button></dialog>
+  <script type="module" src="app.mjs"></script>
+</body>
+</html>
