@@ -184,6 +184,19 @@ button,dialog {
   letter-spacing:1px;
 }
 
+.github-link {
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  width:44px;
+  height:44px;
+  flex-shrink:0;
+}
+
+.github-link:hover {
+  color:var(--accent);
+}
+
 main {
   max-width:1440px;
   margin:0 auto;
@@ -1194,6 +1207,16 @@ dialog .primary-button {
   }
   .sound-state {
     display:none;
+  }
+  .masthead {
+    flex-wrap:wrap;
+    height:auto;
+    min-height:76px;
+    gap:8px 16px;
+    padding-block:12px;
+  }
+  .masthead nav {
+    margin-left:auto;
   }
   main {
     padding:0 20px;
