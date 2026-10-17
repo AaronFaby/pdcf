@@ -1,42 +1,10 @@
 # Public Domain Cartoon Fighters
 
-A browser-based, side-view 2D fighter: six cartoon stars, rubber-hose animation, a painted harbor stage, and a warm black-and-white theatrical presentation.
+A browser-based, side-view 2D fighter with six cartoon stars, rubber-hose animation, original swing music, and a warm black-and-white theatrical presentation. Play Arcade, Training, single CPU matches, or local two-player on the animated Ink Harbor stage.
 
-## Ink Harbor milestone
+**[Play the game](https://pdcf.aaronfaby.com)** · [Contributor guidance](AGENTS.md) · [Asset provenance](assets/provenance.md)
 
-The featured **Mickey versus Popeye** bout adds buffered attacks, punch-to-kick/special hit-confirm cancels, brief impact freezes, combo callouts, aerial punches/kicks, vulnerable directional dashes, and close-range throws that beat guard. Mickey has a faster jab; Popeye has slower, heavier normals. CPU opponents can react to projectiles, dash into range, and throw guarded opponents.
-
-Ink Harbor now includes a chugging tugboat, rising steam, moving water highlights, gulls, and a lantern glow. Reduced motion freezes the ambient animation and disables camera shake and film movement. All six fighters have the expanded animation set.
-
-An original 32-bar, 144 BPM swing arrangement, **Ink Harbor Stomp**, accompanies the menus and fights. Thirteen original rendered sound cues replace the live oscillator effects. Music and effects have independent saved levels and a mute control. Audio starts after a player interaction, pauses when a match or tab loses focus, and resumes at its saved position. Audio failure leaves gameplay available.
-
-## Training and combat polish
-
-Select **Training** in the mode picker, choose your fighter and practice dummy using the roster slots, then start. Practice begins immediately with an endless clock and the fighters in jab range. **Practice options** is available below the arena and in the pause menu.
-
-- The dummy can stand, guard, jump repeatedly, or spar using the normal CPU logic.
-- Health recovery prevents knockouts and restores health once a string ends. Switch it off to practice knockouts; the bout resets automatically without awarding rounds.
-- Unlimited ink keeps both meters full. Switch it off for normal special costs and meter gain.
-- Last-hit damage, uninterrupted combo hits/damage, attack phase/startup timing, and the last eight P1 inputs appear beneath the arena. Timing is shown in 60-fps frame notation. Held directions do not flood the input history.
-- **Backspace**, controller **View / Select**, or **Reset** clears positions, health, ink, attacks, projectiles, buffs, stats, and input history. Your chosen cast and practice settings stay in place.
-
-Combo counts restart when the opponent has recovered or blocks a strike. Minnie has faster normals, Oswald trades startup/recovery for reach, Felix has a quicker jab, Betty has a quicker defensive kick, and Popeye retains his slower heavy blows. Heavy impacts and throws have distinct bursts and callouts. These are initial tuning choices, not a claim of competitive balance.
-
-All six fighters now have dedicated dash, throw, aerial punch, and aerial kick cels. Minnie's skirt/footwork, Oswald's ears/long limbs, Felix's tail/crouched dash, and Betty's compact footwork have individual exposure poses. The animation reel previews all 288 drawings.
-
-## Arcade mode
-
-Select **Arcade**, choose your star and **Easy / Normal / Hard**, then start a **New Arcade Run**. The six-bout ladder shuffles the other five fighters and finishes with a mirror match against your own character. Each bout is best of three, with full health, 35 ink, and fresh round wins at the start. The mirror finale labels P1 and the rival so identical characters remain distinguishable.
-
-- **First Bell / Next Bout** starts the next match. Wins clear exactly one ladder slot.
-- A loss offers **Continue** against the same rival. Cleared bouts stay cleared, and losses are counted. Continues are unlimited.
-- Difficulty applies to Arcade and single CPU matches; Training retains its normal CPU behavior. Difficulty changes CPU decision timing, guard, evasions, attacks, specials, throws, dashes, and hit-confirm combo choices. Health, speed, and damage stay equal across difficulty settings. Later ladder bouts shorten CPU decision intervals slightly.
-- Checkpoints save in this browser before and after bouts. **Save & Casting** leaves the match; **Resume Arcade** restores your character, difficulty, ladder, and cleared bouts. Reloading during a fight restarts that bout from round one, without adding a loss. Changing the difficulty selector does not change a resumed run.
-- Clearing all six bouts presents an original two-part story ending and animated victory portrait for your character. **View Ending** on the casting screen reopens the last completed run's ending. **Play Again** starts a new ladder with the same star and difficulty.
-
-There are six distinct endings: Mickey's community tugboat voyage, Minnie's rebuilt theater, Oswald's repaired projector, Felix's impossible doorway, Betty's waterfront concert, and Popeye's restored pier and community kitchen. These are original game stories and use the existing character artwork. Checkpoints are local to one browser and device; when storage is disabled, the run remains playable for the current page session. A new run replaces the previous checkpoint.
-
-## Run
+## Run locally
 
 Requires Node.js 22 or newer. No package installation is needed.
 
@@ -44,35 +12,66 @@ Requires Node.js 22 or newer. No package installation is needed.
 npm start
 ```
 
-Open http://127.0.0.1:4173. Select your fighter, select the CPU opponent or player two, and click **Let’s make a scene**. The selection screen supports mirror matches. Choose **2 players / Local** for a shared-keyboard match.
+Open [the local game](http://127.0.0.1:4173), choose a mode and fighter, then start. CPU, Local, and Training let you choose both roster slots, including mirror matches. The development server binds only to localhost.
 
-```sh
-npm test
-```
+## Modes
+
+| Mode | What to expect |
+| --- | --- |
+| Arcade | Six-bout CPU ladder, three difficulties, continues, saved progress, and a character ending |
+| Single CPU | One best-of-three match against your chosen opponent on Easy, Normal, or Hard |
+| Local | Two players sharing a keyboard or using two standard-mapped controllers |
+| Training | Endless practice with configurable dummy behavior, health recovery, unlimited ink, and combat readouts |
+
+### Arcade
+
+Select **Arcade**, choose your star and **Easy / Normal / Hard**, then start a **New Arcade Run**. The ladder shuffles the other five fighters and ends with a mirror match against your own character. Each bout starts with full health, 35 ink, and fresh round wins. The mirror finale labels P1 and the rival.
+
+- **First Bell / Next Bout** starts a best-of-three match. Win to clear one ladder slot.
+- **Continue** retries the same rival after a loss. Continues are unlimited; cleared bouts remain cleared and losses are counted.
+- **Save & Casting** leaves a fight. **Resume Arcade** restores your star, difficulty, ladder, and cleared bouts. An interrupted fight restarts from round one without adding a loss. Changing the difficulty selector does not change a resumed run.
+- Clear all six bouts for your character's original story ending and animated victory portrait. **View Ending** reopens the completed ending; **Play Again** creates a new ladder with the same star and difficulty.
+
+One checkpoint is stored per browser and device; a new run replaces it. If browser storage is unavailable, the run remains playable while the page stays open. Audio preferences are saved separately.
+
+Difficulty changes CPU reactions and decisions, including guarding, evasion, attacks, throws, dashes, and hit-confirm combos. Fighter health, speed, and damage remain equal across settings. Later ladder bouts shorten CPU decision intervals slightly. Training uses normal CPU behavior.
+
+### Training
+
+Choose your fighter and practice dummy, then start immediately in jab range with an endless clock. Open **Practice options** below the arena or from the pause menu.
+
+- Set the dummy to stand, guard, jump repeatedly, or spar with the CPU.
+- Health recovery prevents knockouts and restores health after each string. Turn it off to practice knockouts; the bout resets without awarding rounds.
+- Unlimited ink keeps both meters full. Turn it off for normal costs and meter gain.
+- Inspect last-hit damage, uninterrupted combo hits/damage, attack phase/startup timing, and the last eight P1 inputs. Timings use 60-fps frame notation; held directions do not flood the history.
+- **Backspace**, controller **View / Select**, or **Reset** clears combat state and readouts while keeping the chosen cast and practice settings.
 
 ## Controls
 
-| Action | Player one | Player two |
-| --- | --- | --- |
-| Move | A / D | Left / Right arrows |
-| Jump | W | Up arrow |
-| Guard | Hold S | Hold Down arrow |
-| Punch | F | J |
-| Kick | G | K |
-| Special | H | L |
-| Throw | R | I |
-| Dash | Left Shift | Right Shift |
-| Pause / resume | Escape | Escape |
+| Action | Player one | Player two | Standard controller |
+| --- | --- | --- | --- |
+| Move | A / D | Left / Right arrows | Stick / D-pad |
+| Jump | W | Up arrow | A / Cross |
+| Guard | Hold S | Hold Down arrow | LB / L1 or Down |
+| Punch | F | J | X / Square |
+| Kick | G | K | Y / Triangle |
+| Special | H | L | B / Circle |
+| Throw | R | I | RB / R1 |
+| Dash | Left Shift | Right Shift | RT / R2 |
+| Pause / resume | Escape | Escape | Start |
+| Reset Training | Backspace | — | View / Select |
 
-Touch buttons support player one’s original moves. Local two-player supports a shared keyboard or two controllers; some keyboards limit simultaneous key presses. Losing browser focus or disconnecting an assigned controller pauses the match.
+In controller menus, the D-pad navigates, A / Cross confirms, and B / Circle goes back. Release controls after joining or changing screens. Controllers retain their player slots across supported disconnect/reconnect flows. Unsupported mappings fall back to keyboard play.
 
-Standard-mapped Xbox and PlayStation controllers use the stick/D-pad to move, A/cross to jump, X/square to punch, Y/triangle to kick, B/circle for special, LB/L1 to guard, RB/R1 to throw, RT/R2 to dash, and Start to pause/resume. A confirms in menus; B goes back; the D-pad navigates. Release controls after joining or changing screens. Browsers may require a click or keyboard press to unlock sound even when the match is started with a controller; an Enable audio prompt appears when needed. Controllers retain their player slots when another controller disconnects. Unsupported mappings fall back to keyboard play.
+Losing browser focus or disconnecting an assigned controller pauses the match. Touch buttons cover P1 movement, guard, punch, kick, and special; throw and dash require a keyboard or controller. Some shared keyboards limit simultaneous key presses.
 
-Open **Options** to adjust music and effects; the note button toggles mute. Sound preferences are stored locally when browser storage is available.
+Open **Options** for independent music/effects levels; the note button toggles mute. Browsers may require a click or keyboard press to unlock audio even when a controller starts the match. Use **Enable audio** when prompted. Sound pauses with the game and resumes at its saved position; an audio failure leaves gameplay available.
 
-Win two rounds. Each round lasts 60 seconds; the fighter with more health wins a timeout, and tied rounds award no wins. Every round begins with 35 ink. Hits and blocks build ink, and signature moves cost 35 ink.
+## Combat and cast
 
-## Cast
+Win two rounds to take a match. Each round lasts 60 seconds; the fighter with more health wins a timeout, and tied rounds award no wins. Each round begins with 35 ink. Hits and blocks build ink; specials cost 35 ink.
+
+Combat includes buffered attacks, punch-to-kick/special cancels on hit, brief impact freezes, aerial punches/kicks, vulnerable directional dashes, and close-range throws that beat guard. Combo counts restart when the opponent recovers or blocks. Fighter-specific startup, recovery, reach, and damage give each character a different feel; balance remains provisional.
 
 | Fighter | Role | Signature move |
 | --- | --- | --- |
@@ -83,25 +82,72 @@ Win two rounds. Each round lasts 60 seconds; the fighter with more health wins a
 | Betty Boop | Ranged | Boop blast: sound projectile |
 | Popeye | Power | Spinach power: heals up to 8 health and increases melee damage by 50% for 6 seconds |
 
-These are original game mechanics, not claims about the historic cartoons.
+These are original game mechanics. Each fighter also has an original Arcade ending, from Mickey's community tugboat voyage to Popeye's restored pier and community kitchen.
 
-## Art and character references
+## Art and audio
 
-The cast uses **288 discrete vector cels**, with 48 drawings per fighter stored in six transparent SVG sprite atlases. The renderer selects complete drawings for idle, walking, jumping, guarding, punching, kicking, signature moves, damage reactions, knockouts, and victory. All six fighters also have dedicated dash, throw, aerial punch, and aerial kick drawings. It no longer interpolates a shared live character rig.
+The six transparent SVG atlases contain **288 discrete vector cels: 48 drawings per fighter**. Complete poses cover idle, walking, jumping, guarding, punching, kicking, specials, damage reactions, knockouts, victory, dashing, throwing, and aerial punches/kicks. They include held exposures, squash and stretch, anticipation, smears, recoil, blinks, and secondary motion. Impact drawings follow the simulation's active damage windows; blocked hits use a separate recoil pose.
 
-The animation includes held poses, squash and stretch, blinks, attack anticipation and smears, recoil, landing compression, and secondary motion in ears, tails, hats, and skirts. Attack impact drawings follow the simulation's active damage windows; blocked hits have their own recoil pose. Idle motion respects the reduced-motion preference. Roster portraits, the arena, and the winner screen all use the same artwork.
+This is script-authored digital vector cel-style animation. Portraits, gameplay, and endings share the same atlases. Open [the animation reel](animation-reel.html) to preview actions, mirror the cast, or scrub through drawings. The [older base-animation GIF](outputs/cel-animation-reel.gif) is an archival preview.
 
-Open [the animation reel](animation-reel.html) to compare all six characters, preview individual actions, mirror the cast, or scrub through the drawings. An earlier standalone overview of the base animations is available at [outputs/cel-animation-reel.gif](outputs/cel-animation-reel.gif).
+Ink Harbor combines a generated background painting with Canvas tugboat, steam, water, gull, and lantern animation. Reduced motion freezes ambient animation and idle poses and disables camera shake and film movement while preserving combat telegraphs.
 
-The cels are script-authored SVG illustrations, using shared ink-drawing helpers and character-specific exposure poses. This is digital vector cel-style animation, not a claim that 288 frames were independently drawn by a human animator. Two Imagegen sprite-sheet requests were rejected, so no generated sprite artwork was used. The existing harbor background was generated with Imagegen; its prompt and the character artwork provenance are recorded in [assets/provenance.md](assets/provenance.md).
+**Ink Harbor Stomp** is an original 32-bar, 144 BPM swing arrangement with synthesized piano-, reed-, muted-brass-, bass-, and banjo-style voices. Thirteen original Foley/stinger cues accompany combat and menus. No historic recordings, cartoon themes, downloaded samples, or live band recordings were imported. See [asset provenance](assets/provenance.md) for artwork sources and generation details.
 
-Edit `scripts/build-cels.mjs`, then regenerate the checked-in atlases with:
+## Development
+
+The game uses native ES modules, Canvas 2D, Web Audio, and the Gamepad API. There are no installed runtime dependencies, accounts, or server-side game state. Google Fonts has a system-font fallback.
+
+| Path | Responsibility |
+| --- | --- |
+| `engine.mjs` | DOM-free combat simulation, CPU behavior, roster, and move timing |
+| `app.mjs` | Screens, keyboard/touch input, controller polling, sound, and the fixed 120 Hz simulation loop |
+| `art.mjs` / `cels.mjs` | Scene rendering, atlas loading, and cel selection |
+| `assets/runtime/` | Arcade progression/endings, controller handling, and audio playback/settings |
+| `scripts/` | Source generators for checked-in SVG atlases and WAV files |
+| `tests/` | Node regression tests and the browser-only Arcade outcome fixture |
+| `controller-simulator.html` | Development harness for two virtual standard controllers |
+| `animation-reel.html` / `reel.mjs` | Animation preview and scrubbing tool |
+
+Edit the generator sources before rebuilding their checked-in assets:
 
 ```sh
 npm run art
+npm run audio
 ```
 
-No art-generation dependency or image service is needed to run or rebuild these SVG atlases. The asset loader validates all 48 cells and registers the drawings to a fixed origin so attack silhouettes do not move the character's planted feet.
+`scripts/build-cels.mjs` authors the character drawings; `scripts/build-audio.mjs` contains the score, software instruments, and Foley synthesis. Both run locally without an image service or additional packages. See [AGENTS.md](AGENTS.md) for change boundaries and validation guidance.
+
+## Validation
+
+```sh
+npm test
+git diff --check
+```
+
+The current suite has **43 Node tests** covering combat, CPU matches, round transitions, controllers, Training, Arcade progression/checkpoint validation, cel generation/timing, and audio generation/lifecycle. Tests use Node's built-in runner.
+
+With the server running, open [the controller simulator](http://127.0.0.1:4173/controller-simulator.html). Connect P1/P2 for manual checks, or click **Run controller checks** for **13 repeatable browser checks** covering menu navigation, both players, pause/resume, disconnect/reconnect, Training controls, and Arcade progression/endings. Buttons toggle held state; use **Release** after screen changes. The simulator suppresses iframe focus-loss pausing so its outer controls remain usable.
+
+Arcade flow checks use `tests/fixtures/arcade-engine.mjs` to script timeout outcomes through the real round-resolution code. They verify progression and recovery, not human-played wins or difficulty balance. The harness restores the previous Arcade checkpoint and audio preferences afterward.
+
+Browser checks have covered keyboard combat, two virtual controllers, Training readouts/options, Arcade resume/endings, audio settings, and animation previews. Physical controllers, physical touch devices, speaker listening, Safari/Firefox, mobile Training layout, and sustained human balance testing remain unverified. Virtual pads do not establish hardware mappings, latency, or pairing behavior.
+
+## Static hosting
+
+The existing [release](https://pdcf.aaronfaby.com) uses Cloudflare Workers with GitHub builds on pushes to `main`. The build/deploy settings are managed in the Cloudflare dashboard; this repository contains no Wrangler configuration or deployment workflow.
+
+The current build command runs tests and copies an explicit set of static files:
+
+```sh
+npm test && mkdir -p dist && cp index.html animation-reel.html style.css app.mjs art.mjs cels.mjs engine.mjs reel.mjs dist/ && cp -R assets dist/
+```
+
+Serve `dist/` as static assets. Keep the relative directory structure: runtime modules under `assets/runtime/` import the root engine. New root runtime files must be added to the copy command. The simulator, tests/fixtures, generators, documentation, and development server are excluded. Do not use `server.mjs` as a production backend or commit the generated `dist/` directory.
+
+Pushing starts the configured deployment; verify its result separately before reporting a release as live.
+
+## Character references and rights
 
 The 1930s/1940s influence describes the presentation, not a blanket right to use later character versions. Intended references are early Mickey and Minnie (1928), Oswald (1927–1928), silent-era Felix, Betty's early dog-eared 1930 design, and Segar's original Popeye comic character (1929–1930). Modern character assets, studio logos, cartoon recordings, and theme songs have not been imported.
 
@@ -113,36 +159,6 @@ The 1930s/1940s influence describes the presentation, not a blanket right to use
 
 Popeye's spinach mechanic relies on Duke's finding that the relevant 1931 strip appears not to have been renewed. Those 1931 materials enter the U.S. public domain by ordinary term expiration on January 1, 2027. No independent renewal search, character-design clearance, trademark clearance, or international-rights review has been performed. Check the finished art and branding before commercial distribution.
 
-## Scope
+## Remaining work
 
-This version runs entirely in the browser, with no account, server-side game state, or installed runtime dependencies. Google Fonts enhances the typography when online; system fonts provide an offline fallback. It includes Arcade mode with character endings, Training mode, CPU play and local two-player, one animated stage, original swing music and Foley, pause, rematches, keyboard/touch/controller controls, audio options, and the cel animation reel. Additional stages, online multiplayer, and a story campaign belong to later milestones. The artwork and combat balance still need sustained art-direction and playtesting review.
-
-`engine.mjs` owns the deterministic simulation; `cels.mjs` loads the atlases and selects animation drawings; `art.mjs` draws the cast and stage; `app.mjs` connects input, screens, sound, and the fixed simulation timestep. The Node server is a localhost development preview. The static files can be hosted on any ordinary static server. The existing release is hosted at [pdcf.aaronfaby.com](https://pdcf.aaronfaby.com); new local changes require a commit and push to reach that deployment. Runtime audio/controller modules and WAV assets live under `assets/`, so the current Cloudflare build command already copies them.
-
-## Verification
-
-The 43 Node tests cover single-hit attacks, guard damage, jump avoidance, ink costs, projectiles, Popeye's healing and temporary boost, simultaneous knockouts, stage boundaries, round resets, completed matches for all six fighters, all 288 distinct cel drawings, active-frame synchronization, block recoil, jump/landing selection, reverse walking, victory/defeat holds, reduced motion, and atlas-bound validation. They also cover controller slot stability (including reverse-order reconnect), neutral arming and pending edges, hitstop and combo transitions, throws, dashes, buffered input expiry, audio lifecycle/failure recovery, preference validation, deterministic audio regeneration, endless training, dummy behavior, practice resets/options, health recovery and KO resets, bounded input history, combo damage, and the expanded animation states for all six fighters. Arcade tests also cover all six full ladders and endings, loss/continue, stale or duplicate results, fresh bout state, checkpoint validation/recovery, and difficulty behavior without stat bonuses. All JavaScript modules pass Node syntax checks.
-
-Earlier browser checks covered roster changes, CPU combat, both keyboard players, Popeye's special, touch-button event handling, pause/resume, a complete CPU match, the winner dialog, rematch reset, and the instructions dialog. Layout was checked at 390-pixel phone and 1280-pixel desktop widths, with no horizontal overflow or browser console errors. Physical touch devices, speakers, gamepads, and additional browsers were not tested. Balance has not received a sustained human playtest.
-
-## Audio authoring
-
-Rebuild the checked-in mono 22,050 Hz / 16-bit WAV assets with:
-
-```sh
-npm run audio
-```
-
-`scripts/build-audio.mjs` contains the original melody, harmony, swung rhythm arrangement, software instrument voices, percussion, and Foley synthesis. The track uses piano-, reed-, muted-brass-, bass-, and banjo-style voices; these are synthesized instruments, not a live band recording. No historic recordings, cartoon themes, downloaded samples, or additional runtime packages are used.
-
-Milestone browser verification covered the featured CPU match, keyboard combat, audio loading and saved volume settings, and two virtual standard gamepads controlling local versus. Virtual controller checks included menu confirm/back, stable player slots, one-shot attacks, disconnect pause, reconnect, and Start resume. The expanded atlas was also rasterized: all 288 cels are unique and have clear cell margins. Physical controllers, speaker listening, Safari/Firefox, and sustained human balance sessions remain unverified.
-
-## Virtual controller simulator
-
-With `npm start` running, open [the local controller simulator](http://127.0.0.1:4173/controller-simulator.html). Connect P1/P2, wait for the ready status, select Local mode, and launch the featured bout. Buttons toggle held/released state; dark buttons are held. Use Release after changing screens. Disconnect a pad to test the recovery flow. This exercises the normal Gamepad input path through virtual devices; hardware pairing, real mappings, latency and vibration still require physical devices. The simulator suppresses iframe focus-loss pausing so its outer controls remain usable. It is a development tool and is excluded from the current production copy command.
-
-Click **Run controller checks** for thirteen repeatable browser checks covering both players' movement/attacks, menu navigation, confirm/back, volume adjustment, local mode, pausing, frozen health/clock, returning to the roster, both disconnects, held-button reconnect, and reverse-order reconnect. These checks run the real game with virtual pads and a controlled frame clock, then restore normal speed and the previous audio preferences. This pass reproduced and fixed returning controllers changing player slots and a buffered pre-pause attack firing after resume; the browser checks now pass, including both regressions and Training mode controller options/reset.
-
-Training browser verification covered keyboard punch feedback and Backspace reset, all four dummy behaviors, practice options and controller reset, combo damage readouts, returning from Training to normal CPU rounds, and mirrored throw/aerial poses in the animation reel. The original nine simulator checks pass. The new Training screen was checked in the desktop in-app browser; physical controllers, other browsers, and mobile Training layout remain unverified.
-
-Arcade browser checks add difficulty selection, controller start/continue, interrupted-bout reload and resume, progression through all six bouts, every character ending, play again, return to local versus, and unavailable browser storage. These flow checks use `tests/fixtures/arcade-engine.mjs` to script timeout results through the real round-resolution code; they do not represent human-played victories or difficulty balance testing. The fixture and simulator are excluded from the current production file-copy command. The simulator restores the previous saved run and audio preferences after checks.
+There is currently one stage. Additional stages, online multiplayer, and a larger story campaign are future work. Art direction, accessibility, browser/device coverage, controller calibration, audio listening, and sustained balance playtests still need production review.
