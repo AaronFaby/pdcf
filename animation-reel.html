@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>The cast, frame by frame — Public Domain Cartoon Fighters</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .reel{padding-top:35px;padding-bottom:35px}.reel h1{font-size:54px;line-height:1.1}.reel>p{max-width:750px;line-height:1.8;color:var(--muted)}
+    .reel-controls{display:flex;gap:8px;flex-wrap:wrap;margin:22px 0}.reel-controls button{border:1px solid var(--line);padding:10px 14px;background:transparent;font-size:11px;font-weight:700}.reel-controls button[aria-pressed=true]{background:var(--ink);color:var(--paper)}
+    .reel-strip{display:flex;align-items:center;gap:18px;flex-wrap:wrap;margin-bottom:24px}.reel-strip button{padding:9px 16px;border:1px solid var(--ink);background:transparent;font-size:11px}.reel-strip label{font-size:11px}.reel-strip input{width:220px;accent-color:var(--accent)}
+    .reel-cast{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}.reel-cast figure{border:1px solid var(--line);margin:0;background:#dfd5bc}.reel-cast canvas{width:100%;height:auto;display:block}.reel-cast figcaption{padding:13px 15px;background:var(--paper);border-top:1px solid var(--line);font-family:var(--display);font-size:22px;font-weight:700}.reel-cast small{display:block;font:9px var(--body);letter-spacing:1px;color:var(--muted);margin-top:3px}
+    @media(max-width:700px){.reel h1{font-size:40px}.reel-cast{grid-template-columns:repeat(2,1fr)}.reel-strip input{width:150px}}
+  </style>
+</head>
+<body>
+  <header class="masthead"><a class="brand" href="./"><span class="brand-mark" aria-hidden="true">✦</span><span>PUBLIC DOMAIN<br><b>CARTOON FIGHTERS</b></span></a><a class="text-button" href="./">BACK TO THE GAME →</a></header>
+  <main class="reel">
+    <p class="eyebrow">216 DRAWINGS. SIX CARTOON STARS.</p>
+    <h1>The cast, <em>frame by frame.</em></h1>
+    <p>Compare each character’s poses, step through individual drawings, and watch the action in either direction. In a match, anticipation and impact frames follow the combat timing.</p>
+    <div class="reel-controls" id="animation-controls" role="group" aria-label="Animation to preview"></div>
+    <div class="reel-strip"><button id="play-toggle">PAUSE</button><button id="direction-toggle" aria-pressed="false">FACE LEFT</button><label for="cel-scrub">DRAWING <output id="cel-number">01</output> / 36</label><input id="cel-scrub" type="range" min="0" max="35" value="0" aria-label="Individual cel drawing"></div>
+    <p id="reel-status" role="status">Loading the cast…</p>
+    <div id="reel-cast" class="reel-cast"></div>
+  </main>
+  <script type="module" src="reel.mjs"></script>
+</body>
+</html>

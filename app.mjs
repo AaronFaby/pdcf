@@ -1,10 +1,12 @@
 import { ROSTER, createMatch, tick, cpuInput, SPECIAL_COST } from './engine.mjs';
 import { drawFighter, drawScene } from './art.mjs';
+import { loadCels } from './cels.mjs';
 
 const $ = id => document.getElementById(id);
 const selection = ['mickey', 'popeye'];
 let slot = 0, mode = 'cpu', match = null, paused = false, accumulator = 0, lastTime = 0;
 let preview = createMatch(...selection), soundOn = false, audio = null;
+let celsReady = false;
 const arena = $('arena'), arenaContext = arena.getContext('2d');
 const showcaseContext = $('showcase').getContext('2d');
 const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
@@ -110,6 +112,7 @@ function updateHUD() {
   $('round-number').textContent = match.round;
 }
 function startMatch() {
+  if (!celsReady) return;
   for (const id of ['result-dialog', 'pause-dialog', 'help-dialog']) if ($(id).open) $(id).close();
   clearInput(); paused = false; match = createMatch(...selection, mode);
   $('selection').hidden = true; $('game').hidden = false;
@@ -135,7 +138,7 @@ function showResult() {
   $('result-title').textContent = `${winner.short.toUpperCase()} WINS!`;
   $('result-score').textContent = `${match.fighters[0].wins} — ${match.fighters[1].wins} · ${winner.quote}`;
   const context = $('winner-portrait').getContext('2d'); context.clearRect(0, 0, 300, 280);
-  drawFighter(context, { ...winner, y: 0, face: 1, vx: 0, attack: null, hurt: 0 }, { x: 140, y: 270, scale: 1.05, time: 0, portrait: true });
+  drawFighter(context, { ...winner, y: 0, face: 1, vx: 0, attack: null, hurt: 0 }, { x: 140, y: 270, scale: .95, animation: 'victory', progress: 1 });
   $('match-announcement').textContent = `${winner.name} wins the match, ${match.fighters[0].wins} to ${match.fighters[1].wins}.`;
   clearInput(); $('result-dialog').showModal(); $('rematch-button').focus();
 }
@@ -210,9 +213,17 @@ function frame(timestamp) {
       }
       if (match.phase === 'matchover' && !$('result-dialog').open) showResult();
     }
-    drawScene(arenaContext, match, background, paused ? match.elapsed : time, { reducedMotion: reducedMotion.matches });
+    drawScene(arenaContext, match, background, match.elapsed, { reducedMotion: reducedMotion.matches });
   }
   requestAnimationFrame(frame);
 }
 
 buildRoster(); updateSelection(); requestAnimationFrame(frame);
+loadCels().then(() => {
+  celsReady = true;
+  $('start-button').disabled = false;
+  $('art-status').hidden = true;
+}).catch(error => {
+  $('art-status').textContent = 'The animation artwork could not load. Refresh this page to try again.';
+  console.error('Cel artwork failed to load:', error);
+});

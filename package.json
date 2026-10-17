@@ -4,6 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "art": "node scripts/build-cels.mjs",
     "dev": "node server.mjs",
     "start": "node server.mjs",
     "test": "node --test tests/*.test.mjs"

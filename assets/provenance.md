@@ -2,8 +2,16 @@
 
 - Asset: `ink-harbor.png`
 - Created for this project with the built-in Imagegen tool on October 16, 2026.
-- Character animation and portraits are authored in `art.mjs`, not extracted from this image or historic cartoons.
+- Character animation and portraits are authored in `scripts/build-cels.mjs`, not extracted from this image or historic cartoons.
 
 ## Final generation prompt
 
 Use case: stylized-concept. Asset type: painted background for a playable 2D cartoon fighting game, wide landscape 1536x1024. Create an exquisite vintage 1930s black-and-white rubber-hose animation background painting of a whimsical harbor boardwalk at twilight. Slight warm ivory/sepia paper with charcoal ink and soft grayscale wash, lovingly hand-painted film background, old theatrical cartoon, elegant atmospheric depth. At left a crooked bait-and-tackle shack and tied ropes; at right a huge moored steamboat with smoking crooked chimneys and lifebuoy; distant waterfront skyline, moon, cloudy sky, gently rippling water. No characters, no people, no faces. Main horizontal fighting surface is a broad flat wooden pier spanning the entire width near the bottom quarter, with perspective floorboards, leave center completely clear for two fighters. Side-on game camera, horizon at mid-height. Beautiful theatrical composition with busy edges and clear center; rich tactile paper grain and hand-painted shading; ink-black darkest values confined to edges so bright foreground character silhouettes are readable. No text, no lettering, no logos, no UI, no frames. Finished game production art, not a mockup, no colored elements.
+
+## Vector cel artwork — October 17, 2026
+
+The six files in `assets/cels/` contain 36 distinct full-pose drawings per character, arranged in a 6 × 6 atlas. They are authored as native SVG paths by `scripts/build-cels.mjs`. The source contains exposure poses, cleanup shapes, expressions, and motion accents. Shared drawing helpers keep the palette and line work consistent; individual character profiles control proportions and movement. No historic cartoon frames, modern game sprites, downloaded character images, or generated sprite-sheet output were imported.
+
+The built-in Imagegen tool rejected two attempts to create a Mickey sprite sheet. No resulting images were saved or used, and the API-key-based CLI fallback was not invoked. The vector cel artwork was created directly in the project instead. It should be described as script-authored vector cel-style animation, rather than human-painted traditional animation.
+
+The atlas row order is: six idle drawings; six walking drawings; three jump and three guard drawings; three punch and three kick drawings; four special and two hurt drawings; three knockout and three victory drawings. Complete silhouettes are registered to a shared per-character origin at runtime; falling poses use their lower silhouette edge to stay on the floor. The same atlases supply portraits and gameplay.

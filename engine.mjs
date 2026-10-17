@@ -19,7 +19,7 @@ export const MOVES = {
 function fighter(id, index) {
   const spec = ROSTER.find(f => f.id === id);
   if (!spec) throw new Error('Unknown fighter: ' + id);
-  return { ...spec, x: index ? 860 : 340, y: 0, vx: 0, vy: 0, face: index ? -1 : 1, hp: 100, meter: 35, wins: 0, attack: null, hurt: 0, cooldown: 0, guard: false, buff: 0, walk: 0 };
+  return { ...spec, x: index ? 860 : 340, y: 0, vx: 0, vy: 0, face: index ? -1 : 1, hp: 100, meter: 35, wins: 0, attack: null, hurt: 0, reaction: null, land: 0, cooldown: 0, guard: false, buff: 0, walk: 0 };
 }
 
 export function createMatch(a = 'mickey', b = 'popeye', mode = 'cpu') {
@@ -62,6 +62,7 @@ function hit(match, defender, attacker, damage, push, direction) {
   const amount = blocked ? damage * .15 : damage;
   defender.hp = Math.max(0, defender.hp - amount);
   defender.hurt = blocked ? .1 : .25;
+  defender.reaction = blocked ? 'block' : 'hurt';
   if (!blocked) defender.attack = null;
   defender.x = Math.min(1140, Math.max(60, defender.x + direction * (blocked ? push * .3 : push)));
   defender.meter = Math.min(100, defender.meter + (blocked ? 5 : 9));
@@ -108,6 +109,7 @@ export function tick(match, inputs, dt) {
     const f = match.fighters[i], other = match.fighters[1 - i], input = commands[i];
     f.face = other.x >= f.x ? 1 : -1;
     f.hurt = Math.max(0, f.hurt - dt);
+    f.land = Math.max(0, f.land - dt);
     f.cooldown = Math.max(0, f.cooldown - dt);
     f.buff = Math.max(0, f.buff - dt);
     f.guard = !!input.guard && f.y === 0 && !f.attack && f.hurt <= 0;
@@ -124,7 +126,7 @@ export function tick(match, inputs, dt) {
     if (f.y < 0 || f.vy < 0) {
       f.vy += 1700 * dt;
       f.y += f.vy * dt;
-      if (f.y >= 0) { f.y = 0; f.vy = 0; }
+      if (f.y >= 0) { f.y = 0; f.vy = 0; f.land = .12; }
     }
   }
   const [a, b] = match.fighters;

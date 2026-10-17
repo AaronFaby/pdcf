@@ -47,7 +47,21 @@ These are original game mechanics, not claims about the historic cartoons.
 
 ## Art and character references
 
-Character art is drawn and animated directly in Canvas, so poses and attacks can be changed without replacing sprite sheets. It is a first-pass stylization, not final cel animation. The background was generated using the built-in Imagegen tool; its prompt is recorded in [assets/provenance.md](assets/provenance.md).
+The cast uses **216 discrete vector cels**, with 36 drawings per character stored in six transparent SVG sprite atlases. The renderer selects complete drawings for idle, walking, jumping, guarding, punching, kicking, signature moves, damage reactions, knockouts, and victory. It no longer interpolates a shared live character rig.
+
+The animation includes held poses, squash and stretch, blinks, attack anticipation and smears, recoil, landing compression, and secondary motion in ears, tails, hats, and skirts. Attack impact drawings follow the simulation's active damage windows; blocked hits have their own recoil pose. Idle motion respects the reduced-motion preference. Roster portraits, the arena, and the winner screen all use the same artwork.
+
+Open [the animation reel](animation-reel.html) to compare all six characters, preview individual actions, mirror the cast, or scrub through the drawings. A standalone animated overview is available at [outputs/cel-animation-reel.gif](outputs/cel-animation-reel.gif).
+
+The cels are script-authored SVG illustrations, using shared ink-drawing helpers and character-specific exposure poses. This is digital vector cel-style animation, not a claim that 216 frames were independently drawn by a human animator. Two Imagegen sprite-sheet requests were rejected, so no generated sprite artwork was used. The existing harbor background was generated with Imagegen; its prompt and the character artwork provenance are recorded in [assets/provenance.md](assets/provenance.md).
+
+Edit `scripts/build-cels.mjs`, then regenerate the checked-in atlases with:
+
+```sh
+npm run art
+```
+
+No art-generation dependency or image service is needed to run or rebuild these SVG atlases. The asset loader validates all 36 cells and registers the drawings to a fixed origin so attack silhouettes do not move the character's planted feet.
 
 The 1930s/1940s influence describes the presentation, not a blanket right to use later character versions. Intended references are early Mickey and Minnie (1928), Oswald (1927–1928), silent-era Felix, Betty's early dog-eared 1930 design, and Segar's original Popeye comic character (1929–1930). Modern character assets, studio logos, cartoon recordings, and theme songs have not been imported.
 
@@ -61,12 +75,12 @@ Popeye's spinach mechanic relies on Duke's finding that the relevant 1931 strip 
 
 ## Scope
 
-This first version runs entirely in the browser, with no account, server-side game state, or installed runtime dependencies. Google Fonts enhances the typography when online; system fonts provide an offline fallback. It includes CPU play and local two-player, one stage, synthesized sound effects, pause, rematches, and keyboard/touch controls. Online multiplayer, gamepad support, a story campaign, and final production animation are not included.
+This version runs entirely in the browser, with no account, server-side game state, or installed runtime dependencies. Google Fonts enhances the typography when online; system fonts provide an offline fallback. It includes CPU play and local two-player, one stage, synthesized sound effects, pause, rematches, keyboard/touch controls, and the cel animation reel. Online multiplayer, gamepad support, and a story campaign are not included. The artwork and combat balance still need sustained art-direction and playtesting review.
 
-`engine.mjs` owns the deterministic simulation; `art.mjs` draws the cast and stage; `app.mjs` connects input, screens, sound, and the fixed simulation timestep. The Node server is a localhost development preview. The static files can be hosted on any ordinary static server. Nothing has been deployed.
+`engine.mjs` owns the deterministic simulation; `cels.mjs` loads the atlases and selects animation drawings; `art.mjs` draws the cast and stage; `app.mjs` connects input, screens, sound, and the fixed simulation timestep. The Node server is a localhost development preview. The static files can be hosted on any ordinary static server. Nothing has been deployed.
 
 ## Verification
 
-The 11 Node simulation tests pass, including single-hit attacks, guard damage, jump avoidance, ink costs, projectiles, Popeye's healing and temporary boost, simultaneous knockouts, stage boundaries, round resets, and completed matches for all six fighters. All JavaScript modules pass Node syntax checks.
+The 18 Node tests cover single-hit attacks, guard damage, jump avoidance, ink costs, projectiles, Popeye's healing and temporary boost, simultaneous knockouts, stage boundaries, round resets, completed matches for all six fighters, all 216 distinct cel drawings, active-frame synchronization, block recoil, jump/landing selection, reverse walking, victory/defeat holds, reduced motion, and atlas-bound validation. All JavaScript modules pass Node syntax checks.
 
 Browser checks covered roster changes, CPU combat, both keyboard players, Popeye's special, touch-button event handling, pause/resume, a complete CPU match, the winner dialog, rematch reset, and the instructions dialog. Layout was checked at 390-pixel phone and 1280-pixel desktop widths, with no horizontal overflow or browser console errors. Physical touch devices, speakers, gamepads, and additional browsers were not tested. Balance has not received a sustained human playtest.

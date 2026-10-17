@@ -10,6 +10,17 @@
   --body:'DM Sans',Arial,sans-serif;
 }
 
+.art-status {
+  color: var(--muted);
+  font-size: 10px;
+  line-height: 1.5;
+}
+
+.primary-button:disabled {
+  opacity: .5;
+  transform: none;
+}
+
 * {
   box-sizing:border-box;
 }
