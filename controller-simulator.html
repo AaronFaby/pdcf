@@ -1,0 +1,149 @@
+<!doctype html><html><head><meta charset="utf-8"><title>Virtual controllers — Public Domain Cartoon Fighters</title><style>body{margin:0;font:13px system-ui;background:#fff}#toolbar{padding:10px;display:flex;gap:5px;flex-wrap:wrap;position:sticky;top:0;background:#fff;z-index:20}button{padding:8px;border:1px solid #c6bfac;background:#eee7d6;color:#25251f;cursor:pointer}button[aria-pressed="true"]{background:#25251f;color:#fff}h1{font-size:22px;margin:0 0 8px}.intro{padding:18px;background:#eee7d6;line-height:1.6}.intro p{margin:4px 0}pre{white-space:pre-wrap;overflow-wrap:anywhere}iframe{display:block;width:100%;height:900px;border:0}pre{margin:0;padding:8px;background:#f4f1e9}</style></head><body><section class="intro"><h1>Two controllers. No hardware required.</h1><details><summary>How to use the simulator</summary><p>1. Click <b>Connect P1</b> (and <b>Connect P2</b> for two players). Wait for CONTROLLER READY.</p><p>2. Choose <b>Local mode</b> for two players, then <b>Featured bout</b>. After a screen change, click <b>Release P1/P2</b> and wait for CONTROLLER READY.</p><p>3. Controller buttons toggle between held and released. A dark button is held. Click it again or use <b>Release</b> to let go. Combine directions, guard and attacks.</p><p>A jumps / confirms; X punches; Y kicks; B uses special / goes back. Start starts or pauses a match. Disconnect either controller to test recovery.</p><p>This page exercises the game’s real controller input code using virtual devices. It does not validate hardware pairing, physical button layouts or real input latency. Focus-loss pausing is suppressed inside this simulator so its outer buttons remain usable.</p></details></section><div id="toolbar"></div><pre id="status">Booting…</pre><iframe id="game"></iframe><script>
+const pads=[null,null], frame=document.getElementById('game'),bar=document.getElementById('toolbar');
+function makePad(index){return {index,id:'QA virtual pad '+index,connected:true,mapping:'standard',axes:[0,0],buttons:Array.from({length:16},()=>({pressed:false,value:0}))};}
+let lastFocus;document.addEventListener('pointerdown',()=>{const e=frame.contentDocument?.activeElement;if(e&&e.tagName!=='BODY')lastFocus=e;},true);
+function add(label,action){const b=document.createElement('button');b.textContent=label;b.onclick=()=>{action();refreshHeld();frame.contentWindow.focus();if(lastFocus?.getClientRects().length)lastFocus.focus();};bar.append(b);return b;}
+for(let p=0;p<2;p++){
+ add('Connect P'+(p+1),()=>{pads[p]=makePad(p);});add('Disconnect P'+(p+1),()=>{pads[p]=null;});
+ for(const [label,key] of [['A',0],['B',1],['X',2],['Y',3],['Guard',4],['Throw',5],['Dash',7],['Start',9],['Up',12],['Down',13],['Left',14],['Right',15]]) {const b=add('P'+(p+1)+' '+label,()=>{if(pads[p]){pads[p].buttons[key].pressed=!pads[p].buttons[key].pressed;pads[p].buttons[key].value=pads[p].buttons[key].pressed?1:0;}});b.dataset.player=p;b.dataset.button=key;b.setAttribute('aria-pressed','false');}
+ add('Release P'+(p+1),()=>{if(pads[p]) pads[p]=makePad(p);});
+}
+add('Local mode',()=>frame.contentDocument.querySelector('[data-mode="local"]').click());
+add('Featured bout',()=>frame.contentDocument.getElementById('featured-button').click());
+add('Return to roster',()=>frame.contentDocument.getElementById('back-button').click());
+frame.onload=()=>{frame.contentWindow.addEventListener('blur',e=>e.stopImmediatePropagation(),true);Object.defineProperty(frame.contentWindow.navigator,'getGamepads',{configurable:true,value:()=>pads});frame.contentWindow.addEventListener('error',e=>{document.getElementById('status').textContent+=' ERROR '+e.message;});};
+function refreshHeld(){for(const b of bar.querySelectorAll('[data-player]'))b.setAttribute('aria-pressed',String(!!pads[Number(b.dataset.player)]?.buttons[Number(b.dataset.button)]?.pressed));}
+window.readTestPads=()=>pads;
+fetch('/').then(r=>r.text()).then(html=>{frame.srcdoc=html.replace('<head>', '<head><base href="/"><script>window.addEventListener("blur",e=>e.stopImmediatePropagation(),true);Object.defineProperty(navigator,"getGamepads",{configurable:true,value:()=>parent.readTestPads()});<\/script>');});
+setInterval(()=>{
+ const d=frame.contentDocument;if(!d?.getElementById('controller-status'))return;
+ const health=['one','two'].map(side=>d.getElementById('health-'+side).getAttribute('aria-valuenow'));
+ const dialog=d.querySelector('dialog[open]');
+ const message=d.getElementById('controller-status').textContent+'\nP1 health: '+health[0]+' · P2 health: '+health[1]+' · Time: '+d.getElementById('timer').textContent+(dialog?'\n'+(dialog.id==='pause-dialog'?d.getElementById('pause-message').textContent:'Menu open: use A to confirm or B to go back.'):'');
+ const status=document.getElementById('status');if(status.textContent!==message)status.textContent=message;
+},100);
+let testing = false, nextFrame = null, testTime = 1000;
+window.queueControllerTestFrame = callback => { nextFrame = callback; };
+window.controllerTestMode = () => testing;
+const checkOutput = document.createElement('pre'); checkOutput.id = 'checks'; checkOutput.setAttribute('role','status');
+bar.before(checkOutput);
+const runButton = add('Run controller checks', runChecks);
+
+async function loadGameForChecks(stepped) {
+ testing=stepped; nextFrame=null; testTime=1000;
+ const html=await (await fetch('/')).text();
+ frame.srcdoc=html.replace('<head>', '<head><base href="/"><script>window.addEventListener("blur",e=>e.stopImmediatePropagation(),true);Object.defineProperty(navigator,"getGamepads",{configurable:true,value:()=>parent.readTestPads()});if(parent.controllerTestMode()){window.requestAnimationFrame=callback=>{parent.queueControllerTestFrame(callback);return 1;};}<\/script>');
+ const deadline=Date.now()+10000;
+ while(!frame.contentDocument?.getElementById('start-button') || frame.contentDocument.getElementById('start-button').disabled || (stepped&&!nextFrame)) {
+  if(Date.now()>deadline)throw Error('Game artwork did not become ready');
+  await new Promise(resolve=>setTimeout(resolve,20));
+ }
+}
+async function advance(count=1) {
+ for(let i=0;i<count;i++) {
+  const callback=nextFrame; nextFrame=null;
+  if(!callback)throw Error('Game animation loop stopped');
+  testTime+=1000/60; callback(testTime);
+ }
+ await new Promise(resolve=>requestAnimationFrame(resolve));
+}
+function setButton(player,button,pressed) {pads[player].buttons[button]={pressed,value:pressed?1:0};refreshHeld();}
+async function tap(player,button) {setButton(player,button,true);await advance();setButton(player,button,false);await advance(2);}
+const gameElement=id=>frame.contentDocument.getElementById(id);
+const health=player=>Number(gameElement(player?'health-two':'health-one').getAttribute('aria-valuenow'));
+function requireCheck(condition,message) {if(!condition)throw Error(message);}
+
+async function runChecks() {
+ runButton.disabled=true;
+ for(const b of bar.children) if(b!==runButton)b.disabled=true;
+ checkOutput.textContent='Running the real game with virtual pads and a controlled frame clock…';
+ const lines=[];
+ const passed=message=>{lines.push('PASS '+message);checkOutput.textContent=lines.join('\n');};
+ const preferences=localStorage.getItem('pdcf-audio-v1');
+ try {
+  pads[0]=makePad(0);pads[1]=makePad(1);
+  await loadGameForChecks(true); await advance(3);
+  requireCheck(gameElement('controller-status').textContent.includes('P2 CONTROLLER READY'),'Both pads must join');
+  passed('Both players join and arm at neutral');
+
+  gameElement('start-button').focus(); await tap(0,12);
+  requireCheck(frame.contentDocument.activeElement.id==='sound-button','P1 menu navigation failed');
+  await tap(1,12);requireCheck(frame.contentDocument.activeElement.id==='settings-button','P2 menu navigation failed');
+  await tap(0,0);requireCheck(gameElement('settings-dialog').open,'Controller confirm did not open options');
+  await tap(0,13);requireCheck(frame.contentDocument.activeElement.id==='music-volume','Could not navigate to music slider');
+  const volume=Number(gameElement('music-volume').value);
+  await tap(1,15);requireCheck(Number(gameElement('music-volume').value)===Math.min(100,volume+5),'P2 could not adjust music');
+  await tap(1,1);requireCheck(!gameElement('settings-dialog').open,'Controller Back did not close options');
+  passed('Both players navigate menus, confirm/back and adjust volume');
+
+  gameElement('help-button').focus();await tap(1,0);requireCheck(gameElement('help-dialog').open,'P2 confirm did not open help');
+  await tap(0,1);requireCheck(!gameElement('help-dialog').open,'P1 Back did not close help');
+  passed('Help opens and closes from either controller');
+
+  frame.contentDocument.querySelector('[data-mode="cpu"]').focus();await tap(0,15);await tap(1,0);
+  requireCheck(frame.contentDocument.querySelector('[data-mode="local"]').getAttribute('aria-pressed')==='true','Could not select local mode with a controller');
+  await tap(0,9); await advance(160);
+  requireCheck(!gameElement('game').hidden && !frame.contentDocument.querySelector('dialog[open]'),'Controller Start did not start local versus: '+gameElement('controller-status').textContent+'; dialog '+frame.contentDocument.querySelector('dialog[open]')?.id);
+  setButton(0,15,true);setButton(1,14,true);await advance(70);
+  setButton(0,15,false);setButton(1,14,false);await advance(3);
+  await tap(0,2);await advance(30);
+  requireCheck(health(1)===92,'P1 movement/punch did not damage P2 exactly once');
+  setButton(0,2,true);await advance(50);const once=health(1);await advance(50);
+  requireCheck(health(1)===once,'Held P1 punch repeated');setButton(0,2,false);await advance(30);
+  setButton(1,14,true);await advance(15);setButton(1,14,false);await advance(3);
+  await tap(1,2);await advance(40);
+  requireCheck(health(0)<100,'P2 movement/punch did not damage P1');
+  passed('Both players move and land attacks; held attacks do not repeat');
+
+  await tap(0,9);requireCheck(gameElement('pause-dialog').open,'P1 Start did not pause');
+  const clock=gameElement('timer').textContent, hp=[health(0),health(1)];
+  await tap(1,2);await advance(120);
+  requireCheck(gameElement('timer').textContent===clock && health(0)===hp[0] && health(1)===hp[1],'Gameplay advanced while paused');
+  await tap(1,9);requireCheck(!gameElement('pause-dialog').open,'P2 Start did not resume');await advance(45);
+  requireCheck(health(0)===hp[0] && health(1)===hp[1],'Paused menu input leaked into combat');
+  await tap(1,9);requireCheck(gameElement('pause-dialog').open,'P2 Start did not pause');
+  await tap(0,1);requireCheck(!gameElement('pause-dialog').open,'P1 Back did not resume');
+  passed('Either player pauses/resumes; clock and damage freeze; menu attacks are discarded');
+
+  pads[0]=null;await advance(3);requireCheck(gameElement('pause-dialog').open,'P1 disconnect did not pause');
+  pads[1]=null;await advance(3);pads[1]=makePad(1);setButton(1,2,true);await advance(3);
+  requireCheck(gameElement('controller-status').textContent==='P2 RELEASE BUTTONS TO JOIN' && gameElement('pause-dialog').open,'A held reconnect button was accepted');
+  setButton(1,2,false);await advance(3);
+  requireCheck(gameElement('controller-status').textContent==='P2 CONTROLLER READY','P2 changed player slot after reconnecting first');
+  pads[0]=makePad(0);await advance(3);await tap(1,9);
+  requireCheck(!gameElement('pause-dialog').open,'Could not resume after both controllers reconnected');
+  pads[1]=null;await advance(3);requireCheck(gameElement('pause-dialog').open,'P2 disconnect did not pause');
+  pads[1]=makePad(1);await advance(3);await tap(0,9);
+  requireCheck(!gameElement('pause-dialog').open,'P1 could not resume after P2 reconnected');
+  passed('Disconnects pause; reconnect needs neutral and preserves player assignments');
+
+  await tap(1,9);await tap(0,13);
+  requireCheck(frame.contentDocument.activeElement.id==='quit-button','Could not navigate the pause menu');
+  await tap(1,0);requireCheck(!gameElement('selection').hidden && gameElement('game').hidden,'Pause menu did not return to roster');
+  passed('Either player can navigate the pause menu and return to the roster');
+
+  gameElement('featured-button').click();await advance(160);
+  setButton(0,15,true);setButton(1,14,true);await advance(70);
+  setButton(0,15,false);setButton(1,14,false);await advance(3);
+  setButton(0,2,true);await advance();setButton(0,2,false);
+  for(let i=0;i<12 && health(1)===100;i++)await advance();
+  requireCheck(health(1)===92,'Could not set up a connected punch');
+  setButton(0,3,true);await advance();setButton(0,3,false);
+  setButton(1,9,true);await advance();setButton(1,9,false);
+  requireCheck(gameElement('pause-dialog').open && health(1)===92,'Could not pause before the queued kick landed');
+  await advance(3);await tap(1,9);await advance(45);
+  requireCheck(health(1)===92,'Buffered pre-pause kick executed after resume with all attack buttons released');
+  passed('Pre-pause buffered attacks are discarded on resume');
+  lines.push('ALL CONTROLLER CHECKS PASSED');
+ } catch(error) { lines.push('FAIL '+error.message); }
+ finally {
+  checkOutput.textContent=lines.join('\n');
+  if(preferences===null)localStorage.removeItem('pdcf-audio-v1');else localStorage.setItem('pdcf-audio-v1',preferences);
+  pads[0]=makePad(0);pads[1]=makePad(1);refreshHeld();
+  testing=false;
+  try {await loadGameForChecks(false);}catch(error){checkOutput.textContent+='\nReload failed: '+error.message;}
+  for(const b of bar.children)b.disabled=false;
+ }
+}
+
+</script></body></html>

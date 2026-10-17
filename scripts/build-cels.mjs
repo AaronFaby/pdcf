@@ -18,6 +18,26 @@ const ellipse = (x, y, rx, ry, fill = PAPER, angle = 0, width = 5) => `<ellipse 
 const group = (transform, contents) => `<g transform="${transform}">${contents}</g>`;
 
 export function exposure(id, index) {
+  if (index >= 36) {
+    const action = Math.floor((index - 36) / 3), n = (index - 36) % 3;
+    const pose = exposure(id, (action === 0 ? 6 : action === 1 || action === 2 ? 18 : 21) + n);
+    pose.frame = index;
+    if (action === 0) {
+      pose.lean = [20, 28, 15][n]; pose.body[1] += 20;
+      pose.front = [55, -145]; pose.back = [-100, -170]; pose.head = -8;
+      pose.feet = [[-84, 0], [74, -28]]; pose.ear = -30; pose.tail = -25;
+    } else if (action === 1) {
+      pose.front = [[72, -220], [155, -245], [119, -125]][n];
+      pose.back = [[-20, -210], [102, -197], [68, -136]][n];
+      pose.lean = [-8, 19, 27][n]; pose.hand = 1.15;
+      pose.mouth = n === 1 ? 'teeth' : 'focus'; pose.smear = n === 1;
+    } else {
+      pose.feet[0] = [-55, -33]; pose.knees[0] = [-63, -89];
+      if (action === 2) { pose.feet[1] = [35, -47]; pose.knees[1] = [52, -99]; }
+      pose.lean += 10; pose.ear = -28;
+    }
+    return pose;
+  }
   const profile = PROFILES[id];
   const pose = { body: [0, 0], lean: 0, head: 0, front: [60, -178], back: [-52, -183], feet: [[-38, 0], [39, 0]], knees: [[-34, -48], [35, -48]], eyes: 'open', mouth: 'grin', ear: 0, tail: 0, skirt: 0, hand: 1, rotate: 0, shift: 0, smear: false, accent: '', frame: index };
   if (id === 'betty') { pose.front = [38, -189]; pose.back = [-38, -156]; pose.feet = [[-22, 0], [28, 0]]; }
@@ -276,7 +296,7 @@ function cel(id, pose) {
   const neckY = id === 'betty' ? -237 : popeye ? -260 : -243;
   body += group(`translate(0 ${neckY}) rotate(${pose.head})`, head(id, pose));
   const frontElbow = [pose.front[0] * .46 - 12, pose.front[1] + 49];
-  body += arm([popeye ? 34 : 23, -192], frontElbow, pose.front, skin, popeye ? 20 : 14, (popeye ? 1.1 : .83) * pose.hand, pose.frame >= 28 && !popeye, popeye);
+  body += arm([popeye ? 34 : 23, -192], frontElbow, pose.front, skin, popeye ? 20 : 14, (popeye ? 1.1 : .83) * pose.hand, ((pose.frame >= 28 && pose.frame < 36) || (pose.frame >= 39 && pose.frame < 42)) && !popeye, popeye);
   if (id === 'betty') body += line('M24-48Q32-54 40-47', 4) + ellipse(37, -50, 5, 5, INK, 0, 1);
   body = group(`translate(${bodyX} ${bodyY}) rotate(${pose.lean} 0 -115) translate(0 -135) scale(${1 / Math.sqrt(pose.stretch)} ${pose.stretch}) translate(0 135)`, body);
   return group(`translate(${pose.shift} ${pose.drop || 0}) rotate(${pose.rotate} 0 -35)`, back + body + accents(id, pose));
@@ -289,15 +309,16 @@ export function buildCel(id, index) {
 export function buildSheet(id) {
   if (!PROFILES[id]) throw new Error('Unknown character: ' + id);
   let drawings = '';
-  for (let index = 0; index < 36; index++) {
+  const count = id === 'mickey' || id === 'popeye' ? 48 : 36;
+  for (let index = 0; index < count; index++) {
     const x = index % 6 * 512, y = Math.floor(index / 6) * 512;
     drawings += `<g data-cel="${index}" transform="translate(${x} ${y})"><clipPath id="cell-${index}"><rect width="512" height="512"/></clipPath><g clip-path="url(#cell-${index})">${buildCel(id, index)}</g></g>\n`;
   }
-  return `<svg xmlns="http://www.w3.org/2000/svg" width="1920" height="1920" viewBox="0 0 3072 3072"><title>${id} — 36 cel drawings</title>${drawings}</svg>\n`;
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="1920" height="${count / 6 * 320}" viewBox="0 0 3072 ${count / 6 * 512}"><title>${id} — ${count} cel drawings</title>${drawings}</svg>\n`;
 }
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
   await mkdir(new URL('../assets/cels/', import.meta.url), { recursive: true });
   for (const { id } of ROSTER) await writeFile(new URL(`../assets/cels/${id}.svg`, import.meta.url), buildSheet(id));
-  console.log('Authored 216 vector cels across six transparent sprite atlases.');
+  console.log('Authored 240 vector cels, including dash, throw and aerial attacks for the featured fighters.');
 }

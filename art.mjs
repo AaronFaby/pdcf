@@ -47,14 +47,58 @@ export function drawBackdrop(c, image, time = 0) {
     for (let i = 0; i < 14; i++) { c.beginPath(); c.moveTo(i * 100 - 60, 530); c.lineTo(i * 115 - 135, 675); c.stroke(); }
     for (let y = 535; y < 675; y += 30) { c.beginPath(); c.moveTo(0, y); c.lineTo(1200, y); c.stroke(); }
   }
+  drawHarborLife(c, Math.floor(time * 12) / 12);
   const vignette = c.createRadialGradient(600, 300, 150, 600, 320, 760);
   vignette.addColorStop(0, 'rgba(20,18,14,0)'); vignette.addColorStop(1, 'rgba(20,18,14,.45)');
   c.fillStyle = vignette; c.fillRect(0, 0, 1200, 675);
 }
 
+function drawHarborLife(c, time) {
+  c.save(); c.lineCap = 'round'; c.lineWidth = 1.4;
+  // Keep all ambient action behind the fighting plane, with held cartoon exposures.
+  c.strokeStyle = '#e8debd';
+  for (let i = 0; i < 23; i++) {
+    const x = 320 + i * 27 + Math.sin(time * .7 + i) * 12;
+    const y = 334 + i % 9 * 14;
+    c.globalAlpha = .1 + (.5 + Math.sin(i * 3 + time)) * .07;
+    c.beginPath(); c.moveTo(x, y); c.quadraticCurveTo(x + 13, y + Math.sin(time + i) * 2, x + 27, y); c.stroke();
+  }
+  c.globalAlpha = .8;
+  for (let i = 0; i < 3; i++) {
+    const x = ((time * (8 + i * 2) + i * 310) % 1500) - 150;
+    const y = 176 + i * 36 + Math.sin(time * .35 + i) * 9;
+    const wing = Math.sin(time * 3 + i) * 5;
+    c.strokeStyle = '#49483e'; c.beginPath(); c.moveTo(x - 8, y + wing); c.quadraticCurveTo(x - 3, y - 4, x, y); c.quadraticCurveTo(x + 4, y - 4, x + 9, y + wing); c.stroke();
+  }
+  const boatX = 620 + Math.sin(time * .065) * 145, boatY = 367 + Math.sin(time * 1.1) * 2;
+  c.translate(boatX, boatY); c.rotate(Math.sin(time * .8) * .012);
+  c.strokeStyle = '#403e33'; c.lineWidth = 1.5;
+  path(c, [[-43, -3], [48, -3], [33, 12], [-30, 12]], '#77715e');
+  c.fillStyle = '#b9ad91'; c.fillRect(-21, -25, 40, 20); c.strokeRect(-21, -25, 40, 20);
+  c.fillStyle = '#474639'; c.fillRect(-11, -42, 10, 17); c.fillRect(8, -20, 7, 8); c.fillRect(-16, -20, 7, 8);
+  c.beginPath(); c.moveTo(-27, -26); c.lineTo(25, -26); c.stroke();
+  c.strokeStyle = '#c7bda3'; c.globalAlpha = .35;
+  for (let i = 0; i < 4; i++) {
+    c.beginPath(); c.ellipse(-40 - i * 16 - (time * 5 % 16), 14 + i % 2 * 2, 10, 1.6, 0, 0, Math.PI * 2); c.stroke();
+  }
+  for (let i = 0; i < 5; i++) {
+    const age = (time * .42 + i / 5) % 1;
+    c.globalAlpha = (1 - age) * .18; c.fillStyle = '#ddd2b6';
+    c.beginPath(); c.ellipse(-7 - age * 35, -42 - age * 48, 4 + age * 12, 3 + age * 9, 0, 0, Math.PI * 2); c.fill();
+  }
+  c.restore();
+  c.save();
+  const glow = c.createRadialGradient(91, 235, 0, 91, 235, 44);
+  glow.addColorStop(0, 'rgba(255,220,143,.14)'); glow.addColorStop(1, 'rgba(255,220,143,0)');
+  c.fillStyle = glow; c.fillRect(47, 191, 88, 88);
+  c.restore();
+}
+
 export function drawScene(c, match, image, time, { showcase = false, reducedMotion = false } = {}) {
   c.clearRect(0, 0, 1200, 675);
-  drawBackdrop(c, image, time);
+  c.save();
+  if (!showcase && !reducedMotion && match.shake > 0) c.translate(Math.sin(time * 191) * match.shake, Math.cos(time * 153) * match.shake * .45);
+  drawBackdrop(c, image, reducedMotion ? 0 : time);
   const fighters = match.fighters;
   if (!showcase) {
     c.fillStyle = 'rgba(244,236,217,.72)';
@@ -70,6 +114,12 @@ export function drawScene(c, match, image, time, { showcase = false, reducedMoti
       defeatTime: finishedRound && f.hp <= 0 ? endTime : undefined,
       victoryTime: finishedRound && match.roundWinner === index ? endTime : undefined
     });
+    if (!showcase && f.combo >= 2 && f.comboTime > 0) {
+      c.save(); c.font = 'italic bold 25px Georgia'; c.textAlign = index ? 'right' : 'left';
+      c.strokeStyle = PAPER; c.lineWidth = 5; c.fillStyle = INK;
+      const text = `${f.combo} HIT COMBO!`, x = index ? 1120 : 80;
+      c.strokeText(text, x, 157); c.fillText(text, x, 157); c.restore();
+    }
   }
   for (const p of match.projectiles) {
     c.save(); c.translate(p.x, FLOOR + p.y); c.strokeStyle = INK; c.lineWidth = 4;
@@ -92,6 +142,7 @@ export function drawScene(c, match, image, time, { showcase = false, reducedMoti
     }
     c.fillStyle = INK; c.textAlign = 'center'; c.font = 'italic bold 22px Georgia'; c.fillText(e.text, 0, 7); c.restore();
   }
+  c.restore();
   if (!showcase && match.phase !== 'fight') {
     let label = '';
     if (match.phase === 'countdown') label = match.phaseTime > 1.45 ? `ROUND ${match.round}` : match.phaseTime > .65 ? 'READY?' : 'FIGHT!';

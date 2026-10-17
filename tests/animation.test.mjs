@@ -1,27 +1,31 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
-import { ROSTER, MOVES, createMatch, tick } from '../engine.mjs';
+import { ROSTER, moveFor, createMatch, tick } from '../engine.mjs';
 import { CEL_STATES, celFor, measureAtlas } from '../cels.mjs';
 import { buildSheet, buildCel } from '../scripts/build-cels.mjs';
 
-test('all ten animation states occupy 36 distinct cels for every character', async () => {
-  assert.deepEqual(Object.values(CEL_STATES).flat(), Array.from({ length: 36 }, (_, i) => i));
+test('all 240 authored cels match their source, with expanded moves for the two featured fighters', async () => {
+  assert.deepEqual(Object.values(CEL_STATES).flat(), Array.from({ length: 48 }, (_, i) => i));
   for (const { id } of ROSTER) {
+    const count = ['mickey', 'popeye'].includes(id) ? 48 : 36;
     const source = await readFile(new URL(`../assets/cels/${id}.svg`, import.meta.url), 'utf8');
     assert.equal(source, buildSheet(id), `${id}: committed artwork matches its authoring source`);
-    assert.equal((source.match(/data-cel=/g) || []).length, 36);
-    assert.equal(new Set(Array.from({ length: 36 }, (_, i) => buildCel(id, i))).size, 36);
+    assert.equal((source.match(/data-cel=/g) || []).length, count);
+    assert.equal(new Set(Array.from({ length: count }, (_, i) => buildCel(id, i))).size, count);
     assert.doesNotMatch(source, /NaN|undefined|<script|<image/);
     for (const [animation, frames] of Object.entries(CEL_STATES)) {
-      for (const [i, index] of frames.entries()) assert.equal(celFor({ id }, { animation, progress: (i + .1) / frames.length }), index);
+      for (const [i, index] of frames.entries()) {
+        const cel = celFor({ id }, { animation, progress: (i + .1) / frames.length });
+        if (index < count) assert.equal(cel, index); else assert.ok(cel < count);
+      }
     }
   }
 });
 
 test('punch, kick, and special impact drawings follow the actual damage windows', () => {
   for (const { id } of ROSTER) for (const kind of ['punch', 'kick', 'special']) {
-    const f = { id, attack: { kind, time: 0 } }, move = MOVES[kind], frames = CEL_STATES[kind];
+    const f = { id, attack: { kind, time: 0 } }, move = moveFor(f, kind), frames = CEL_STATES[kind];
     assert.equal(celFor(f), frames[0]);
     f.attack.time = move.active;
     assert.equal(celFor(f), kind === 'special' ? 26 : frames[1]);
@@ -72,7 +76,7 @@ test('landing exposure is brief and does not change jump physics', () => {
 test('reduced motion freezes idle but preserves attack telegraphs', () => {
   const f = { id: 'popeye' };
   assert.equal(celFor(f, { time: 2, reducedMotion: true }), 0);
-  assert.equal(celFor({ ...f, attack: { kind: 'punch', time: .12 } }, { reducedMotion: true }), 19);
+  assert.equal(celFor({ ...f, attack: { kind: 'punch', time: .17 } }, { reducedMotion: true }), 19);
   assert.throws(() => celFor(f, { animation: 'missing' }), /Unknown animation/);
 });
 

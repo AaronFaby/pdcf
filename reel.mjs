@@ -3,7 +3,7 @@ import { CEL_STATES, loadCels } from './cels.mjs';
 import { drawFighter } from './art.mjs';
 
 const $ = id => document.getElementById(id);
-const durations = { idle: .8, walk: .6, jump: .8, guard: .65, punch: .32, kick: .48, special: .65, hurt: .3, knockout: .9, victory: 1.2 };
+const durations = { idle: .8, walk: .6, jump: .8, guard: .65, punch: .32, kick: .48, special: .65, hurt: .3, knockout: .9, victory: 1.2, dash: .3, throw: .6, airpunch: .32, airkick: .48 };
 let animation = 'idle', progress = 0, playing = !matchMedia('(prefers-reduced-motion: reduce)').matches, face = 1, ready = false, last = 0;
 const cast = ROSTER.map(fighter => {
   const figure = document.createElement('figure');
