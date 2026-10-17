@@ -23,15 +23,24 @@ setInterval(()=>{
  const status=document.getElementById('status');if(status.textContent!==message)status.textContent=message;
 },100);
 let testing = false, nextFrame = null, testTime = 1000;
+let fixtureURL = null;
+window.arcadeTestResult = null;
 window.queueControllerTestFrame = callback => { nextFrame = callback; };
 window.controllerTestMode = () => testing;
 const checkOutput = document.createElement('pre'); checkOutput.id = 'checks'; checkOutput.setAttribute('role','status');
 bar.before(checkOutput);
 const runButton = add('Run controller checks', runChecks);
 
-async function loadGameForChecks(stepped) {
+async function loadGameForChecks(stepped, arcadeFixture = false, storageBlocked = false) {
  testing=stepped; nextFrame=null; testTime=1000;
- const html=await (await fetch('/')).text();
+ let html=await (await fetch('/')).text();
+ if(fixtureURL) {URL.revokeObjectURL(fixtureURL);fixtureURL=null;}
+ if(arcadeFixture) {
+  const app=(await (await fetch('/app.mjs')).text()).replace("from './engine.mjs'", `from '${location.origin}/tests/fixtures/arcade-engine.mjs'`).replaceAll("from './", `from '${location.origin}/`);
+  fixtureURL=URL.createObjectURL(new Blob([app],{type:'text/javascript'}));
+  html=html.replace('src="app.mjs"',`src="${fixtureURL}"`);
+ }
+ if(storageBlocked)html=html.replace('<head>','<head><script>Object.defineProperty(window,"localStorage",{get(){throw new Error("Test: storage disabled");}});<\/script>');
  frame.srcdoc=html.replace('<head>', '<head><base href="/"><script>window.addEventListener("blur",e=>e.stopImmediatePropagation(),true);Object.defineProperty(navigator,"getGamepads",{configurable:true,value:()=>parent.readTestPads()});if(parent.controllerTestMode()){window.requestAnimationFrame=callback=>{parent.queueControllerTestFrame(callback);return 1;};}<\/script>');
  const deadline=Date.now()+10000;
  while(!frame.contentDocument?.getElementById('start-button') || frame.contentDocument.getElementById('start-button').disabled || (stepped&&!nextFrame)) {
@@ -60,6 +69,7 @@ async function runChecks() {
  const lines=[];
  const passed=message=>{lines.push('PASS '+message);checkOutput.textContent=lines.join('\n');};
  const preferences=localStorage.getItem('pdcf-audio-v1');
+ const checkpoint=localStorage.getItem('pdcf-arcade-v1');
  try {
   pads[0]=makePad(0);pads[1]=makePad(1);
   await loadGameForChecks(true); await advance(3);
@@ -162,11 +172,62 @@ async function runChecks() {
   gameElement('start-button').click();await advance(3);
   requireCheck(gameElement('training-panel').hidden && gameElement('timer').textContent==='60' && gameElement('opponent-tag').textContent==='CPU','Practice settings leaked into a normal match');
   passed('Training shows hits/inputs, recovers health, and keeps options through controller reset');
+
+  await loadGameForChecks(true,true);await advance(3);
+  frame.contentDocument.querySelector('[data-mode="arcade"]').click();
+  frame.contentDocument.querySelector('[data-fighter="felix"]').click();
+  frame.contentDocument.querySelector('[data-difficulty="normal"]').focus();await tap(0,15);await tap(0,0);
+  requireCheck(frame.contentDocument.querySelector('[data-difficulty="hard"]').getAttribute('aria-pressed')==='true','Controller could not choose Hard');
+  gameElement('start-button').focus();await tap(0,0);
+  requireCheck(!gameElement('arcade').hidden && gameElement('arcade-ladder').children.length===6 && gameElement('arcade-summary').textContent.includes('HARD'),'Arcade setup failed');
+  await tap(0,0);requireCheck(gameElement('match-format').textContent.includes('ARCADE 1/6'),'Arcade did not start its first bout');
+  window.arcadeTestResult=1;await advance(3);
+  requireCheck(gameElement('arcade-play').textContent==='CONTINUE →' && gameElement('arcade-summary').textContent.includes('0/6') && gameElement('arcade-summary').textContent.includes('1 loss'),'A loss skipped a challenger');
+  await tap(0,0);requireCheck(health(0)===100 && health(1)===100,'Continue did not reset health');
+  window.arcadeTestResult=0;await advance(3);
+  requireCheck(gameElement('arcade-summary').textContent.includes('1/6'),'Winning did not advance the ladder');
+  passed('Arcade difficulty, first bout, loss/continue and victory work from a controller');
+
+  await tap(0,0);const opponent=gameElement('name-two').textContent;
+  await loadGameForChecks(true,true);await advance(3);
+  requireCheck(!gameElement('arcade-resume').hidden && gameElement('arcade-resume').textContent.includes('BOUT 2/6'),'Interrupted run was not restored');
+  gameElement('arcade-resume').focus();await tap(0,0);await tap(0,0);
+  requireCheck(gameElement('name-two').textContent===opponent && gameElement('timer').textContent==='60' && health(0)===100,'Resume changed the rival or carried old combat state');
+  for(let i=1;i<6;i++) {
+    window.arcadeTestResult=0;await advance(3);
+    requireCheck(gameElement('arcade-summary').textContent.includes(`${i+1}/6`),'A bout did not advance exactly once');
+    if(i<5)await tap(0,0);
+  }
+  requireCheck(!gameElement('arcade-ending').hidden && gameElement('arcade-bout-title').textContent==='The last laugh' && gameElement('arcade-ladder').querySelectorAll('.cleared').length===6,'Felix ending was not awarded');
+  passed('Reload resumes the same bout, and six victories unlock the character ending');
+
+  const titles=new Set([gameElement('arcade-bout-title').textContent]);
+  for(const id of ['mickey','minnie','oswald','betty','popeye']) {
+    gameElement('arcade-exit').click();frame.contentDocument.querySelector(`[data-fighter="${id}"]`).click();
+    gameElement('start-button').click();await advance(3);
+    for(let i=0;i<6;i++) {await tap(0,0);window.arcadeTestResult=0;await advance(3);}
+    requireCheck(!gameElement('arcade-ending').hidden && gameElement('ending-story').children.length===2,'A character ending failed to render');
+    titles.add(gameElement('arcade-bout-title').textContent);
+  }
+  requireCheck(titles.size===6,'Character endings are not distinct');
+  await tap(0,0);requireCheck(gameElement('arcade-summary').textContent.includes('0/6'),'Play again did not create a fresh run');
+  await tap(0,1);requireCheck(!gameElement('selection').hidden,'Controller Back did not leave the ladder');
+  frame.contentDocument.querySelector('[data-mode="local"]').click();gameElement('start-button').click();await advance(3);
+  requireCheck(gameElement('opponent-tag').textContent==='P2' && gameElement('match-format').textContent==='BEST OF THREE','Arcade state leaked into local versus');
+  passed('All six endings, play again, Back and return to local versus work');
+
+  await loadGameForChecks(true,true,true);await advance(3);
+  frame.contentDocument.querySelector('[data-mode="arcade"]').click();gameElement('start-button').click();await advance(3);
+  requireCheck(gameElement('arcade-save-status').textContent.includes('unavailable'),'Storage failure was not explained');
+  await tap(0,0);window.arcadeTestResult=0;await advance(3);
+  requireCheck(gameElement('arcade-summary').textContent.includes('1/6'),'Storage failure blocked arcade progression');
+  passed('Arcade remains playable when browser storage is disabled');
   lines.push('ALL CONTROLLER CHECKS PASSED');
  } catch(error) { lines.push('FAIL '+error.message); }
  finally {
   checkOutput.textContent=lines.join('\n');
   if(preferences===null)localStorage.removeItem('pdcf-audio-v1');else localStorage.setItem('pdcf-audio-v1',preferences);
+  if(checkpoint===null)localStorage.removeItem('pdcf-arcade-v1');else localStorage.setItem('pdcf-arcade-v1',checkpoint);
   pads[0]=makePad(0);pads[1]=makePad(1);refreshHeld();
   testing=false;
   try {await loadGameForChecks(false);}catch(error){checkOutput.textContent+='\nReload failed: '+error.message;}

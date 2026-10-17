@@ -21,3 +21,7 @@ The atlas row order is: six idle drawings; six walking drawings; three jump and 
 `assets/audio/ink-harbor.wav` is an original 32-bar swing arrangement authored in `scripts/build-audio.mjs`, rendered with original software instrument voices. The same script authors thirteen original Foley/stinger WAVs. No third-party compositions, samples, soundfonts, character voices, cartoon themes, or historic recordings were imported. These are synthesized period-inspired assets, not a recording of live musicians.
 
 The animated tugboat, steam, water glints, gulls and lantern glow are native Canvas artwork in `art.mjs`, composited over the existing generated harbor painting. The expanded cels for all six fighters are authored in the existing SVG drawing source, with character-specific poses for the four newly expanded fighters. No additional generated images were used.
+
+## Arcade character endings
+
+The six two-part ending stories in `assets/runtime/arcade.mjs` are original fictional vignettes written for this game. The ladder and ending screens use the existing vector character atlases and original UI styling. No historic dialogue, film stills, third-party stories, new generated images, or additional music recordings were imported.

@@ -114,6 +114,12 @@ export function drawScene(c, match, image, time, { showcase = false, reducedMoti
       defeatTime: finishedRound && f.hp <= 0 ? endTime : undefined,
       victoryTime: finishedRound && match.roundWinner === index ? endTime : undefined
     });
+    if (!showcase && match.mode === 'arcade' && match.arcadeStage === 5) {
+      c.save(); c.fillStyle = index ? PAPER : INK; c.strokeStyle = INK; c.lineWidth = 2;
+      c.fillRect(f.x - 28, FLOOR + f.y - 345, 56, 22); c.strokeRect(f.x - 28, FLOOR + f.y - 345, 56, 22);
+      c.fillStyle = index ? INK : PAPER; c.font = 'bold 12px Georgia'; c.textAlign = 'center';
+      c.fillText(index ? 'RIVAL' : 'P1', f.x, FLOOR + f.y - 330); c.restore();
+    }
     if (!showcase && f.combo >= 2 && f.comboTime > 0) {
       c.save(); c.font = 'italic bold 25px Georgia'; c.textAlign = index ? 'right' : 'left';
       c.strokeStyle = PAPER; c.lineWidth = 5; c.fillStyle = INK;

@@ -10,6 +10,11 @@ export const ROSTER = [
 export const WIDTH = 1200;
 export const FLOOR = 545;
 export const SPECIAL_COST = 35;
+export const CPU_DIFFICULTIES = {
+  easy: { reaction: .3, variation: .2, guard: .25, jump: .06, evade: .25, punch: .35, kick: .28, special: .16, throw: .2, dash: .08, combo: .2 },
+  normal: { reaction: .15, variation: .17, guard: .64, jump: .12, evade: .65, punch: .55, kick: .48, special: .38, throw: .55, dash: .2, combo: .5 },
+  hard: { reaction: .09, variation: .08, guard: .8, jump: .18, evade: .85, punch: .7, kick: .64, special: .48, throw: .75, dash: .32, combo: .85 }
+};
 export const MOVES = {
   punch: { duration: .32, active: .09, until: .18, damage: 8, reach: 0, height: 85, push: 26 },
   kick: { duration: .48, active: .17, until: .29, damage: 12, reach: 25, height: 60, push: 48 },
@@ -35,8 +40,8 @@ function fighter(id, index) {
   return { ...spec, x: index ? 860 : 340, y: 0, vx: 0, vy: 0, face: index ? -1 : 1, hp: 100, meter: 35, wins: 0, attack: null, hurt: 0, reaction: null, land: 0, cooldown: 0, guard: false, buff: 0, walk: 0, buffer: null, dash: 0, dashCooldown: 0, dashFace: 1, combo: 0, comboDamage: 0, comboTime: 0 };
 }
 
-export function createMatch(a = 'mickey', b = 'popeye', mode = 'cpu') {
-  const match = { fighters: [fighter(a, 0), fighter(b, 1)], mode, phase: 'countdown', phaseTime: 2.4, time: 60, round: 1, projectiles: [], effects: [], events: [], winner: null, roundWinner: null, elapsed: 0, hitstop: 0, shake: 0, ai: { clock: 0, action: {} } };
+export function createMatch(a = 'mickey', b = 'popeye', mode = 'cpu', difficulty = 'normal') {
+  const match = { fighters: [fighter(a, 0), fighter(b, 1)], mode, difficulty: Object.hasOwn(CPU_DIFFICULTIES, difficulty) ? difficulty : 'normal', phase: 'countdown', phaseTime: 2.4, time: 60, round: 1, projectiles: [], effects: [], events: [], winner: null, roundWinner: null, elapsed: 0, hitstop: 0, shake: 0, ai: { clock: 0, action: {} } };
   if (mode === 'training') {
     match.training = { dummy: 'stand', infiniteHealth: true, infiniteInk: true, lastHit: null, inputs: [], previousInput: {} };
     resetTraining(match);
@@ -61,23 +66,27 @@ export function trainingInput(match, dt, random = Math.random) {
 
 export function cpuInput(match, dt, random = Math.random) {
   const ai = match.ai;
+  const settings = CPU_DIFFICULTIES[match.difficulty] || CPU_DIFFICULTIES.normal;
   ai.clock -= dt;
   if (ai.clock > 0) return { ...ai.action, punch: false, kick: false, special: false, jump: false, throw: false, dash: false };
-  ai.clock = .15 + random() * .17;
+  ai.clock = (settings.reaction + random() * settings.variation) * (1 - Math.min(5, match.arcadeStage || 0) * .025);
   const [enemy, self] = match.fighters;
   const distance = Math.abs(enemy.x - self.x);
   const close = distance < self.reach + 22;
   ai.action = {
     left: self.x > enemy.x && !close,
     right: self.x < enemy.x && !close,
-    guard: enemy.attack !== null && distance < enemy.reach + 55 && random() < .64,
-    jump: (distance > 220 && random() < .12) || (match.projectiles.some(p => p.owner === 0 && Math.abs(p.x - self.x) < 210) && random() < .65),
-    punch: close && random() < .55,
-    kick: close && random() < .48,
-    special: self.meter >= SPECIAL_COST && distance < 460 && random() < .38,
-    throw: distance < 90 && enemy.guard && random() < .55,
-    dash: distance > 370 && random() < .2
+    guard: enemy.attack !== null && distance < enemy.reach + 55 && random() < settings.guard,
+    jump: (distance > 220 && random() < settings.jump) || (match.projectiles.some(p => p.owner === 0 && Math.abs(p.x - self.x) < 210) && random() < settings.evade),
+    punch: close && random() < settings.punch,
+    kick: close && random() < settings.kick,
+    special: self.meter >= SPECIAL_COST && distance < 460 && random() < settings.special,
+    throw: distance < 90 && enemy.guard && random() < settings.throw,
+    dash: distance > 370 && random() < settings.dash
   };
+  if (self.attack?.kind === 'punch' && self.attack.connected && random() < settings.combo) {
+    ai.action.kick = true; ai.action.punch = false; ai.action.special = false;
+  }
   return ai.action;
 }
 

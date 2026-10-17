@@ -3,10 +3,13 @@ import { drawFighter, drawScene } from './art.mjs';
 import { loadCels } from './cels.mjs';
 import { Controllers } from './assets/runtime/controllers.mjs';
 import { GameAudio } from './assets/runtime/audio.mjs';
+import { ARCADE_KEY, ENDINGS, createArcade, arcadeMatch, finishArcade, restoreArcade } from './assets/runtime/arcade.mjs';
 
 const $ = id => document.getElementById(id);
 const selection = ['mickey', 'popeye'];
 let slot = 0, mode = 'cpu', match = null, paused = false, accumulator = 0, lastTime = 0;
+let difficulty = 'normal', arcade = null;
+try { arcade = restoreArcade(JSON.parse(localStorage.getItem(ARCADE_KEY))); } catch { /* A new run works without browser storage. */ }
 let preview = createMatch(...selection);
 const controllers = new Controllers(), audio = new GameAudio();
 let celsReady = false;
@@ -85,10 +88,16 @@ function updateSelection() {
   $('detail-quote').textContent = current.quote;
   $('detail-special').textContent = current.special;
   $('preview-name-one').textContent = ROSTER.find(f => f.id === selection[0]).name.toUpperCase();
-  $('preview-name-two').textContent = ROSTER.find(f => f.id === selection[1]).name.toUpperCase();
+  $('preview-name-two').textContent = mode === 'arcade' ? 'SIX-BOUT LADDER' : ROSTER.find(f => f.id === selection[1]).name.toUpperCase();
   $('opponent-label').textContent = mode === 'training' ? 'PRACTICE DUMMY' : mode === 'cpu' ? 'CPU OPPONENT' : 'PLAYER TWO';
+  document.querySelector('[data-slot="1"]').hidden = mode === 'arcade';
+  $('difficulty-picker').hidden = !['cpu', 'arcade'].includes(mode);
+  $('arcade-description').hidden = mode !== 'arcade';
+  $('start-button').textContent = mode === 'arcade' ? 'NEW ARCADE RUN →' : 'LET’S MAKE A SCENE →';
+  for (const button of document.querySelectorAll('[data-difficulty]')) button.setAttribute('aria-pressed', String(button.dataset.difficulty === difficulty));
+  updateResume();
   for (const button of document.querySelectorAll('.fighter-card')) {
-    const id = button.dataset.fighter, chosen = selection[0] === id, opponent = selection[1] === id;
+    const id = button.dataset.fighter, chosen = selection[0] === id, opponent = mode !== 'arcade' && selection[1] === id;
     button.classList.toggle('selected', chosen); button.classList.toggle('opponent-selected', opponent);
     button.setAttribute('aria-pressed', String(selection[slot] === id));
     button.setAttribute('aria-label', `${ROSTER.find(f => f.id === id).name}, ${ROSTER.find(f => f.id === id).style.toLowerCase()}${chosen ? ', player one' : ''}${opponent ? ', opponent' : ''}. Select for ${slot ? 'opponent' : 'player one'}.`);
@@ -104,7 +113,63 @@ function updateSelection() {
   }
 }
 document.querySelectorAll('.slot').forEach(button => button.addEventListener('click', () => { slot = Number(button.dataset.slot); updateSelection(); }));
-document.querySelectorAll('.mode').forEach(button => button.addEventListener('click', () => { mode = button.dataset.mode; updateSelection(); }));
+document.querySelectorAll('.mode').forEach(button => button.addEventListener('click', () => { mode = button.dataset.mode; if (mode === 'arcade') slot = 0; updateSelection(); }));
+document.querySelectorAll('[data-difficulty]').forEach(button => button.addEventListener('click', () => { difficulty = button.dataset.difficulty; updateSelection(); }));
+
+function updateResume() {
+  $('arcade-resume').hidden = !arcade;
+  if (arcade) $('arcade-resume').textContent = `${arcade.status === 'complete' ? 'VIEW ENDING' : 'RESUME ARCADE'} · ${ROSTER.find(f => f.id === arcade.fighter).short.toUpperCase()} · ${arcade.difficulty.toUpperCase()}${arcade.status === 'complete' ? '' : ` · BOUT ${arcade.index + 1}/6`} →`;
+}
+function saveArcade() {
+  try {
+    localStorage.setItem(ARCADE_KEY, JSON.stringify(arcade));
+    $('arcade-save-status').textContent = arcade.status === 'complete' ? 'Your ending is saved. View it again from the casting screen.' : 'Checkpoint saved in this browser. Resume from casting; an interrupted bout restarts from its first round.';
+  } catch { $('arcade-save-status').textContent = 'Progress is available while this page stays open. Browser storage is unavailable.'; }
+  updateResume();
+}
+function showArcade() {
+  match = null; paused = false; clearInput();
+  for (const dialog of document.querySelectorAll('dialog[open]')) dialog.close();
+  $('selection').hidden = $('game').hidden = true; $('arcade').hidden = false;
+  const complete = arcade.status === 'complete', lost = arcade.status === 'lost';
+  const player = ROSTER.find(f => f.id === arcade.fighter), opponent = ROSTER.find(f => f.id === arcade.ladder[Math.min(5, arcade.index)]);
+  $('arcade-kicker').textContent = complete ? 'THAT’S ALL, CHAMPION.' : lost ? 'THE SHOW ISN’T OVER.' : 'SIX REELS. ONE STAR.';
+  $('arcade-title').textContent = complete ? `${player.short} takes the spotlight.` : lost ? 'One more take?' : 'Your name on the marquee.';
+  $('arcade-summary').textContent = `${player.name} · ${arcade.difficulty.toUpperCase()} · ${arcade.index}/6 bouts cleared · ${arcade.losses} ${arcade.losses === 1 ? 'loss' : 'losses'}`;
+  $('arcade-ladder').replaceChildren(...arcade.ladder.map((id, i) => {
+    const li = document.createElement('li'), number = document.createElement('span'), name = document.createElement('strong'), state = document.createElement('small');
+    number.textContent = String(i + 1).padStart(2, '0'); name.textContent = ROSTER.find(f => f.id === id).name;
+    state.textContent = i < arcade.index ? 'CLEARED ✓' : i === 5 ? 'MIRROR FINALE' : i === arcade.index ? 'UP NEXT' : 'CHALLENGER';
+    li.classList.toggle('cleared', i < arcade.index);
+    if (i === arcade.index) li.setAttribute('aria-current', 'step');
+    li.append(number, name, state); return li;
+  }));
+  $('arcade-bout-label').textContent = complete ? 'A PUBLIC DOMAIN CARTOON FIGHTERS ORIGINAL' : `BOUT ${arcade.index + 1} / 6 · BEST OF THREE${arcade.index === 5 ? ' · MIRROR FINALE' : ''}`;
+  $('arcade-bout-title').textContent = complete ? ENDINGS[player.id].title : `${player.short} vs. ${opponent.short}`;
+  $('arcade-bout-copy').hidden = complete;
+  $('arcade-bout-copy').textContent = lost ? 'The ladder is still yours to climb. Continue with a fresh match against the same challenger. Your cleared bouts stay cleared.' : arcade.index === 5 ? 'One last rival knows every trick you do. Beat your own reflection to claim the harbor crown.' : `${opponent.quote} Win two rounds to move up the bill. Every new bout begins with full health and fresh ink.`;
+  $('arcade-ending').hidden = !complete;
+  $('ending-story').replaceChildren(...ENDINGS[player.id].story.map(text => { const p = document.createElement('p'); p.textContent = text; return p; }));
+  $('ending-closing').textContent = ENDINGS[player.id].closing;
+  $('arcade-play').textContent = complete ? 'PLAY AGAIN →' : lost ? 'CONTINUE →' : arcade.index ? 'NEXT BOUT →' : 'FIRST BELL →';
+  saveArcade(); audio.setScene('menu'); $('arcade-play').focus({ preventScroll: true }); window.scrollTo({ top: 0, behavior: 'instant' });
+}
+function playArcade() {
+  if (arcade.status === 'complete') { arcade = createArcade(arcade.fighter, arcade.difficulty); showArcade(); return; }
+  const bout = arcadeMatch(arcade);
+  if (bout) { saveArcade(); startMatch(bout); }
+}
+function startSelected() {
+  if (!celsReady) return;
+  if (mode === 'arcade') { arcade = createArcade(selection[0], difficulty); showArcade(); }
+  else startMatch();
+}
+$('arcade-play').addEventListener('click', playArcade);
+$('arcade-exit').addEventListener('click', returnToSelection);
+$('arcade-resume').addEventListener('click', () => {
+  if (!celsReady || !arcade) return;
+  mode = 'arcade'; slot = 0; selection[0] = arcade.fighter; difficulty = arcade.difficulty; updateSelection(); showArcade();
+});
 
 function updateHUD() {
   match.fighters.forEach((f, i) => {
@@ -159,26 +224,28 @@ $('dummy-mode').addEventListener('click', () => {
   match.ai = { clock: 0, action: {} }; practiceSettings();
 });
 for (const [id, key] of [['infinite-health', 'infiniteHealth'], ['infinite-ink', 'infiniteInk']]) $(id).addEventListener('click', () => { match.training[key] = !match.training[key]; practiceSettings(); });
-function startMatch() {
+function startMatch(bout) {
   if (!celsReady) return;
   for (const id of ['result-dialog', 'pause-dialog', 'help-dialog', 'settings-dialog', 'training-dialog']) if ($(id).open) $(id).close();
-  clearInput(); paused = false; match = createMatch(...selection, mode);
-  $('selection').hidden = true; $('game').hidden = false;
+  clearInput(); paused = false; match = bout || createMatch(...selection, mode, mode === 'training' ? 'normal' : difficulty);
+  $('selection').hidden = $('arcade').hidden = true; $('game').hidden = false;
   $('name-one').textContent = match.fighters[0].name; $('name-two').textContent = match.fighters[1].name;
-  $('opponent-tag').textContent = mode === 'training' ? 'DUMMY' : mode === 'cpu' ? 'CPU' : 'P2';
+  $('opponent-tag').textContent = mode === 'training' ? 'DUMMY' : mode !== 'local' ? 'CPU' : 'P2';
   $('p2-controls').hidden = mode !== 'local';
   $('training-panel').hidden = $('training-pause-options').hidden = mode !== 'training';
-  $('match-format').textContent = mode === 'training' ? 'TRAINING' : 'BEST OF THREE';
+  $('match-format').textContent = mode === 'training' ? 'TRAINING' : mode === 'arcade' ? `ARCADE ${arcade.index + 1}/6 · ${arcade.difficulty.toUpperCase()}` : mode === 'cpu' ? `BEST OF THREE · ${difficulty.toUpperCase()}` : 'BEST OF THREE';
+  $('back-button').textContent = mode === 'arcade' ? '← SAVE & CASTING' : '← CASTING CALL';
   if (match.training) practiceSettings();
   $('match-announcement').textContent = match.training ? `Training. ${match.fighters[0].name} versus ${match.fighters[1].name}.` : `Round one. ${match.fighters[0].name} versus ${match.fighters[1].name}.`;
   updateHUD(); arena.focus({ preventScroll: true }); window.scrollTo({ top: 0, behavior: 'instant' });
   audio.setScene('fight'); unlockAudio(); lastPhase = ''; lastRound = 0;
 }
 function returnToSelection() {
+  if (arcade?.status === 'fighting') { arcade.status = 'ready'; saveArcade(); }
   match = null; paused = false; clearInput();
   for (const id of ['result-dialog', 'pause-dialog', 'help-dialog', 'settings-dialog', 'training-dialog']) if ($(id).open) $(id).close();
   audio.setScene('menu');
-  $('selection').hidden = false; $('game').hidden = true; $('start-button').focus({ preventScroll: true });
+  $('selection').hidden = false; $('game').hidden = $('arcade').hidden = true; updateResume(); $('start-button').focus({ preventScroll: true });
 }
 function pause(reason = 'The projector’s still running. Your fight can wait.') {
   if (!match || paused || match.phase === 'matchover') return;
@@ -187,6 +254,7 @@ function pause(reason = 'The projector’s still running. Your fight can wait.')
 }
 function resume() { $('pause-dialog').close(); clearInput(); paused = false; audio.setScene('fight'); unlockAudio(); arena.focus({ preventScroll: true }); }
 function showResult() {
+  if (match.mode === 'arcade') { finishArcade(arcade, match); showArcade(); return; }
   const winner = match.fighters[match.winner];
   $('result-title').textContent = `${winner.short.toUpperCase()} WINS!`;
   $('result-score').textContent = `${match.fighters[0].wins} — ${match.fighters[1].wins} · ${winner.quote}`;
@@ -195,13 +263,13 @@ function showResult() {
   $('match-announcement').textContent = `${winner.name} wins the match, ${match.fighters[0].wins} to ${match.fighters[1].wins}.`;
   clearInput(); audio.setScene('menu'); $('result-dialog').showModal(); $('rematch-button').focus();
 }
-$('start-button').addEventListener('click', startMatch);
-$('featured-button').addEventListener('click', () => { selection[0] = 'mickey'; selection[1] = 'popeye'; updateSelection(); startMatch(); });
+$('start-button').addEventListener('click', startSelected);
+$('featured-button').addEventListener('click', () => { if (mode === 'arcade') mode = 'cpu'; selection[0] = 'mickey'; selection[1] = 'popeye'; updateSelection(); startSelected(); });
 $('back-button').addEventListener('click', returnToSelection);
 $('pause-button').addEventListener('click', pause);
 $('resume-button').addEventListener('click', resume);
 $('quit-button').addEventListener('click', returnToSelection);
-$('rematch-button').addEventListener('click', startMatch);
+$('rematch-button').addEventListener('click', () => startMatch());
 $('roster-button').addEventListener('click', returnToSelection);
 $('pause-dialog').addEventListener('cancel', event => { event.preventDefault(); resume(); });
 $('result-dialog').addEventListener('cancel', event => { event.preventDefault(); returnToSelection(); });
@@ -222,6 +290,7 @@ $('settings-button').addEventListener('click', () => {
 document.querySelectorAll('[data-close]').forEach(button => button.addEventListener('click', () => $(button.dataset.close).close()));
 
 window.addEventListener('keydown', event => {
+  if (event.code === 'Escape' && !$('arcade').hidden && !document.querySelector('dialog[open]')) { event.preventDefault(); returnToSelection(); return; }
   if (!match || event.ctrlKey || event.metaKey || event.altKey) return;
   if (event.code === 'Backspace' && match.training && !paused && !document.querySelector('dialog[open]')) { event.preventDefault(); resetPractice(); return; }
   if (event.code === 'Escape') {
@@ -263,11 +332,12 @@ function pollControllers() {
   }
   for (const keys of state.menus) {
     const dialog = document.querySelector('dialog[open]');
+    if (keys.cancel && !dialog && !$('arcade').hidden) { returnToSelection(); return; }
     if (keys.reset && match?.training && !paused && !dialog) { resetPractice(); return; }
     if (keys.pause) {
       if (dialog?.id === 'pause-dialog') resume();
       else if (!dialog && match) pause();
-      else if (!match && !dialog) startMatch();
+      else if (!match && !dialog) { if (!$('arcade').hidden) playArcade(); else startSelected(); }
       return;
     }
     if (keys.cancel && dialog) { dialog.dispatchEvent(new Event('cancel', { cancelable: true })); if (dialog.open && !['pause-dialog', 'result-dialog'].includes(dialog.id)) dialog.close(); return; }
@@ -284,14 +354,18 @@ function pollControllers() {
       buttons[index < 0 ? direction > 0 ? 0 : buttons.length - 1 : (index + direction + buttons.length) % buttons.length].focus();
       audio.play({ type: 'select' });
     }
-    if (keys.confirm) { if (buttons.includes(active) && active.tagName === 'BUTTON') active.click(); else buttons[0]?.focus(); }
+    if (keys.confirm) { if (buttons.includes(active) && active.tagName === 'BUTTON') active.click(); else buttons[0]?.focus(); return; }
   }
 }
 function frame(timestamp) {
   const time = timestamp / 1000, delta = Math.min(.05, lastTime ? (timestamp - lastTime) / 1000 : 0);
   lastTime = timestamp;
   pollControllers();
-  if (!match) {
+  if (!$('arcade').hidden) {
+    const complete = arcade.status === 'complete', id = complete ? arcade.fighter : arcade.ladder[arcade.index];
+    const context = $('arcade-portrait').getContext('2d'); context.clearRect(0, 0, 300, 300);
+    drawFighter(context, { ...ROSTER.find(f => f.id === id), face: 1, y: 0, vx: 0 }, { x: 140, y: 285, scale: .95, time: reducedMotion.matches ? 0 : time, ...(complete ? { animation: 'victory', progress: reducedMotion.matches ? 1 : (time % 1.2) / 1.2 } : {}) });
+  } else if (!match) {
     drawScene(showcaseContext, preview, background, reducedMotion.matches ? 0 : time, { showcase: true, reducedMotion: reducedMotion.matches });
     const pf = reducedMotion.matches ? 0 : Math.floor(time * 12);
     if (pf !== portraitFrame) {
@@ -305,7 +379,7 @@ function frame(timestamp) {
     if (!paused && match.phase !== 'matchover') {
       accumulator += delta;
       while (accumulator >= 1 / 120) {
-        tick(match, [input(0), match.training ? trainingInput(match, 1 / 120) : mode === 'cpu' ? cpuInput(match, 1 / 120) : input(1)], 1 / 120);
+        tick(match, [input(0), match.training ? trainingInput(match, 1 / 120) : mode !== 'local' ? cpuInput(match, 1 / 120) : input(1)], 1 / 120);
         edges.clear(); touchEdges.clear(); accumulator -= 1 / 120;
         match.events.forEach(event => audio.play(event));
       }
@@ -317,7 +391,7 @@ function frame(timestamp) {
       }
       if (match.phase === 'matchover' && !$('result-dialog').open) showResult();
     }
-    drawScene(arenaContext, match, background, match.elapsed, { reducedMotion: reducedMotion.matches });
+    if (match) drawScene(arenaContext, match, background, match.elapsed, { reducedMotion: reducedMotion.matches });
   }
   requestAnimationFrame(frame);
 }
@@ -327,6 +401,7 @@ loadCels().then(() => {
   celsReady = true;
   $('start-button').disabled = false;
   $('featured-button').disabled = false;
+  $('arcade-resume').disabled = false;
   $('art-status').hidden = true;
 }).catch(error => {
   $('art-status').textContent = 'The animation artwork could not load. Refresh this page to try again.';
