@@ -2,9 +2,10 @@ import assert from 'node:assert/strict';
 import { readdir, readFile, stat } from 'node:fs/promises';
 import { resolve, dirname, relative, extname } from 'node:path';
 import { pathToFileURL } from 'node:url';
-import { ROOT_FILES, SOURCE } from './build.mjs';
+import { ROOT_FILES, ASSET_FILES, SOURCE } from './build.mjs';
 import { ROSTER } from '../engine.mjs';
 import { STAGES } from '../assets/runtime/stages.mjs';
+import { CUES } from '../assets/runtime/audio.mjs';
 
 export async function checkBuild(directory = resolve(SOURCE, 'dist')) {
   const root = resolve(directory), files = [], pages = new Map();
@@ -16,6 +17,7 @@ export async function checkBuild(directory = resolve(SOURCE, 'dist')) {
   }
   assert.deepEqual((await readdir(root)).sort(), [...ROOT_FILES, 'assets'].sort(), 'Unexpected files in the production build');
   await walk(root);
+  assert.deepEqual(files.sort(), [...ROOT_FILES, ...ASSET_FILES].map(name => resolve(root, name)).sort(), 'Unexpected or missing production files');
   const source = new Map(await Promise.all(files.filter(file => ['.html', '.mjs', '.css'].includes(extname(file))).map(async file => [file, await readFile(file, 'utf8')])));
   const index = source.get(resolve(root, 'index.html'));
   assert.doesNotMatch(index, /<!-- BUILD_INFO -->/, 'Build label was not stamped; use npm run build');
@@ -38,7 +40,7 @@ export async function checkBuild(directory = resolve(SOURCE, 'dist')) {
     checked++;
   }
   for (const [file, text] of source) {
-    const expressions = extname(file) === '.html' ? [/\b(?:href|src)=["']([^"']+)["']/g] : extname(file) === '.mjs' ? [/(?:from\s+|import\s*)["'](\.[^"']+)["']/g] : [/url\(\s*((?:"[^"]*"|'[^']*'|[^)\s]+))\s*\)/g];
+    const expressions = extname(file) === '.html' ? [/\b(?:href|src)=["']([^"']+)["']/g] : extname(file) === '.mjs' ? [/(?:from\s+|import\s*(?:\(\s*)?)["']([./][^"']+)["']/g] : [/url\(\s*((?:"[^"]*"|'[^']*'|[^)\s]+))\s*\)/g];
     for (const expression of expressions) for (const match of text.matchAll(expression)) await check(file, match[1].replace(/^['"]|['"]$/g, ''));
   }
   for (const name of ['privacy', 'legal']) assert.doesNotMatch(source.get(resolve(root, `assets/${name}.html`)) || '', /<script|mailto:/i, 'Notices must remain script-free with no published email');
@@ -47,6 +49,7 @@ export async function checkBuild(directory = resolve(SOURCE, 'dist')) {
     await check(resolve(root, 'index.html'), stage.image);
     await check(resolve(root, 'index.html'), `assets/audio/${stage.id}.wav`);
   }
+  for (const name of CUES) await check(resolve(root, 'index.html'), `assets/audio/${name}.wav`);
   return { files: files.length, references: checked };
 }
-if (import.meta.url === pathToFileURL(process.argv[1]).href) console.log('Build and local links verified:', await checkBuild());
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) console.log('Build and local links verified:', await checkBuild());

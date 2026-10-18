@@ -82,7 +82,7 @@ export function updateTutorial(match, input) {
     if (event.index === 0) {
       if (event.type === 'jump') g.flags.jumped = true;
       if (event.type === 'land' && g.flags.jumped) g.flags.landed = true;
-      if (event.type === 'dash' && (input.left || input.right)) { g.flags.dash = true; g.flags.dashX = f.x; }
+      if (event.type === 'dash') { g.flags.dash = !!(input.left || input.right); g.flags.dashX = f.x; g.flags.dashDistance = g.flags.dashFinished = false; }
       if (event.type === 'spinach') g.flags.special = true;
       if (event.type === 'throw' && g.flags.grab) g.flags.slam = true;
       if (event.type === 'swing') g.flags.cancel = event.kind === 'kick' && event.cancel && !!g.flags.punch;

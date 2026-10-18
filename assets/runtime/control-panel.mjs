@@ -38,7 +38,8 @@ export class ControlPanel {
       const row = document.createElement('tr'), name = document.createElement('th'); name.scope = 'row'; name.textContent = label; row.append(name);
       for (const device of ['keyboard', 'buttons']) {
         const cell = document.createElement('td');
-        if (device === 'buttons' && !Object.hasOwn(profile.buttons, action)) cell.textContent = 'Stick / D-pad';
+        if (action === 'reset' && this.player === 1) cell.textContent = 'P1 only';
+        else if (device === 'buttons' && !Object.hasOwn(profile.buttons, action)) cell.textContent = 'Stick / D-pad';
         else {
           const button = document.createElement('button'); button.className = 'binding-button'; button.dataset.bindAction = action; button.dataset.bindDevice = device;
           button.textContent = device === 'keyboard' ? keyName(profile.keyboard[action]) : buttonName(profile.buttons[action]);

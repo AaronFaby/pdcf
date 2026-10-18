@@ -72,6 +72,40 @@ test('a stalled audio output times out, retries, and ignores a late resume', asy
   } finally { globalThis.window = previousWindow; globalThis.fetch = previousFetch; }
 });
 
+test('stalled audio fetches, bodies and decodes expire, retry only missing assets, and cannot overwrite a retry', async t => {
+  const previousWindow = globalThis.window, previousFetch = globalThis.fetch;
+  t.mock.timers.enable({ apis: ['setTimeout'] });
+  try {
+    for (const phase of ['fetch', 'body', 'decode']) {
+      let release, signal, requests = 0;
+      class Context extends AudioContextFixture {
+        decodeAudioData(data) { return new Uint8Array(data)[0] === 1 && phase === 'decode' ? new Promise(resolve => { release = resolve; }) : Promise.resolve({ duration: 53.333 }); }
+      }
+      globalThis.window = { AudioContext: Context };
+      const data = new Uint8Array([1]).buffer;
+      globalThis.fetch = async (url, options) => {
+        requests++;
+        if (!url.pathname.endsWith('ink-harbor.wav')) return { ok: true, arrayBuffer: async () => new ArrayBuffer(1) };
+        signal = options?.signal;
+        if (phase === 'fetch') return new Promise(resolve => { release = resolve; });
+        return { ok: true, arrayBuffer: () => phase === 'body' ? new Promise(resolve => { release = resolve; }) : Promise.resolve(data) };
+      };
+      const audio = new GameAudio(), pending = audio.unlock();
+      for (let i = 0; i < 12; i++) await Promise.resolve();
+      assert.equal(requests, 14); assert.equal(audio.starting, true);
+      t.mock.timers.tick(15000); await pending;
+      assert.equal(audio.error, true); assert.equal(audio.starting, false); assert.equal(audio.loading.size, 0);
+      assert.equal(signal.aborted, true); assert.equal(audio.buffers.has('ink-harbor'), false);
+      globalThis.fetch = async () => { requests++; return { ok: true, arrayBuffer: async () => new ArrayBuffer(1) }; };
+      await audio.unlock(); const restored = audio.buffers.get('ink-harbor');
+      assert.equal(requests, 15); assert.equal(audio.error, false); assert.ok(audio.source);
+      release(phase === 'fetch' ? { ok: true, arrayBuffer: async () => data } : phase === 'body' ? data : { duration: 999 });
+      for (let i = 0; i < 12; i++) await Promise.resolve();
+      assert.equal(audio.buffers.get('ink-harbor'), restored); assert.equal(audio.error, false);
+    }
+  } finally { globalThis.window = previousWindow; globalThis.fetch = previousFetch; }
+});
+
 test('stage scores load on demand, switch without stale playback, and preserve pause/mute', async () => {
   const previousWindow = globalThis.window, previousFetch = globalThis.fetch;
   try {

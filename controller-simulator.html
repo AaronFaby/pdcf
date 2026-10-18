@@ -164,6 +164,17 @@ async function runChecks() {
   requireCheck(!gameElement('pause-dialog').open,'P1 could not resume after P2 reconnected');
   passed('Disconnects pause; reconnect needs neutral and preserves player assignments');
 
+  for(const menu of ['settings','help']) {
+    gameElement(menu+'-button').click();pads[1]=null;await advance(3);
+    const closed=dialogClosed(menu+'-dialog');await tap(0,1);await closed;await advance(3);
+    requireCheck(gameElement('pause-dialog').open && gameElement('pause-message').textContent.includes('disconnected'),'Closing '+menu+' lost the P2 disconnect');
+    const stopped=gameElement('timer').textContent;await advance(90);requireCheck(gameElement('timer').textContent===stopped,'Combat resumed without accepting the disconnect warning');
+    pads[1]=makePad(1);pads[1].index=3;await advance(3);
+    requireCheck(gameElement('controller-status').textContent.includes('P2 CONTROLLER READY'),'Index-changing reconnect lost P2');
+    await tap(0,9);
+  }
+  passed('Disconnects behind Options/Help remain paused after closing; changed controller indexes retain P2');
+
   await tap(1,9);await tap(0,13);
   requireCheck(frame.contentDocument.activeElement.id==='quit-button','Could not navigate the pause menu');
   await tap(1,0);requireCheck(!gameElement('selection').hidden && gameElement('game').hidden,'Pause menu did not return to roster');
@@ -188,9 +199,18 @@ async function runChecks() {
   frame.contentDocument.querySelector('[data-fighter="minnie"]').click();
   gameElement('start-button').click();await advance(3);
   requireCheck(!gameElement('training-panel').hidden && gameElement('timer').textContent==='∞','Training did not start');
+  gameElement('training-tutorial').click();await advance(3);
+  setButton(0,14,true);await advance(35);setButton(0,14,false);setButton(0,15,true);await advance(35);setButton(0,15,false);await advance(3);
+  requireCheck(gameElement('training-dialog').open,'Could not finish the first guided lesson');
+  pads[0]=null;await advance(3);const lessonClosed=dialogClosed('training-dialog');await tap(1,1);await lessonClosed;await advance(3);
+  requireCheck(gameElement('pause-dialog').open && gameElement('pause-message').textContent.includes('disconnected'),'Lesson completion swallowed the P1 disconnect');
+  pads[0]=makePad(0);await advance(3);await tap(1,9);
+  gameElement('tutorial-panel').querySelector('[data-tutorial-action="end"]').click();await advance(3);
+  passed('A disconnect behind a completed guided lesson requires explicit resume');
   await tap(0,2);await advance(35);
   requireCheck(gameElement('practice-hit').textContent.includes('PUNCH') && gameElement('practice-inputs').textContent.includes('Punch'),'Training did not display a hit and input');
   await advance(100);requireCheck(health(1)===100,'Training health did not recover');
+  await tap(1,8);requireCheck(gameElement('practice-hit').textContent.includes('PUNCH'),'P2 reset changed P1 Training');
   await tap(0,8);requireCheck(gameElement('practice-hit').textContent==='—' && gameElement('practice-inputs').textContent==='Make your first move.','Controller quick reset did not clear practice');
   setButton(0,2,true);await advance();setButton(0,2,false);
   for(let i=0;i<10 && gameElement('practice-hit').textContent==='—';i++)await advance();
@@ -288,6 +308,7 @@ async function runChecks() {
   gameElement('horizontal-zone').value=60;gameElement('horizontal-zone').dispatchEvent(new Event('input'));
   gameElement('vertical-zone').value=65;gameElement('vertical-zone').dispatchEvent(new Event('input'));
   query('[data-control-player="1"]').click();bindKey('punch','KeyU');
+  requireCheck(!query('[data-bind-action="reset"]') && gameElement('binding-rows').textContent.includes('P1 only'),'P2 bindings advertise an unavailable Training reset');
   query('[data-bind-action="punch"][data-bind-device="buttons"]').click();await advance(3);await tap(1,10);
   query('[data-bind-action="kick"][data-bind-device="buttons"]').click();await advance(3);await tap(1,9);
   requireCheck(gameElement('controls-dialog').open && gameElement('cancel-binding').hidden,'Start did not cancel controller capture');
@@ -386,6 +407,9 @@ async function runChecks() {
   await tap(0,0);requireCheck(health(0)===100 && health(1)===100,'Continue did not reset health');
   window.arcadeTestResult=0;await advance(3);
   requireCheck(gameElement('arcade-summary').textContent.includes('1/6'),'Winning did not advance the ladder');
+  const attemptBefore=JSON.parse(localStorage.getItem('pdcf-arcade-v1')).attempts;
+  gameElement('arena-art-retry').click();setButton(0,9,true);await advance();setButton(0,9,false);await advance(3);
+  requireCheck(!gameElement('arcade').hidden && JSON.parse(localStorage.getItem('pdcf-arcade-v1')).attempts===attemptBefore,'Start began a bout while an artwork attempt was settling');
   passed('Arcade difficulty, first bout, loss/continue and victory work from a controller');
 
   await tap(0,0);const opponent=gameElement('name-two').textContent;

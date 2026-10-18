@@ -264,7 +264,7 @@ export function drawScene(c, match, image, time, { showcase = false, reducedMoti
   if (!showcase && match.phase !== 'fight') {
     let label = '';
     if (match.phase === 'countdown') label = match.phaseTime > 1.45 ? `ROUND ${match.round}` : match.phaseTime > .65 ? 'READY?' : 'FIGHT!';
-    if (match.phase === 'roundover') label = match.roundWinner === null ? 'A DRAW!' : match.time <= 0 ? 'TIME!' : 'KNOCKOUT!';
+    if (match.phase === 'roundover') label = match.roundWinner === null ? 'A DRAW!' : match.roundEndReason === 'timeout' ? 'TIME!' : 'KNOCKOUT!';
     if (label) {
       c.save(); c.translate(600, 290); c.rotate(-.04);
       c.fillStyle = PAPER; c.fillRect(-280, -53, 560, 100);

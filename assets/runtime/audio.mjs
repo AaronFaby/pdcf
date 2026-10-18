@@ -2,7 +2,7 @@ import { stageFor } from './stages.mjs';
 
 const KEY = 'pdcf-audio-v1';
 const DEFAULTS = { enabled: true, music: .45, effects: .7 };
-const CUES = ['hit', 'heavy', 'block', 'swing', 'bell', 'ko', 'jump', 'land', 'dash', 'throw', 'special', 'spinach', 'select'];
+export const CUES = ['hit', 'heavy', 'block', 'swing', 'bell', 'ko', 'jump', 'land', 'dash', 'throw', 'special', 'spinach', 'select'];
 
 export function audioSettings(value) {
   return {
@@ -27,6 +27,7 @@ export class GameAudio {
   async unlock() {
     if (!this.settings.enabled) return;
     const track = this.track, attempt = this.attempt = (this.attempt || 0) + 1;
+    this.starting = true;
     let timer;
     try {
       this.context ||= new (window.AudioContext || window.webkitAudioContext)();
@@ -47,18 +48,25 @@ export class GameAudio {
       await Promise.all([track, ...CUES].map(name => {
         if (this.buffers.has(name)) return;
         if (!this.loading.has(name)) {
-          const pending = (async () => {
-            const response = await fetch(new URL(`../audio/${name}.wav`, import.meta.url));
+          const controller = new AbortController(); let deadline;
+          const decoded = (async () => {
+            const response = await fetch(new URL(`../audio/${name}.wav`, import.meta.url), { signal: controller.signal });
             if (!response.ok) throw new Error('Audio asset unavailable');
-            this.buffers.set(name, await this.context.decodeAudioData(await response.arrayBuffer()));
-          })().finally(() => this.loading.delete(name));
+            return this.context.decodeAudioData(await response.arrayBuffer());
+          })();
+          const pending = Promise.race([decoded, new Promise((_, reject) => {
+            deadline = setTimeout(() => { controller.abort(); reject(new Error('Audio asset timed out')); }, 15000);
+          })]).then(buffer => this.buffers.set(name, buffer)).finally(() => {
+            clearTimeout(deadline);
+            if (this.loading.get(name) === pending) this.loading.delete(name);
+          });
           this.loading.set(name, pending);
         }
         return this.loading.get(name);
       }));
       if (track === this.track && attempt === this.attempt) { this.error = false; this.mix(); }
     } catch { if (track === this.track && attempt === this.attempt) this.error = true; }
-    finally { clearTimeout(timer); }
+    finally { clearTimeout(timer); if (attempt === this.attempt) this.starting = false; }
   }
   async setStage(id) {
     const next = stageFor(id).id;

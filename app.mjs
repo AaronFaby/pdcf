@@ -15,6 +15,7 @@ import { VISUALS_KEY, MOTION_MODES, visualSettings, visualEffects } from './asse
 const $ = id => document.getElementById(id);
 const selection = ['mickey', 'popeye'];
 let slot = 0, mode = 'cpu', match = null, paused = false, accumulator = 0, lastTime = 0;
+let pendingPause = '';
 let difficulty = 'normal', arcade = null;
 let selectedStage = 'ink-harbor';
 try { arcade = restoreArcade(JSON.parse(localStorage.getItem(ARCADE_KEY))); } catch { /* A new run works without browser storage. */ }
@@ -98,7 +99,7 @@ if (!fullscreenSupported) $('fullscreen-status').textContent = 'This browser or 
 function assetStatus() {
   const total = ROSTER.length + STAGES.length;
   celsReady = ROSTER.every(f => loadedAssets.has(f.id));
-  for (const id of ['start-button', 'featured-button', 'arcade-resume']) $(id).disabled = assetsLoading || !celsReady;
+  for (const id of ['start-button', 'featured-button', 'arcade-resume', 'arcade-play', 'rematch-button']) $(id).disabled = assetsLoading || !celsReady;
   $('asset-progress').max = total; $('asset-progress').value = loadedAssets.size;
   $('asset-progress').hidden = !assetsLoading;
   $('retry-art').hidden = !failedAssets.size; $('retry-art').disabled = assetsLoading;
@@ -152,8 +153,8 @@ function soundUI() {
   $('effects-value').textContent = `${$('effects-volume').value}%`;
 }
 function audioStatus() {
-  $('audio-unlock').hidden = !audio.settings.enabled || (!audio.context && !audio.error) || (audio.context?.state === 'running' && !audio.error);
-  $('audio-status').textContent = audio.error ? 'Sound could not start. Check your audio output and connection, then press Enable audio to try again.' : audio.context?.state === 'running' ? `${stageFor(audio.track).music} · Original 32-bar arrangement` : 'Press Enable audio to let the band play.';
+  $('audio-unlock').hidden = !audio.settings.enabled || audio.starting || (!audio.context && !audio.error) || (audio.context?.state === 'running' && !audio.error);
+  $('audio-status').textContent = audio.starting ? 'Loading sound…' : audio.error ? 'Sound could not start. Check your audio output and connection, then press Enable audio to try again.' : audio.context?.state === 'running' ? `${stageFor(audio.track).music} · Original 32-bar arrangement` : 'Press Enable audio to let the band play.';
 }
 function unlockAudio() {
   const pending = audio.unlock(); audioStatus(); pending.then(audioStatus);
@@ -255,7 +256,7 @@ function saveArcade() {
   updateResume();
 }
 function showArcade() {
-  match = null; paused = false; clearInput();
+  match = null; paused = false; pendingPause = ''; clearInput();
   for (const dialog of document.querySelectorAll('dialog[open]')) dialog.close();
   $('selection').hidden = $('game').hidden = true; $('arcade').hidden = false;
   const complete = arcade.status === 'complete', lost = arcade.status === 'lost';
@@ -283,6 +284,7 @@ function showArcade() {
   saveArcade(); audio.setScene('menu'); presentStage(arcadeVenue(complete ? 5 : arcade.index).id); $('arcade-play').focus({ preventScroll: true }); window.scrollTo({ top: 0, behavior: 'instant' });
 }
 function playArcade() {
+  if (!celsReady || assetsLoading) return;
   if (arcade.status === 'complete') { arcade = createArcade(arcade.fighter, arcade.difficulty); showArcade(); return; }
   const bout = arcadeMatch(arcade);
   if (bout) { saveArcade(); startMatch(bout); }
@@ -409,9 +411,9 @@ $('dummy-mode').addEventListener('click', () => {
 });
 for (const [id, key] of [['infinite-health', 'infiniteHealth'], ['infinite-ink', 'infiniteInk']]) $(id).addEventListener('click', () => { match.training[key] = !match.training[key]; practiceSettings(); });
 function startMatch(bout) {
-  if (!celsReady) return;
+  if (!celsReady || assetsLoading) return;
   for (const id of ['result-dialog', 'pause-dialog', 'help-dialog', 'settings-dialog', 'training-dialog', 'controls-dialog', 'moves-dialog']) if ($(id).open) $(id).close();
-  clearInput(); paused = false; match = bout || createMatch(...selection, mode, mode === 'training' ? 'normal' : difficulty, selectedStage);
+  clearInput(); paused = false; pendingPause = ''; match = bout || createMatch(...selection, mode, mode === 'training' ? 'normal' : difficulty, selectedStage);
   presentStage(match.stage);
   $('selection').hidden = $('arcade').hidden = true; $('game').hidden = false;
   $('name-one').textContent = match.fighters[0].name; $('name-two').textContent = match.fighters[1].name;
@@ -428,17 +430,20 @@ function startMatch(bout) {
 }
 function returnToSelection() {
   if (arcade?.status === 'fighting') { arcade.status = 'ready'; saveArcade(); }
-  match = null; paused = false; clearInput();
+  match = null; paused = false; pendingPause = ''; clearInput();
   for (const id of ['result-dialog', 'pause-dialog', 'help-dialog', 'settings-dialog', 'training-dialog', 'controls-dialog', 'moves-dialog']) if ($(id).open) $(id).close();
   audio.setScene('menu');
   $('selection').hidden = false; $('game').hidden = $('arcade').hidden = true; updateSelection(); $('start-button').focus({ preventScroll: true });
 }
 function pause(reason = 'The projector’s still running. Your fight can wait.') {
-  if (!match || paused || match.phase === 'matchover') return;
-  paused = true; clearInput(); audio.pause(); $('pause-message').textContent = typeof reason === 'string' ? reason : 'The projector’s still running. Your fight can wait.';
+  if (!match || match.phase === 'matchover') return;
+  const message = typeof reason === 'string' ? reason : 'The projector’s still running. Your fight can wait.';
+  $('pause-message').textContent = message;
+  if (paused) { pendingPause = message; return; }
+  paused = true; clearInput(); audio.pause();
   $('pause-dialog').showModal(); $('resume-button').focus();
 }
-function resume() { $('pause-dialog').close(); clearInput(); paused = false; audio.setScene('fight'); unlockAudio(); arena.focus({ preventScroll: true }); }
+function resume() { $('pause-dialog').close(); clearInput(); paused = false; pendingPause = ''; audio.setScene('fight'); unlockAudio(); arena.focus({ preventScroll: true }); }
 function showResult() {
   if (match.mode === 'arcade') { finishArcade(arcade, match); showArcade(); return; }
   const winner = match.fighters[match.winner];
@@ -466,7 +471,9 @@ $('help-button').addEventListener('click', () => {
 for (const name of ['help', 'settings', 'training', 'controls', 'moves']) $(name + '-dialog').addEventListener('close', () => {
   clearInput();
   if (match && !document.querySelector('dialog[open]')) {
-    paused = false; audio.setScene(match.phase === 'matchover' ? 'menu' : 'fight'); arena.focus({ preventScroll: true });
+    const reason = pendingPause; pendingPause = ''; paused = false;
+    if (reason) pause(reason);
+    else { audio.setScene(match.phase === 'matchover' ? 'menu' : 'fight'); arena.focus({ preventScroll: true }); }
   }
 });
 function openSettings() {
@@ -525,6 +532,9 @@ document.querySelectorAll('[data-move-player]').forEach(button => button.addEven
 $('moves-button').addEventListener('click', openMoves);
 $('moves-pause').addEventListener('click', openMoves);
 document.querySelectorAll('[data-close]').forEach(button => button.addEventListener('click', () => $(button.dataset.close).close()));
+window.addEventListener('click', event => {
+  if (match && !paused && !document.querySelector('dialog[open]') && event.target.closest?.('button')) arena.focus({ preventScroll: true });
+});
 
 window.addEventListener('keydown', event => {
   if (controls.keydown(event)) return;
@@ -536,7 +546,7 @@ window.addEventListener('keydown', event => {
     return;
   }
   if (paused || document.querySelector('dialog[open]') || event.target.closest?.('a, button, input')) return;
-  if (match.training && controls.settings.players.some(profile => profile.keyboard.reset === event.code)) { event.preventDefault(); resetPractice(); return; }
+  if (match.training && controls.settings.players[0].keyboard.reset === event.code) { event.preventDefault(); if (!event.repeat) resetPractice(); return; }
   if (controls.settings.players.some(profile => Object.entries(profile.keyboard).some(([action, key]) => action !== 'reset' && key === event.code))) {
     event.preventDefault();
     if (!event.repeat && !held.has(event.code)) edges.add(event.code);
@@ -544,9 +554,10 @@ window.addEventListener('keydown', event => {
   }
 });
 window.addEventListener('keyup', event => { held.delete(event.code); });
-window.addEventListener('blur', () => { clearInput(); pause(); audio.pause(); });
-window.addEventListener('focus', () => { if (!match) audio.setScene('menu'); });
-document.addEventListener('visibilitychange', () => { if (document.hidden) { clearInput(); pause(); audio.pause(); } });
+window.addEventListener('blur', () => { clearInput(); pause('The game lost focus. Release held inputs, then resume when you’re ready.'); audio.pause(); });
+function restoreMenuAudio() { if (!match || match.phase === 'matchover') audio.setScene('menu'); }
+window.addEventListener('focus', restoreMenuAudio);
+document.addEventListener('visibilitychange', () => { if (document.hidden) { clearInput(); pause('The game was hidden. Release held inputs, then resume when you’re ready.'); audio.pause(); } else restoreMenuAudio(); });
 document.querySelectorAll('[data-action]').forEach(button => {
   button.addEventListener('pointerdown', event => {
     event.preventDefault(); if (!match || paused) return;
@@ -575,7 +586,7 @@ function pollControllers() {
   for (const keys of state.menus) {
     const dialog = [...document.querySelectorAll('dialog[open]')].at(-1);
     if (keys.cancel && !dialog && !$('arcade').hidden) { returnToSelection(); return; }
-    if (keys.reset && match?.training && !paused && !dialog) { resetPractice(); return; }
+    if (keys.reset && keys.player === 0 && match?.training && !paused && !dialog) { resetPractice(); return; }
     if (keys.pause) {
       if (dialog?.id === 'pause-dialog') resume();
       else if (!dialog && match) pause();

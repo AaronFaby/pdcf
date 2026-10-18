@@ -67,6 +67,31 @@ test('profiles follow player slots through swap and reverse reconnect; held inpu
   controllers.configure(settings); controllers.poll([pad(0, [10]), pad(1, [6])]); assert.deepEqual(controllers.consume(0), {});
 });
 
+test('known controller IDs retain profiles after indexes change and exact duplicate-ID matches take priority', () => {
+  const settings = rebind(rebind(controlSettings(), 0, 'buttons', 'punch', 6), 1, 'buttons', 'punch', 10);
+  for (const swapped of [false, true]) {
+    const c = new Controllers(settings); c.poll([pad(0), pad(1)]); if (swapped) c.swap();
+    c.poll([]);
+    const first = { ...pad(2), id: 'Test pad 1' }, second = { ...pad(3), id: 'Test pad 0' };
+    c.poll([first]); c.poll([first, second]);
+    assert.deepEqual(c.slots.map(s => s.id), swapped ? ['Test pad 1', 'Test pad 0'] : ['Test pad 0', 'Test pad 1']);
+    const pressed = c.slots.map((s, i) => ({ ...pad(s.index, [i ? 10 : 6]), id: s.id }));
+    c.poll(pressed); assert.equal(c.consume(0).punch, true); assert.equal(c.consume(1).punch, true);
+  }
+  const same = index => ({ ...pad(index), id: 'Identical pad' });
+  const c = new Controllers(); c.poll([same(0), same(1)]); c.poll([]);
+  c.poll([same(2), same(0)]);
+  assert.deepEqual(c.slots.map(s => s.index), [0, 2], 'a returning exact index/ID must not lose its slot to an ambiguous ID fallback');
+  const returning = new Controllers(); returning.poll([pad(0), pad(1)]); returning.poll([]);
+  returning.poll([{ ...pad(0), id: 'New device' }, { ...pad(2), id: 'Test pad 0' }]);
+  assert.deepEqual(returning.slots.map(s => s.id), ['Test pad 0', 'New device'], 'a new device cannot take a known reconnecting player’s slot');
+  assert.equal(returning.poll([{ ...pad(0, [8]), id: 'New device' }, { ...pad(2), id: 'Test pad 0' }]).menus.find(menu => menu.reset).player, 1);
+  const changed = new Controllers(); changed.poll([pad(0), pad(1)]); changed.poll([]);
+  const other = { ...pad(0), id: 'New device' }, moved = { ...pad(3), id: 'Test pad 0' };
+  changed.poll([other]); changed.poll([other, moved]); changed.poll([]); changed.poll([pad(0)]);
+  assert.equal(changed.slots[1]?.id, 'Test pad 0', 'an old index must not resurrect an assignment from before the device changed player slots');
+});
+
 test('move lists match actual damage for all six fighters, including projectiles and spinach', () => {
   const profile = rebind(controlSettings(), 1, 'keyboard', 'punch', 'KeyU').players[1];
   for (const fighter of ROSTER) {

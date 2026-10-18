@@ -83,6 +83,18 @@ test('blocking, whiffing and separate hits cannot satisfy hit-confirm combo or s
   step(m, 1, { punch: true }); step(m, 90); assert.equal(m.training.tutorial.ready, false);
 });
 
+test('an obstructed directional dash cannot lend its direction or distance to a later neutral dash', () => {
+  const m = createMatch('mickey', 'popeye', 'training'); startTutorial(m);
+  while (m.training.tutorial.index < 5) nextLesson(m, true);
+  step(m, 220, { left: true });
+  step(m, 1, { left: true, dash: true }); step(m, 50);
+  assert.equal(m.training.tutorial.ready, false);
+  step(m, 40, { right: true }); step(m, 1, { dash: true }); step(m, 50);
+  assert.equal(m.training.tutorial.ready, false, 'the latest dash has no held direction');
+  step(m, 80); step(m, 1, { right: true, dash: true }); step(m, 50);
+  assert.equal(m.training.tutorial.ready, true, 'a fresh directional dash still passes');
+});
+
 test('lesson and coaching prompts follow remapped keyboard/controller profiles without resetting progress', () => {
   let settings = rebind(controlSettings(), 0, 'keyboard', 'punch', 'KeyQ'); settings = rebind(settings, 0, 'buttons', 'punch', 6);
   const m = createMatch('mickey', 'popeye', 'training'); startTutorial(m); nextLesson(m, true); nextLesson(m, true);

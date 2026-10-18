@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { writeFile } from 'node:fs/promises';
+import { readFile, writeFile } from 'node:fs/promises';
 import { execFileSync } from 'node:child_process';
 
 test('packaged game starts all stages, plays Training, pauses and keeps legal pages separate', async ({ page }) => {
@@ -101,7 +101,7 @@ test('complete virtual-controller and Arcade regression matrix', async ({ page }
   const output=page.locator('#checks');
   await expect(output).toContainText(/ALL CONTROLLER CHECKS PASSED|FAIL /,{timeout:120000});
   const result=await output.textContent();expect(result).not.toContain('FAIL ');
-  expect(result.split('\n').filter(line=>line.startsWith('PASS '))).toHaveLength(26);
+  expect(result.split('\n').filter(line=>line.startsWith('PASS '))).toHaveLength(28);
 });
 
 test('all 24 fighter/stage combinations produce a frame-timing report', async ({ page },testInfo) => {
@@ -206,4 +206,52 @@ test('fullscreen rejection and unsupported browsers retain usable settings and w
   await page.goto('/?no-fullscreen');await page.locator('#settings-button').click();await expect(page.locator('#fullscreen-button')).toBeDisabled();
   await page.locator('#visual-motion').click();await expect(page.locator('html')).toHaveAttribute('data-motion','reduced');
   await page.getByRole('button',{name:'Close options',exact:true}).click();await expect(page.locator('#start-button')).toBeEnabled();await page.locator('#start-button').click();await expect(page.locator('#game')).toBeVisible();
+});
+
+test('in-fight buttons return keyboard control to both players and Training reset is a P1 one-shot',async({page})=>{
+  await page.goto('/');await page.locator('[data-mode="local"]').click();await page.locator('#start-button').click();
+  await expect(page.locator('#timer')).not.toHaveText('60',{timeout:12000});
+  await page.locator('#sound-button').click();await expect(page.locator('#arena')).toBeFocused();
+  const enabled=await page.locator('#sound-button').getAttribute('aria-pressed');await page.keyboard.press('Enter');await page.keyboard.press('Space');
+  await expect(page.locator('#sound-button')).toHaveAttribute('aria-pressed',enabled);
+  await page.keyboard.down('KeyD');await page.keyboard.down('ArrowLeft');
+  await expect.poll(async()=>{await page.keyboard.press('KeyF');return page.locator('#health-two').getAttribute('aria-valuenow');},{timeout:12000}).not.toBe('100');
+  await page.keyboard.up('KeyD');await page.keyboard.up('ArrowLeft');
+  await page.locator('#sound-button').click();await page.keyboard.down('ArrowLeft');
+  await expect.poll(async()=>{await page.keyboard.press('KeyJ');return page.locator('#health-one').getAttribute('aria-valuenow');},{timeout:12000}).not.toBe('100');await page.keyboard.up('ArrowLeft');
+  await page.locator('#back-button').click();await page.locator('[data-mode="training"]').click();await page.locator('#start-button').click();
+  await page.keyboard.down('Backspace');await page.keyboard.press('KeyF');await expect(page.locator('#practice-hit')).toContainText('PUNCH');
+  await page.keyboard.down('Backspace');await expect(page.locator('#practice-hit')).toContainText('PUNCH');
+  await page.keyboard.press('Delete');await expect(page.locator('#practice-hit')).toContainText('PUNCH');await page.keyboard.up('Backspace');
+  await page.keyboard.press('Backspace');await expect(page.locator('#practice-hit')).toHaveText('—');
+});
+
+test('result-screen audio resumes after focus and visibility restoration',async({page})=>{
+  const fixture=await readFile(new URL('../fixtures/arcade-engine.mjs',import.meta.url),'utf8');
+  await page.route('**/test-engine.mjs',route=>route.fulfill({contentType:'text/javascript',body:fixture.replaceAll('../../engine.mjs','/engine.mjs')}));
+  await page.route('**/app.mjs',async route=>{
+    const response=await route.fetch();await route.fulfill({response,body:(await response.text()).replace("from './engine.mjs'","from './test-engine.mjs'")+ '\nwindow.issueAudio = audio;'});
+  });
+  await page.goto('/');await page.locator('#settings-button').click();await page.locator('#enable-audio').click();await expect(page.locator('#audio-status')).toContainText('Original 32-bar');
+  await page.getByRole('button',{name:'Close options',exact:true}).click();await page.locator('#start-button').click();await page.evaluate(()=>{window.cpuTestResult=0;});
+  await expect(page.locator('#result-dialog')).toBeVisible();
+  await page.evaluate(()=>window.dispatchEvent(new Event('blur')));expect(await page.evaluate(()=>window.issueAudio.source)).toBeNull();
+  await page.evaluate(()=>window.dispatchEvent(new Event('focus')));expect(await page.evaluate(()=>window.issueAudio.scene==='menu'&&!!window.issueAudio.source)).toBe(true);
+  await page.evaluate(()=>{Object.defineProperty(document,'hidden',{configurable:true,value:true});document.dispatchEvent(new Event('visibilitychange'));});
+  expect(await page.evaluate(()=>window.issueAudio.source)).toBeNull();
+  await page.evaluate(()=>{Object.defineProperty(document,'hidden',{configurable:true,value:false});document.dispatchEvent(new Event('visibilitychange'));});
+  expect(await page.evaluate(()=>window.issueAudio.scene==='menu'&&!!window.issueAudio.source)).toBe(true);await expect(page.locator('#result-dialog')).toBeVisible();
+});
+
+test('a stalled score fetch reports loading, expires without blocking combat, and retries',async({page})=>{
+  await page.addInitScript(()=>{
+    const native=window.fetch;window.stallScore=true;
+    window.fetch=(url,options)=>window.stallScore&&String(url).endsWith('/audio/ink-harbor.wav')?new Promise(()=>{}):native(url,options);
+  });
+  await page.goto('/');await page.locator('[data-mode="training"]').click();await page.locator('#start-button').click();
+  await page.keyboard.press('KeyF');await expect(page.locator('#practice-hit')).toContainText('PUNCH');
+  await page.locator('#settings-button').click();await expect(page.locator('#audio-status')).toHaveText('Loading sound…');
+  await expect(page.locator('#audio-status')).toContainText('could not start',{timeout:20000});
+  await page.evaluate(()=>{window.stallScore=false;});await page.locator('#enable-audio').click();await expect(page.locator('#audio-status')).toContainText('Original 32-bar');
+  await page.getByRole('button',{name:'Close options',exact:true}).click();await page.keyboard.press('Backspace');await page.keyboard.press('KeyF');await expect(page.locator('#practice-hit')).toContainText('PUNCH');
 });

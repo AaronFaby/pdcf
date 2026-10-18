@@ -69,6 +69,7 @@ test('checkpoint restoration restarts an interrupted bout and rejects corrupt or
   const match = arcadeMatch(restored); assert.equal(match.arcadeAttempt, 2);
   assert.equal(match.phase, 'countdown'); assert.equal(match.fighters[0].hp, 100);
   for (const bad of [null, {}, { ...saved, version: 9 }, { ...saved, difficulty: 'constructor' }, { ...saved, index: 7 }, { ...saved, index: NaN }, { ...saved, losses: -1 }, { ...saved, attempts: Infinity }, { ...saved, status: 'complete' }, { ...saved, ladder: Array(6).fill('felix') }, { ...saved, ladder: [...saved.ladder].reverse() }]) assert.equal(restoreArcade(bad), null);
+  for (const bad of [{ ...saved, status: 'lost', losses: 0 }, { ...saved, index: 2, losses: 1, attempts: 2 }, { ...saved, status: 'ready', index: 6, attempts: 6 }, { ...saved, ladder: [saved.ladder[5], ...saved.ladder.slice(1, 5), saved.ladder[0]] }]) assert.equal(restoreArcade(bad), null);
   saved.ladder[0] = 'flip'; assert.notEqual(restored.ladder[0], 'flip', 'restored data does not share the input array');
 });
 

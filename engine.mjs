@@ -44,7 +44,7 @@ function fighter(id, index) {
 }
 
 export function createMatch(a = 'mickey', b = 'popeye', mode = 'cpu', difficulty = 'normal', stage = 'ink-harbor') {
-  const match = { fighters: [fighter(a, 0), fighter(b, 1)], mode, difficulty: Object.hasOwn(CPU_DIFFICULTIES, difficulty) ? difficulty : 'normal', stage: stageFor(stage).id, phase: 'countdown', phaseTime: 2.4, time: 60, round: 1, projectiles: [], effects: [], events: [], winner: null, roundWinner: null, elapsed: 0, hitstop: 0, shake: 0, ai: { clock: 0, action: {} } };
+  const match = { fighters: [fighter(a, 0), fighter(b, 1)], mode, difficulty: Object.hasOwn(CPU_DIFFICULTIES, difficulty) ? difficulty : 'normal', stage: stageFor(stage).id, phase: 'countdown', phaseTime: 2.4, time: 60, round: 1, projectiles: [], effects: [], events: [], winner: null, roundWinner: null, roundEndReason: null, elapsed: 0, hitstop: 0, shake: 0, ai: { clock: 0, action: {} } };
   if (mode === 'training') {
     match.training = { dummy: 'stand', infiniteHealth: true, infiniteInk: true, lastHit: null, feedback: null, inputs: [], previousInput: {} };
     resetTraining(match);
@@ -190,6 +190,7 @@ function resetRound(match) {
   match.phase = 'countdown';
   match.phaseTime = 2.4;
   match.time = 60;
+  match.roundEndReason = null;
   match.round++;
 }
 
@@ -328,6 +329,7 @@ export function tick(match, inputs, dt) {
     }
   }
   if ((a.hp <= 0 || b.hp <= 0 || (!match.training && match.time === 0)) && !match.fighters.some(f => f.thrown && f.thrown.phase !== 'down')) {
+    match.roundEndReason = a.hp <= 0 || b.hp <= 0 ? 'knockout' : 'timeout';
     match.roundWinner = a.hp === b.hp ? null : a.hp > b.hp ? 0 : 1;
     if (match.roundWinner !== null && !match.training) match.fighters[match.roundWinner].wins++;
     match.phase = 'roundover';

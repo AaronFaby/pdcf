@@ -23,13 +23,16 @@ The GitHub Actions workflow runs on pushes and pull requests to `main`, with rea
 | Fonts/audio | System-font fallback, audio errors leave controls usable, and audio can retry successfully |
 | Stalled audio output | A pending native output startup reports failure after five seconds, Training combat remains usable, and a new gesture can retry |
 | Animation reel | Missing fighter artwork can retry without refreshing |
-| Existing controller harness | All 26 flows, including real combat, throws, guided lessons, saved bindings/visual preferences, storage failures, disconnect/reconnect, and scripted Arcade progression/endings |
+| Existing controller harness | All 28 flows, including real combat, throws, guided lessons, saved bindings/visual preferences, menu/lesson interruptions, index-changing reconnects, P1-only reset, blocked Arcade starts and scripted progression/endings |
 | Performance pass | All 24 fighter/stage pairings render and produce frame callback/interval measurements |
 | Saved picture settings | System motion changes, keyboard choices, explicit overrides, independent effects, and persistence after reload |
 | Visual storage recovery | Corrupt values recover defaults; blocked storage still applies choices and leaves Training playable |
 | Reduced effects and readability | CPU, Local, Training and Arcade; 1280×720, 390×844 and 800×500 layouts; HUD outside the 16:9 canvas; numeric health/ink; nested display/pause navigation |
 | Native fullscreen | Gesture entry, active-state label/focus, canvas proportions, external exit pausing/clearing held input, nested re-entry/exit, and resumed combat; unsupported environments report the fallback instead |
 | Fullscreen failure | Rejected requests, acknowledged requests that leave fullscreen inactive, and unsupported browsers keep usable settings and windowed play |
+| Keyboard focus/reset | Utility-button clicks return control to both keyboard players; Enter/Space do not repeat the button; Training reset is a P1-only one-shot |
+| Result audio | Completed CPU result menus restore native audio source/scene state after focus and visibility return; outcomes use the browser-only fixture |
+| Stalled score | Loading status remains honest; Training works while the asset fetch stalls; the deadline reports failure and a new gesture retries |
 
 Arcade victory scripting verifies progression, not human difficulty or balance. Virtual controllers verify the input code, not hardware pairing, latency, or physical button layouts. Browser WebKit is not the Safari application or an exhaustive Safari version/device matrix.
 
@@ -41,7 +44,15 @@ The ready-time measurement starts before fetching the game HTML and ends when St
 
 The baseline on October 18, 2026 used the in-app Chromium browser (reported Chrome 155, macOS/ARM host), a 1280 × 720 outer viewport and the 1200px game iframe. All 24 pairings had a median observed interval of 16.7 ms; the largest per-pair p95 callback time was 2.7 ms, and none of the sampled intervals exceeded 33.5 ms. Initial game-ready time was 320 ms with unspecified browser-cache state. This pass showed enough frame headroom to avoid a speculative renderer rewrite; the focused change is bounded, cached asset recovery.
 
-## Local post-change results — October 18, 2026
+## Issue #1 review repairs — October 18, 2026
+
+The [finding-by-finding report](issue-1-review.md) records the reproduced defects, fixes and regression coverage. Local validation passed **83 Node tests**, the **48-file/105-reference** production build check and **51 browser release tests**: seventeen scenarios each in Chromium, Firefox and WebKit on this macOS ARM host. Each engine passed all **28 controller flows**. Syntax checks passed for all seventeen changed JavaScript modules, and `git diff --check` passed.
+
+After the final reconnect and P1-reset UI adjustments, a fresh build and all **6 targeted controller/keyboard reruns** passed across those three engines. The final controller matrix also verifies that P2's controls identify Training reset as P1 only.
+
+The production manifest now excludes unlisted local metadata, which caused the older 49-file count below; the intended build has 48 files. The historical sections retain their original evidence and counts. These local results do not establish a new hosted GitHub Actions run or Cloudflare deployment.
+
+## Historical milestone results — October 18, 2026
 
 `npm run check` passed all 71 Node tests and checked the 48-file production copy with 90 local references. All eight browser scenarios passed in each installed engine: **24 release tests passed**, including the 24-flow controller harness in each engine. Missing/stalled images, successful retry, audio/font failures, and the animation reel were exercised against the built game. The performance/controller harnesses intentionally run from the development server and are excluded from the production copy.
 
@@ -57,7 +68,7 @@ These observations are approximately 60 FPS in this environment, with 0 sampled 
 
 The initial hosted checks passed the build, Chromium, branded Chrome, and branded Edge jobs. Firefox's audio recovery and WebKit's paused-throw checks failed on Linux; see the follow-up below. Branded Chrome/Edge remain uninstalled locally. A native Safari UI connection was too slow to complete a useful manual pass; no Safari-application test is claimed.
 
-## Linux regression follow-up — October 18, 2026
+## Historical Linux regression follow-up — October 18, 2026
 
 The Firefox trace contained no audio asset requests after Enable audio: native output startup remained suspended before loading could begin. Forcing an unavailable output locally reproduced the same unchanged status and failed recovery assertion. Output startup now has a five-second deadline, and each attempt has an identity so an older timeout or completion cannot overwrite a successful retry. Node coverage checks timeout, late completion, successful retry, and stale failure. A ninth browser scenario stalls output startup, checks the error, plays Training while sound is unavailable, and recovers from a new gesture. Linux Firefox CI starts PulseAudio with a null sink so the separate normal asset-failure/recovery scenario exercises native Web Audio with an available output; it does not mock the audio implementation or establish speaker listening.
 
@@ -67,7 +78,7 @@ The follow-up passes all 73 Node tests, the 48-file/90-reference build check, an
 
 The first hosted follow-up passed Firefox and WebKit's strict pause checks, then Linux WebKit reached the controller test's old 60-second deadline while still progressing through its 24 flows. That scenario now allows 120 seconds within a 150-second test budget, and reports an explicit harness failure immediately instead of waiting for the deadline. All 24 passes are still required.
 
-## Accessibility and display follow-up — October 18, 2026
+## Historical accessibility and display follow-up — October 18, 2026
 
 The visual preferences validate motion/effect choices before use and save separately from progress, audio and controls. Reduced motion preserves combat timing and attack/throw cues; independent decoration switches affect rendering only. The HUD now sits outside the scaled arena with numeric health/ink readouts. Focus indicators, reading sizes and muted-text contrast were improved, and the skip link moves keyboard focus into the main content.
 

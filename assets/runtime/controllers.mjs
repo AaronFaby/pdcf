@@ -1,6 +1,7 @@
 import { controlSettings } from './bindings.mjs';
 
 const pressed = (pad, index) => !!pad.buttons[index]?.pressed || pad.buttons[index]?.value > .55;
+const savedID = key => key.slice(key.indexOf(':') + 1);
 
 export function readPad(pad, profile = controlSettings().players[0]) {
   const x = Number.isFinite(pad.axes[0]) ? pad.axes[0] : 0;
@@ -32,12 +33,20 @@ export class Controllers {
     this.slots.forEach((slot, i) => {
       if (slot && !pads.some(p => p.index === slot.index && p.id === slot.id)) { this.slots[i] = null; disconnected.push(i); }
     });
-    for (const pad of pads) {
+    // Reserve exact matches before an identical-ID fallback can take their slots.
+    const joining = pads.filter(pad => !this.slots.some(slot => slot?.index === pad.index));
+    const known = new Set([...this.assignments.keys()].map(savedID));
+    const priority = pad => this.assignments.has(`${pad.index}:${pad.id}`) ? 2 : Number(known.has(pad.id));
+    joining.sort((a, b) => priority(b) - priority(a));
+    for (const pad of joining) {
       if (this.slots.some(slot => slot?.index === pad.index)) continue;
-      const key = `${pad.index}:${pad.id}`, previous = this.assignments.get(key);
+      const key = `${pad.index}:${pad.id}`;
+      const previous = this.assignments.get(key) ?? [...this.assignments].find(([saved, player]) => savedID(saved) === pad.id && this.slots[player] === null)?.[1];
       const vacant = previous !== undefined && this.slots[previous] === null ? previous : this.slots.indexOf(null);
       if (vacant !== -1) {
         this.slots[vacant] = { index: pad.index, id: pad.id, armed: false, state: {}, pending: {} };
+        // Obsolete index aliases must not restore an assignment from before a player change.
+        for (const saved of this.assignments.keys()) if (savedID(saved) === pad.id && !pads.some(other => `${other.index}:${other.id}` === saved)) this.assignments.delete(saved);
         this.assignments.set(key, vacant);
       }
     }
@@ -54,7 +63,7 @@ export class Controllers {
       }
       for (const [action, down] of Object.entries(state)) if (down && !slot.state[action]) edges[action] = true;
       Object.assign(slot.pending, edges);
-      slot.state = state; menus.push(edges);
+      slot.state = state; menus.push({ ...edges, player: index });
     }
     return { disconnected, menus, count: this.slots.filter(Boolean).length };
   }

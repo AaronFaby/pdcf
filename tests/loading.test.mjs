@@ -1,11 +1,12 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { loadImage } from '../assets/runtime/loading.mjs';
-import { build } from '../scripts/build.mjs';
+import { build, SOURCE, ASSET_FILES, ROOT_FILES } from '../scripts/build.mjs';
+import { execFileSync } from 'node:child_process';
 import { checkBuild } from '../scripts/check-build.mjs';
-import { mkdtemp, readFile, writeFile, rm } from 'node:fs/promises';
+import { mkdtemp, readFile, writeFile, rm, stat } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { join, basename } from 'node:path';
 
 test('image requests decode, reject empty/broken/stalled images, and can retry without late completion', async t => {
   const OriginalImage = globalThis.Image;
@@ -62,6 +63,31 @@ test('release build includes runtime/notices, excludes development files, and re
   await assert.rejects(checkBuild(directory), /Missing anchor/);
   await writeFile(file, html.replace('href="legal.html"', 'href="missing.html"'));
   await assert.rejects(checkBuild(directory), /Missing local file/);
+  await writeFile(file, html);
+  const appFile = join(directory, 'app.mjs'), app = await readFile(appFile, 'utf8');
+  for (const suffix of ["\nimport('./assets/runtime/missing.mjs');", "\nimport('/assets/runtime/missing.mjs');"]) {
+    await writeFile(appFile, app + suffix); await assert.rejects(checkBuild(directory), /Missing local file/);
+  }
+  await writeFile(appFile, app);
+  await rm(join(directory, 'assets/audio/hit.wav'));
+  await assert.rejects(checkBuild(directory), /missing production files/);
+});
+
+test('build copies only the production manifest and checker rejects unexpected nested assets', async t => {
+  const directory = await mkdtemp(join(tmpdir(), 'pdcf-manifest-'));
+  const stray = await mkdtemp(join(SOURCE, 'assets', 'qa-untracked-'));
+  t.after(() => Promise.all([rm(directory, { recursive: true, force: true }), rm(stray, { recursive: true, force: true })]));
+  await writeFile(join(stray, '.DS_Store'), 'private metadata');
+  await writeFile(join(stray, 'accidental.txt'), 'not a production asset');
+  await build(directory);
+  assert.equal((await checkBuild(directory)).files, ROOT_FILES.length + ASSET_FILES.length);
+  await assert.rejects(stat(join(directory, 'assets', basename(stray))));
+  await writeFile(join(directory, 'assets/.DS_Store'), 'stray');
+  await assert.rejects(checkBuild(directory), /Unexpected or missing production files/);
+});
+
+test('build modules can be imported by node -e without an argv entry', () => {
+  assert.doesNotThrow(() => execFileSync(process.execPath, ['-e', "import('./scripts/check-build.mjs')"], { cwd: SOURCE }));
 });
 
 test('build label uses the Cloudflare revision, handles missing Git and rejects malformed metadata', async t => {
@@ -72,11 +98,14 @@ test('build label uses the Cloudflare revision, handles missing Git and rejects 
     if (originalPath === undefined) delete process.env.PATH; else process.env.PATH = originalPath;
     await rm(directory, { recursive: true, force: true });
   });
-  process.env.WORKERS_CI_COMMIT_SHA = 'a'.repeat(40);
+  const head = execFileSync('git', ['rev-parse', 'HEAD'], { cwd: SOURCE, encoding: 'utf8' }).trim();
+  process.env.WORKERS_CI_COMMIT_SHA = head;
   await build(directory);
   const html = await readFile(join(directory, 'index.html'), 'utf8');
-  assert.ok(html.includes(`href="https://github.com/AaronFaby/pdcf/commit/${'a'.repeat(40)}"`));
-  assert.ok(html.includes('Build aaaaaaa'));
+  assert.ok(html.includes(`href="https://github.com/AaronFaby/pdcf/commit/${head}"`));
+  process.env.WORKERS_CI_COMMIT_SHA = 'a'.repeat(40);
+  await assert.rejects(build(directory), /does not match the checkout/);
+  assert.equal(await readFile(join(directory, 'index.html'), 'utf8'), html);
   process.env.PATH = '';
   await build(directory);
   assert.ok((await readFile(join(directory, 'index.html'), 'utf8')).includes('Build aaaaaaa'));

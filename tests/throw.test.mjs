@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { ROSTER, createMatch, resetTraining, tick } from '../engine.mjs';
 import { celFor } from '../cels.mjs';
+import { drawScene } from '../art.mjs';
 
 const dt = 1 / 120;
 function fight(id = 'mickey', side = 0, edge = false) {
@@ -74,8 +75,10 @@ test('interrupting a grab or trading simultaneous throws cannot leave a fighter 
   until(m, () => m.hitstop === 0);
   m.projectiles.push({ x: m.fighters[0].x, y: -95, direction: -1, owner: 1, kind: 'mickey', life: 1 });
   tick(m, [{}, {}], dt); assert.ok(m.fighters[0].hurt > 0);
-  until(m, () => !m.fighters[1].thrown);
+  assert.equal(m.fighters[0].attack, null, 'the projectile interrupts the thrower');
+  until(m, () => !m.fighters[1].thrown, 15);
   assert.equal(m.fighters[1].y, 0); assert.equal(m.fighters[1].vy, 0);
+  assert.equal(m.fighters[1].vx, 0); assert.equal(m.fighters[1].hp, 86);
   const killed = fight(); grab(killed); until(killed, () => killed.fighters[1].thrown.phase === 'air');
   killed.fighters[0].hp = 1;
   killed.projectiles.push({ x: killed.fighters[0].x, y: -95, direction: -1, owner: 1, kind: 'mickey', life: 1 });
@@ -88,6 +91,28 @@ test('interrupting a grab or trading simultaneous throws cannot leave a fighter 
   assert.equal(killed.phase, 'roundover'); assert.equal(killed.fighters[1].wins, 1);
   const trade = fight(); tick(trade, [{ throw: true }, { throw: true }], dt); step(trade, 180);
   for (const f of trade.fighters) { assert.equal(f.hp, 86); assert.equal(f.thrown, null); assert.equal(f.y, 0); }
+});
+
+test('round results distinguish knockout, timeout, final-tick hits and late lethal throws', () => {
+  for (const kind of ['knockout', 'timeout', 'final-tick', 'late-throw', 'draw']) {
+    const m = fight();
+    if (kind === 'knockout' || kind === 'draw') { m.fighters[1].hp = 0; if (kind === 'draw') m.fighters[0].hp = 0; }
+    if (kind === 'timeout') { m.time = dt; m.fighters[1].hp = 80; }
+    if (kind === 'final-tick') {
+      m.time = dt; m.fighters[1].hp = 1;
+      m.projectiles.push({ x: m.fighters[1].x, y: -95, direction: 1, owner: 0, kind: 'mickey', life: 1 });
+    }
+    if (kind === 'late-throw') { m.time = .16; m.fighters[1].hp = 10; grab(m); }
+    until(m, () => m.phase === 'roundover');
+    assert.equal(m.roundEndReason, kind === 'timeout' ? 'timeout' : 'knockout', kind);
+    const labels = [], context = new Proxy({}, { get(target, name) {
+      if (name in target) return target[name];
+      return (...args) => { if (name === 'fillText') labels.push(args[0]); if (String(name).startsWith('create')) return { addColorStop() {} }; };
+    } });
+    drawScene(context, m, null, m.elapsed);
+    assert.ok(labels.includes(kind === 'draw' ? 'A DRAW!' : kind === 'timeout' ? 'TIME!' : 'KNOCKOUT!'), 'the banner uses the resolved round reason');
+    step(m, 280); assert.equal(m.roundEndReason, null, 'a new round clears the old reason');
+  }
 });
 
 test('a lethal throw or timeout waits for impact, then awards the round once and resets cleanly', () => {
