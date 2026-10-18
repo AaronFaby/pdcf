@@ -74,15 +74,23 @@ All venues share the same floor, boundaries, combat rules, and camera. Scenery a
 | Throw | R | I | RB / R1 |
 | Dash | Left Shift | Right Shift | RT / R2 |
 | Pause / resume | Escape | Escape | Start |
-| Reset Training | Backspace | — | View / Select |
+| Reset Training | Backspace | Delete | View / Select |
 
-In controller menus, the D-pad navigates, A / Cross confirms, and B / Circle goes back. Release controls after joining or changing screens. Controllers retain their player slots across supported disconnect/reconnect flows. Unsupported mappings fall back to keyboard play.
+These are the defaults. Open **Options → Controls & player assignments**, or **Pause → Control settings**, to edit separate P1/P2 profiles. Select a key or controller action, then press its replacement. Use the controller assigned to that player when capturing a button. A binding already used by the same player swaps places; keyboard keys already used by the other player are rejected with a conflict message. Escape cancels capture, and Start also cancels controller capture. Restore defaults resets both profiles.
+
+Keyboard bindings, controller action buttons, and separate horizontal/vertical stick dead zones save automatically in `pdcf-controls-v1` in this browser. Thresholds range from 10–80%; defaults are 30% horizontal and 55% vertical. Raise them to filter drift; lower them for smaller stick movements. The vertical threshold controls stick jump/guard and menu navigation. Corrupt settings recover safe defaults. If storage is blocked, edits work for the current page session. Key labels use physical key positions (`KeyboardEvent.code`); alternate keyboard layouts may print different letters.
+
+The control panel identifies each detected controller as P1 or P2. **Swap P1 / P2 controllers** exchanges devices while keeping profiles attached to their players. Assignments survive reconnects within the page session; a reload assigns detected controllers afresh. Bindings and dead zones persist across reloads. Standard-mapped devices are required.
+
+Stick / D-pad directions, Up to jump, Down to guard, menu controls, Escape and Start remain fixed so remapping cannot remove navigation or pause. In controller menus, the D-pad navigates, A / Cross confirms, and B / Circle goes back. Release controls after joining or changing screens. Controllers retain their player slots across supported disconnect/reconnect flows. Unsupported mappings fall back to keyboard play.
 
 Losing browser focus or disconnecting an assigned controller pauses the match. Touch buttons cover P1 movement, guard, punch, kick, and special; throw and dash require a keyboard or controller. Some shared keyboards limit simultaneous key presses.
 
 Open **Options** for independent music/effects levels; the note button toggles mute. Browsers may require a click or keyboard press to unlock audio even when a controller starts the match. Use **Enable audio** when prompted. Sound pauses with the game and resumes at its saved position; an audio failure leaves gameplay available.
 
 ## Combat and cast
+
+Open **Fighter moves** under the roster or **Fighter move lists** while paused. Browse all six fighters and select P1/P2 to display the current keyboard and controller bindings. Each list shows punch, kick, throw and signature move, unguarded base damage, startup/recovery in 60-fps frame notation, ink cost, and practical notes. Recovery includes the shared attack cooldown; projectile/spinach recovery begins at release. Projectile travel adds time before impact. Jump, guard, dash and combo guidance appears below the table. Closing a list returns to its parent menu without resuming a paused match.
 
 Win two rounds to take a match. Each round lasts 60 seconds; the fighter with more health wins a timeout, and tied rounds award no wins. Each round begins with 35 ink. Hits and blocks build ink; specials cost 35 ink.
 
@@ -118,7 +126,7 @@ The game uses native ES modules, Canvas 2D, Web Audio, and the Gamepad API. Ther
 | `engine.mjs` | DOM-free combat simulation, CPU behavior, roster, and move timing |
 | `app.mjs` | Screens, keyboard/touch input, controller polling, sound, and the fixed 120 Hz simulation loop |
 | `art.mjs` / `cels.mjs` | Scene rendering, atlas loading, and cel selection |
-| `assets/runtime/` | Stage catalog/tour, Arcade progression/endings, controllers, and audio playback/settings |
+| `assets/runtime/` | Stage catalog/tour, Arcade progression/endings, controller input/assignment, saved bindings/control panel, move-list data, and audio playback/settings |
 | `scripts/` | Source generators for checked-in SVG atlases and WAV files |
 | `tests/` | Node regression tests and the browser-only Arcade outcome fixture |
 | `controller-simulator.html` | Development harness for two virtual standard controllers |
@@ -140,11 +148,11 @@ npm test
 git diff --check
 ```
 
-The current suite has **49 Node tests** covering combat, CPU matches, round transitions, controllers, Training, Arcade progression/checkpoint validation, cel generation/timing, and audio generation/lifecycle. Stage regressions cover equal combat rules, Training/round resets, the Arcade venue tour and old checkpoints, distinct paintings, deterministic score generation, loop headroom, lazy loading, rapid music switches, and failure recovery. Tests use Node's built-in runner.
+The current suite has **55 Node tests** covering combat, CPU matches, round transitions, controllers, Training, Arcade progression/checkpoint validation, cel generation/timing, and audio generation/lifecycle. Stage regressions cover equal combat rules, Training/round resets, the Arcade venue tour and old checkpoints, distinct paintings, deterministic score generation, loop headroom, lazy loading, rapid music switches, and failure recovery. Tests use Node's built-in runner.
 
-With the server running, open [the controller simulator](http://127.0.0.1:4173/controller-simulator.html). Connect P1/P2 for manual checks, or click **Run controller checks** for **15 repeatable browser checks** covering menu navigation, stable mode/stage layout, both players, pause/resume, disconnect/reconnect, Training controls, all four stage choices, and Arcade progression/venues/endings. Buttons toggle held state; use **Release** after screen changes. The simulator suppresses iframe focus-loss pausing so its outer controls remain usable.
+With the server running, open [the controller simulator](http://127.0.0.1:4173/controller-simulator.html). Connect P1/P2 for manual checks, or click **Run controller checks** for **21 repeatable browser checks** covering menu navigation, stable mode/stage layout, both players, pause/resume, disconnect/reconnect, Training controls, all four stage choices, Arcade progression/venues/endings, saved remapping for both players, key conflicts, dead zones, controller swapping, nested pause menus, storage failures, and 390px dialog layout. Buttons toggle held state; use **Release** after screen changes. The simulator suppresses iframe focus-loss pausing so its outer controls remain usable.
 
-Arcade flow checks use `tests/fixtures/arcade-engine.mjs` to script timeout outcomes through the real round-resolution code. They verify progression and recovery, not human-played wins or difficulty balance. The harness restores the previous Arcade checkpoint and audio preferences afterward.
+Arcade flow checks use `tests/fixtures/arcade-engine.mjs` to script timeout outcomes through the real round-resolution code. They verify progression and recovery, not human-played wins or difficulty balance. The harness restores the previous Arcade checkpoint, audio preferences, and control profiles afterward.
 
 Browser checks have covered keyboard combat, two virtual controllers, Training readouts/options, Arcade resume/endings, audio settings, and animation previews. Physical controllers, physical touch devices, speaker listening, Safari/Firefox, mobile Training layout, and sustained human balance testing remain unverified. Virtual pads do not establish hardware mappings, latency, or pairing behavior.
 

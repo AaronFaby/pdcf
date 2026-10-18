@@ -16,7 +16,9 @@ The current game has six fighters (Mickey, Minnie, Oswald, Felix, Betty, Popeye)
 | `cels.mjs` | Atlas loading/measurement and pose selection synchronized to combat timing |
 | `assets/runtime/arcade.mjs` | Ladder generation, bout progression, checkpoint validation, and six original endings |
 | `assets/runtime/stages.mjs` | Stage names/assets/music metadata, safe default, and the derived Arcade venue tour; keep it DOM-free |
-| `assets/runtime/controllers.mjs` | Standard gamepad mapping, player assignment, neutral arming, and pending input edges |
+| `assets/runtime/controllers.mjs` | Standard gamepad input, per-player profiles, assignment/swap/reconnect, neutral arming, and pending input edges |
+| `assets/runtime/bindings.mjs` / `control-panel.mjs` | Validated v1 keyboard/button/dead-zone profiles and the remapping UI; keep validation DOM-free |
+| `assets/runtime/move-list.mjs` | Move-list data derived from engine timing/damage and the selected player profile |
 | `assets/runtime/audio.mjs` | Audio loading/playback, pause/resume, and validated saved preferences |
 | `index.html` / `style.css` | Main interface, dialogs, responsive layout, and accessibility markup |
 | `scripts/build-cels.mjs` / `scripts/build-audio.mjs` | Sources for the checked-in SVG atlases and WAV assets |
@@ -43,10 +45,11 @@ Keep the existing `.mjs` imports, relative asset URLs, and small function-based 
 
 - Simulation advances in fixed 1/120-second steps; Training timing readouts use 60-fps frame notation. Rendering must not determine damage or move timing. Keep random-dependent CPU/ladder behavior testable through the existing injectable random arguments.
 - Attacks are one-shot edges; movement and guard are held state. Preserve pending edges across render frames with no simulation step. Joining, pausing, resuming, and changing screens require neutral controller input. Clear pending combat buffers on those transitions, and keep player assignments stable across reconnects.
+- Remapped keys must remain unique across players; conflicts within one profile swap. Escape, Start, menu confirm/back and D-pad directions stay fixed. Profiles belong to player slots, and controller swaps must update reconnect assignments. Clear held/pending input after edits; even unbound held buttons must prevent controller arming. Move lists/help/gameplay hints must use current bindings and real engine values. Closing a nested dialog must leave its parent pause/options dialog active.
 - Focus loss and assigned-controller disconnects pause the match. Preserve keyboard fallback, menu confirm/back, and controls for both players.
 - Arcade clears one bout per accepted result, rejects stale/duplicate results, retries losses against the same rival, and ends after five other fighters plus a mirror finale. Difficulty changes decisions, not fighter health, speed, or damage. Training CPU behavior stays normal.
 - Stage choice is cosmetic: preserve the shared fighting plane and combat rules, stage selection through Training resets/rematches, and venue identity across Arcade retry/resume. The Arcade tour is derived from bout index so existing v1 saves need no new fields. Scenery freezes under reduced motion; scores load on demand, ignore stale asynchronous completions, and retain pause/mute behavior.
-- Treat saved browser data as untrusted. Validate Arcade checkpoints and audio preferences, handle unavailable/corrupt storage, and keep play available without persistence. Preserve `pdcf-arcade-v1` and `pdcf-audio-v1` compatibility or explicitly handle schema migration/recovery. Do not erase player progress as a test shortcut.
+- Treat saved browser data as untrusted. Validate Arcade checkpoints and audio preferences, handle unavailable/corrupt storage, and keep play available without persistence. Preserve `pdcf-arcade-v1`, `pdcf-audio-v1`, and `pdcf-controls-v1` compatibility or explicitly handle schema migration/recovery. Do not erase player progress as a test shortcut.
 - Training reset preserves cast/options while clearing combat/readout state. Health recovery, unlimited ink, dummy behavior, and normal match round rules must remain independent.
 - Audio needs a browser gesture, supports independent volume/mute, pauses/resumes, and can retry loading failures without interrupting combat. Preserve reduced-motion behavior, semantic buttons, focus handling, accessible labels, and live match announcements.
 
@@ -62,7 +65,7 @@ Record new asset sources in `assets/provenance.md`. Describe the current art as 
 
 For behavior changes, add a focused regression using `node:test` in the relevant existing test file, then run `npm test` and `git diff --check`. Check changed modules with `node --check path/to/file.mjs`. For documentation-only edits, verify commands, links, and claims against the repository; game tests need not be repeated unless the documentation changes reveal a code issue.
 
-For input, menu, or progression changes, run the game and the local `controller-simulator.html` harness. **Run controller checks** currently covers 15 flows, including both players, stable menu layout, pause, reconnect, Training, stage selection, and the Arcade tour. Keep its restoration of the previous saved run and audio settings. Arcade timeout scripting belongs in `tests/fixtures/arcade-engine.mjs`; production must keep importing the real engine directly. Hidden controls that reserve layout space must remain excluded from controller navigation.
+For input, menu, or progression changes, run the game and the local `controller-simulator.html` harness. **Run controller checks** currently covers 21 flows, including both players, stable menu layout, pause, reconnect, Training, stage selection, and the Arcade tour. It also covers saved remapping, conflicts, dead zones, swapping/reconnect, move lists, nested dialogs, 390px layout and storage failures. Keep its restoration of the previous saved run, audio settings and control profiles. Arcade timeout scripting belongs in `tests/fixtures/arcade-engine.mjs`; production must keep importing the real engine directly. Hidden controls that reserve layout space must remain excluded from controller navigation.
 
 For UI changes, check the affected mode, dialog focus, keyboard/controller navigation, desktop/mobile layout, reduced motion, and browser console. For combat changes, exercise hit/miss/block, recovery, round transitions, and affected modes/fighters. A screenshot alone does not verify animation or gameplay.
 

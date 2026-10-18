@@ -1,6 +1,9 @@
 import { ROSTER, createMatch, tick, cpuInput, trainingInput, resetTraining, moveFor, SPECIAL_COST } from './engine.mjs';
 import { drawFighter, drawScene } from './art.mjs';
 import { loadCels } from './cels.mjs';
+import { ACTIONS, keyName, buttonName } from './assets/runtime/bindings.mjs';
+import { ControlPanel } from './assets/runtime/control-panel.mjs';
+import { fighterMoves } from './assets/runtime/move-list.mjs';
 import { Controllers } from './assets/runtime/controllers.mjs';
 import { GameAudio } from './assets/runtime/audio.mjs';
 import { ARCADE_KEY, ENDINGS, createArcade, arcadeMatch, finishArcade, restoreArcade } from './assets/runtime/arcade.mjs';
@@ -20,11 +23,8 @@ const showcaseContext = $('showcase').getContext('2d');
 const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
 const backgrounds = new Map(STAGES.map(stage => { const image = new Image(); image.src = stage.image; return [stage.id, image]; }));
 const held = new Set(), edges = new Set(), touches = new Map(), touchEdges = new Set();
-const keymaps = [
-  { left: 'KeyA', right: 'KeyD', jump: 'KeyW', guard: 'KeyS', punch: 'KeyF', kick: 'KeyG', special: 'KeyH', throw: 'KeyR', dash: 'ShiftLeft' },
-  { left: 'ArrowLeft', right: 'ArrowRight', jump: 'ArrowUp', guard: 'ArrowDown', punch: 'KeyJ', kick: 'KeyK', special: 'KeyL', throw: 'KeyI', dash: 'ShiftRight' }
-];
-const gameKeys = new Set(keymaps.flatMap(Object.values));
+const controls = new ControlPanel(controllers, () => { clearInput(); refreshControlHints(); if ($('moves-dialog').open) renderMoves(); });
+let moveFighter = 'mickey', movePlayer = 0;
 const portraits = [];
 
 function clearInput() {
@@ -33,7 +33,8 @@ function clearInput() {
 }
 function input(index) {
   const result = controllers.consume(index);
-  for (const [action, key] of Object.entries(keymaps[index])) {
+  for (const [action, key] of Object.entries(controls.settings.players[index].keyboard)) {
+    if (action === 'reset') continue;
     const continuous = ['left', 'right', 'guard'].includes(action);
     result[action] = !!result[action] || (continuous ? held : edges).has(key) || (index === 0 && (continuous ? [...touches.values()].includes(action) : touchEdges.has(action)));
   }
@@ -64,7 +65,7 @@ function presentStage(id) {
   $('arena-stage').textContent = stage.name.toUpperCase();
   $('arena-tagline').textContent = stage.tagline;
   $('showcase').setAttribute('aria-label', `An animated preview of the selected fighters at ${stage.name}`);
-  $('arena').setAttribute('aria-label', `Fighting arena at ${stage.name}. Player one uses A D to move, W to jump, S to guard, and F G H to attack. Press Escape to pause.`);
+  refreshControlHints();
   audio.setStage(stage.id).then(audioStatus);
 }
 $('sound-button').addEventListener('click', () => {
@@ -253,7 +254,7 @@ $('dummy-mode').addEventListener('click', () => {
 for (const [id, key] of [['infinite-health', 'infiniteHealth'], ['infinite-ink', 'infiniteInk']]) $(id).addEventListener('click', () => { match.training[key] = !match.training[key]; practiceSettings(); });
 function startMatch(bout) {
   if (!celsReady) return;
-  for (const id of ['result-dialog', 'pause-dialog', 'help-dialog', 'settings-dialog', 'training-dialog']) if ($(id).open) $(id).close();
+  for (const id of ['result-dialog', 'pause-dialog', 'help-dialog', 'settings-dialog', 'training-dialog', 'controls-dialog', 'moves-dialog']) if ($(id).open) $(id).close();
   clearInput(); paused = false; match = bout || createMatch(...selection, mode, mode === 'training' ? 'normal' : difficulty, selectedStage);
   presentStage(match.stage);
   $('selection').hidden = $('arcade').hidden = true; $('game').hidden = false;
@@ -271,7 +272,7 @@ function startMatch(bout) {
 function returnToSelection() {
   if (arcade?.status === 'fighting') { arcade.status = 'ready'; saveArcade(); }
   match = null; paused = false; clearInput();
-  for (const id of ['result-dialog', 'pause-dialog', 'help-dialog', 'settings-dialog', 'training-dialog']) if ($(id).open) $(id).close();
+  for (const id of ['result-dialog', 'pause-dialog', 'help-dialog', 'settings-dialog', 'training-dialog', 'controls-dialog', 'moves-dialog']) if ($(id).open) $(id).close();
   audio.setScene('menu');
   $('selection').hidden = false; $('game').hidden = $('arcade').hidden = true; updateSelection(); $('start-button').focus({ preventScroll: true });
 }
@@ -305,9 +306,9 @@ $('help-button').addEventListener('click', () => {
   if (match) { paused = true; clearInput(); audio.pause(); }
   $('help-dialog').showModal();
 });
-for (const name of ['help', 'settings', 'training']) $(name + '-dialog').addEventListener('close', () => {
+for (const name of ['help', 'settings', 'training', 'controls', 'moves']) $(name + '-dialog').addEventListener('close', () => {
   clearInput();
-  if (match && !$('pause-dialog').open && !$('help-dialog').open && !$('settings-dialog').open && !$('training-dialog').open) {
+  if (match && !document.querySelector('dialog[open]')) {
     paused = false; audio.setScene(match.phase === 'matchover' ? 'menu' : 'fight'); arena.focus({ preventScroll: true });
   }
 });
@@ -315,18 +316,68 @@ $('settings-button').addEventListener('click', () => {
   if (match) { paused = true; clearInput(); audio.pause(); }
   $('settings-dialog').showModal();
 });
+function refreshControlHints() {
+  controls.settings.players.forEach((profile, i) => {
+    const root = $(i ? 'p2-controls' : 'p1-controls'), title = document.createElement('b'); title.textContent = `P${i + 1}`;
+    const rows = [['left', 'right', 'jump', 'guard'], ['punch', 'kick', 'special', 'throw', 'dash']].map(actions => {
+      const span = document.createElement('span');
+      for (const action of actions) { const key = document.createElement('kbd'); key.textContent = keyName(profile.keyboard[action]); span.append(key, ` ${ACTIONS[action].toUpperCase()} `); }
+      return span;
+    });
+    root.replaceChildren(title, ...rows);
+    $(i ? 'help-controls-two' : 'help-controls-one').textContent = Object.entries(profile.keyboard).map(([action, key]) => `${keyName(key)}: ${ACTIONS[action]}`).join(' · ');
+  });
+  $('pad-guide').replaceChildren(...controls.settings.players.slice(0, mode === 'local' ? 2 : 1).map((profile, i) => {
+    const row = document.createElement('p'); row.textContent = `P${i + 1} CONTROLLER: ${Object.entries(profile.buttons).map(([action, button]) => `${buttonName(button)} ${ACTIONS[action]}`).join(' · ')} · STICK / D-PAD MOVE · START PAUSE`; return row;
+  }));
+  const profile = controls.settings.players[0];
+  $('practice-tip').textContent = `Try Punch → Kick on contact. Throw beats guard; jump over a grounded strike. Reset: ${keyName(profile.keyboard.reset)} or ${buttonName(profile.buttons.reset)} (P1). Open Practice options or pause for move lists.`;
+  $('arena').setAttribute('aria-label', `Fighting arena at ${stageFor(match?.stage || preview.stage).name}. Player one: ${Object.entries(profile.keyboard).map(([action, key]) => `${keyName(key)} ${ACTIONS[action]}`).join(', ')}. Escape pauses. Move lists are in the pause menu.`);
+}
+function openControls() { clearInput(); controls.render(); $('controls-dialog').showModal(); }
+$('configure-controls').addEventListener('click', openControls);
+$('controls-pause').addEventListener('click', openControls);
+function renderMoves() {
+  const fighter = ROSTER.find(f => f.id === moveFighter), profile = controls.settings.players[movePlayer];
+  $('move-fighter-name').textContent = fighter.name;
+  $('move-fighter-role').textContent = `${fighter.style} · P${movePlayer + 1} bindings`;
+  document.querySelectorAll('[data-move-fighter]').forEach(button => button.setAttribute('aria-pressed', String(button.dataset.moveFighter === moveFighter)));
+  document.querySelectorAll('[data-move-player]').forEach(button => button.setAttribute('aria-pressed', String(Number(button.dataset.movePlayer) === movePlayer)));
+  $('move-rows').replaceChildren(...fighterMoves(moveFighter, profile).map(move => {
+    const row = document.createElement('tr'), name = document.createElement('th'); name.scope = 'row';
+    const title = document.createElement('strong'); title.textContent = move.name;
+    const inputs = document.createElement('small'); inputs.textContent = `Key: ${move.keyboard} · Pad: ${move.controller}`;
+    const note = document.createElement('small'); note.textContent = move.note; name.append(title, inputs, note);
+    const damage = document.createElement('td'); damage.textContent = move.damage;
+    const timing = document.createElement('td'); timing.textContent = `${move.startup}f / ${move.recovery}f`; row.append(name, damage, timing); return row;
+  }));
+  $('move-basics').textContent = ['jump', 'guard', 'dash'].map(action => `${ACTIONS[action]}: ${keyName(profile.keyboard[action])} / ${buttonName(profile.buttons[action])}`).join(' · ') + '. Stick / D-pad Up also jumps; Down also guards. Dash follows your direction and does not make you invincible.';
+}
+function openMoves() {
+  movePlayer = match ? 0 : slot; moveFighter = match ? match.fighters[movePlayer].id : selection[movePlayer];
+  if (match) { paused = true; clearInput(); audio.pause(); }
+  renderMoves(); $('moves-dialog').showModal();
+}
+for (const fighter of ROSTER) {
+  const button = document.createElement('button'); button.dataset.moveFighter = fighter.id; button.textContent = fighter.short;
+  button.addEventListener('click', () => { moveFighter = fighter.id; renderMoves(); }); $('move-fighters').append(button);
+}
+document.querySelectorAll('[data-move-player]').forEach(button => button.addEventListener('click', () => { movePlayer = Number(button.dataset.movePlayer); moveFighter = match ? match.fighters[movePlayer].id : selection[movePlayer]; renderMoves(); }));
+$('moves-button').addEventListener('click', openMoves);
+$('moves-pause').addEventListener('click', openMoves);
 document.querySelectorAll('[data-close]').forEach(button => button.addEventListener('click', () => $(button.dataset.close).close()));
 
 window.addEventListener('keydown', event => {
+  if (controls.keydown(event)) return;
   if (event.code === 'Escape' && !$('arcade').hidden && !document.querySelector('dialog[open]')) { event.preventDefault(); returnToSelection(); return; }
   if (!match || event.ctrlKey || event.metaKey || event.altKey) return;
-  if (event.code === 'Backspace' && match.training && !paused && !document.querySelector('dialog[open]')) { event.preventDefault(); resetPractice(); return; }
+  if (controls.settings.players.some(profile => profile.keyboard.reset === event.code) && match.training && !paused && !document.querySelector('dialog[open]')) { event.preventDefault(); resetPractice(); return; }
   if (event.code === 'Escape') {
     if (!document.querySelector('dialog[open]')) { event.preventDefault(); pause(); }
     return;
   }
   if (paused || document.querySelector('dialog[open]')) return;
-  if (gameKeys.has(event.code)) {
+  if (controls.settings.players.some(profile => Object.entries(profile.keyboard).some(([action, key]) => action !== 'reset' && key === event.code))) {
     event.preventDefault();
     if (!event.repeat && !held.has(event.code)) edges.add(event.code);
     held.add(event.code);
@@ -349,6 +400,7 @@ let lastPhase = '', lastRound = 0, portraitFrame = -1, controllerStatus = '';
 function pollControllers() {
   let pads = [];
   try { pads = navigator.getGamepads?.() || []; } catch { /* Keyboard play remains available. */ }
+  pads = Array.from(pads);
   const state = controllers.poll(pads);
   const status = controllers.slots.map((slot, i) => slot ? `P${i + 1} ${slot.armed ? 'CONTROLLER READY' : 'RELEASE BUTTONS TO JOIN'}` : '').filter(Boolean).join(' · ')
     || (Array.from(pads).some(p => p?.connected) ? 'CONTROLLER MAPPING UNSUPPORTED · KEYBOARD READY' : 'KEYBOARD READY · CONNECT A CONTROLLER & PRESS A BUTTON');
@@ -358,8 +410,10 @@ function pollControllers() {
   if (state.disconnected.some(index => match && match.phase !== 'matchover' && (index === 0 || mode === 'local'))) {
     pause('A controller disconnected. Reconnect it or continue with the keyboard. Release held buttons before resuming.'); return;
   }
+  const capturing = !!controls.capture; controls.poll(pads);
+  if (capturing) return;
   for (const keys of state.menus) {
-    const dialog = document.querySelector('dialog[open]');
+    const dialog = [...document.querySelectorAll('dialog[open]')].at(-1);
     if (keys.cancel && !dialog && !$('arcade').hidden) { returnToSelection(); return; }
     if (keys.reset && match?.training && !paused && !dialog) { resetPractice(); return; }
     if (keys.pause) {
@@ -374,7 +428,7 @@ function pollControllers() {
     const buttons = [...root.querySelectorAll('button:not(:disabled), input[type="range"]')].filter(button => button.getClientRects().length && getComputedStyle(button).visibility !== 'hidden');
     const active = document.activeElement;
     if (active?.type === 'range' && (keys.left || keys.right)) {
-      active.value = Math.min(100, Math.max(0, Number(active.value) + (keys.right ? 5 : -5))); active.dispatchEvent(new Event('input')); continue;
+      active.value = Math.min(Number(active.max), Math.max(Number(active.min), Number(active.value) + Number(active.step) * (keys.right ? 1 : -1))); active.dispatchEvent(new Event('input')); continue;
     }
     const direction = keys.down || keys.right ? 1 : keys.up || keys.left ? -1 : 0;
     if (direction && buttons.length) {

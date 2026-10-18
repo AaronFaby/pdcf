@@ -1,20 +1,28 @@
+import { controlSettings } from './bindings.mjs';
+
 const pressed = (pad, index) => !!pad.buttons[index]?.pressed || pad.buttons[index]?.value > .55;
 
-export function readPad(pad) {
+export function readPad(pad, profile = controlSettings().players[0]) {
   const x = Number.isFinite(pad.axes[0]) ? pad.axes[0] : 0;
   const y = Number.isFinite(pad.axes[1]) ? pad.axes[1] : 0;
   return {
-    left: x < -.3 || pressed(pad, 14), right: x > .3 || pressed(pad, 15),
-    up: y < -.55 || pressed(pad, 12), down: y > .55 || pressed(pad, 13),
-    jump: pressed(pad, 0) || pressed(pad, 12) || y < -.55,
-    punch: pressed(pad, 2), kick: pressed(pad, 3), special: pressed(pad, 1),
-    throw: pressed(pad, 5), dash: pressed(pad, 7), guard: pressed(pad, 4) || pressed(pad, 13) || y > .55,
-    confirm: pressed(pad, 0), cancel: pressed(pad, 1) || pressed(pad, 8), pause: pressed(pad, 9), reset: pressed(pad, 8)
+    left: x < -profile.deadZone || pressed(pad, 14), right: x > profile.deadZone || pressed(pad, 15),
+    up: y < -profile.verticalDeadZone || pressed(pad, 12), down: y > profile.verticalDeadZone || pressed(pad, 13),
+    ...Object.fromEntries(Object.entries(profile.buttons).map(([action, button]) => [action, pressed(pad, button)])),
+    jump: pressed(pad, profile.buttons.jump) || pressed(pad, 12) || y < -profile.verticalDeadZone,
+    guard: pressed(pad, profile.buttons.guard) || pressed(pad, 13) || y > profile.verticalDeadZone,
+    confirm: pressed(pad, 0), cancel: pressed(pad, 1) || pressed(pad, 8), pause: pressed(pad, 9)
   };
 }
 
 export class Controllers {
-  constructor() { this.slots = [null, null]; this.assignments = new Map(); }
+  constructor(settings) { this.slots = [null, null]; this.assignments = new Map(); this.settings = controlSettings(settings); }
+  configure(settings) { this.settings = controlSettings(settings); this.clear(); }
+  swap() {
+    this.slots.reverse();
+    for (const [key, player] of this.assignments) this.assignments.set(key, 1 - player);
+    this.clear();
+  }
   clear() {
     for (const slot of this.slots) if (slot) { slot.armed = false; slot.pending = {}; slot.state = {}; }
   }
@@ -34,13 +42,13 @@ export class Controllers {
       }
     }
     const menus = [];
-    for (const slot of this.slots) {
+    for (const [index, slot] of this.slots.entries()) {
       if (!slot) continue;
-      const pad = pads.find(p => p.index === slot.index), state = readPad(pad);
+      const pad = pads.find(p => p.index === slot.index), state = readPad(pad, this.settings.players[index]);
       const edges = {};
       if (!slot.armed) {
         // Require neutral after joining, pausing or changing screens so held buttons cannot leak through.
-        slot.armed = !Object.values(state).some(Boolean);
+        slot.armed = !Object.values(state).some(Boolean) && !pad.buttons.some((_, index) => pressed(pad, index));
         slot.state = {}; slot.pending = {};
         continue;
       }

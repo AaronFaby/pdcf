@@ -1,11 +1,11 @@
-<!doctype html><html><head><meta charset="utf-8"><title>Virtual controllers — Public Domain Cartoon Fighters</title><style>body{margin:0;font:13px system-ui;background:#fff}#toolbar{padding:10px;display:flex;gap:5px;flex-wrap:wrap;position:sticky;top:0;background:#fff;z-index:20}button{padding:8px;border:1px solid #c6bfac;background:#eee7d6;color:#25251f;cursor:pointer}button[aria-pressed="true"]{background:#25251f;color:#fff}h1{font-size:22px;margin:0 0 8px}.intro{padding:18px;background:#eee7d6;line-height:1.6}.intro p{margin:4px 0}pre{white-space:pre-wrap;overflow-wrap:anywhere}iframe{display:block;width:100%;height:900px;border:0}pre{margin:0;padding:8px;background:#f4f1e9}</style></head><body><section class="intro"><h1>Two controllers. No hardware required.</h1><details><summary>How to use the simulator</summary><p>1. Click <b>Connect P1</b> (and <b>Connect P2</b> for two players). Wait for CONTROLLER READY.</p><p>2. Choose <b>Local mode</b> for two players, then <b>Featured bout</b>. After a screen change, click <b>Release P1/P2</b> and wait for CONTROLLER READY.</p><p>3. Controller buttons toggle between held and released. A dark button is held. Click it again or use <b>Release</b> to let go. Combine directions, guard and attacks.</p><p>A jumps / confirms; X punches; Y kicks; B uses special / goes back. Start starts or pauses a match. Disconnect either controller to test recovery.</p><p>This page exercises the game’s real controller input code using virtual devices. It does not validate hardware pairing, physical button layouts or real input latency. Focus-loss pausing is suppressed inside this simulator so its outer buttons remain usable.</p></details></section><div id="toolbar"></div><pre id="status">Booting…</pre><iframe id="game"></iframe><script>
+<!doctype html><html><head><meta charset="utf-8"><title>Virtual controllers — Public Domain Cartoon Fighters</title><style>body{margin:0;font:13px system-ui;background:#fff}#toolbar{padding:10px;display:flex;gap:5px;flex-wrap:wrap;position:sticky;top:0;background:#fff;z-index:20}button{padding:8px;border:1px solid #c6bfac;background:#eee7d6;color:#25251f;cursor:pointer}button[aria-pressed="true"]{background:#25251f;color:#fff}h1{font-size:22px;margin:0 0 8px}.intro{padding:18px;background:#eee7d6;line-height:1.6}.intro p{margin:4px 0}pre{white-space:pre-wrap;overflow-wrap:anywhere}iframe{display:block;width:100%;height:900px;border:0}pre{margin:0;padding:8px;background:#f4f1e9}</style></head><body><section class="intro"><h1>Two controllers. No hardware required.</h1><details><summary>How to use the simulator</summary><p>1. Click <b>Connect P1</b> (and <b>Connect P2</b> for two players). Wait for CONTROLLER READY.</p><p>2. Choose <b>Local mode</b> for two players, then <b>Featured bout</b>. After a screen change, click <b>Release P1/P2</b> and wait for CONTROLLER READY.</p><p>3. Controller buttons toggle between held and released. A dark button is held. Click it again or use <b>Release</b> to let go. Combine directions, guard and attacks.</p><p>By default A jumps / confirms; X punches; Y kicks; B uses special / goes back. Remap gameplay buttons in Options → Controls; menu A/B/Start stay fixed. Start starts or pauses a match. Disconnect either controller to test recovery.</p><p>This page exercises the game’s real controller input code using virtual devices. It does not validate hardware pairing, physical button layouts or real input latency. Focus-loss pausing is suppressed inside this simulator so its outer buttons remain usable.</p></details></section><div id="toolbar"></div><pre id="status">Booting…</pre><iframe id="game"></iframe><script>
 const pads=[null,null], frame=document.getElementById('game'),bar=document.getElementById('toolbar');
 function makePad(index){return {index,id:'QA virtual pad '+index,connected:true,mapping:'standard',axes:[0,0],buttons:Array.from({length:16},()=>({pressed:false,value:0}))};}
 let lastFocus;document.addEventListener('pointerdown',()=>{const e=frame.contentDocument?.activeElement;if(e&&e.tagName!=='BODY')lastFocus=e;},true);
 function add(label,action){const b=document.createElement('button');b.textContent=label;b.onclick=()=>{action();refreshHeld();frame.contentWindow.focus();if(lastFocus?.getClientRects().length)lastFocus.focus();};bar.append(b);return b;}
 for(let p=0;p<2;p++){
  add('Connect P'+(p+1),()=>{pads[p]=makePad(p);});add('Disconnect P'+(p+1),()=>{pads[p]=null;});
- for(const [label,key] of [['A',0],['B',1],['X',2],['Y',3],['Guard',4],['Throw',5],['Dash',7],['Reset',8],['Start',9],['Up',12],['Down',13],['Left',14],['Right',15]]) {const b=add('P'+(p+1)+' '+label,()=>{if(pads[p]){pads[p].buttons[key].pressed=!pads[p].buttons[key].pressed;pads[p].buttons[key].value=pads[p].buttons[key].pressed?1:0;}});b.dataset.player=p;b.dataset.button=key;b.setAttribute('aria-pressed','false');}
+ for(const [label,key] of [['A',0],['B',1],['X',2],['Y',3],['LB',4],['RB',5],['LT',6],['RT',7],['View',8],['Start',9],['L3',10],['R3',11],['Up',12],['Down',13],['Left',14],['Right',15]]) {const b=add('P'+(p+1)+' '+label,()=>{if(pads[p]){pads[p].buttons[key].pressed=!pads[p].buttons[key].pressed;pads[p].buttons[key].value=pads[p].buttons[key].pressed?1:0;}});b.dataset.player=p;b.dataset.button=key;b.setAttribute('aria-pressed','false');}
  add('Release P'+(p+1),()=>{if(pads[p]) pads[p]=makePad(p);});
 }
 add('Local mode',()=>frame.contentDocument.querySelector('[data-mode="local"]').click());
@@ -70,7 +70,9 @@ async function runChecks() {
  const passed=message=>{lines.push('PASS '+message);checkOutput.textContent=lines.join('\n');};
  const preferences=localStorage.getItem('pdcf-audio-v1');
  const checkpoint=localStorage.getItem('pdcf-arcade-v1');
+ const bindings=localStorage.getItem('pdcf-controls-v1');
  try {
+  localStorage.removeItem('pdcf-controls-v1');
   pads[0]=makePad(0);pads[1]=makePad(1);
   await loadGameForChecks(true); await advance(3);
   requireCheck(gameElement('controller-status').textContent.includes('P2 CONTROLLER READY'),'Both pads must join');
@@ -206,8 +208,84 @@ async function runChecks() {
   }
   passed('All four stages select from a controller and survive Training start/reset/return');
 
+  const query=selector=>frame.contentDocument.querySelector(selector);
+  const key=code=>{frame.contentWindow.dispatchEvent(new frame.contentWindow.KeyboardEvent('keydown',{code,bubbles:true}));frame.contentWindow.dispatchEvent(new frame.contentWindow.KeyboardEvent('keyup',{code,bubbles:true}));};
+  const bindKey=(action,code)=>{query(`[data-bind-action="${action}"][data-bind-device="keyboard"]`).click();key(code);};
+  gameElement('settings-button').click();gameElement('configure-controls').click();await advance(3);
+  bindKey('punch','KeyG');
+  requireCheck(query('[data-bind-action="kick"][data-bind-device="keyboard"]').textContent==='F','Keyboard conflict within P1 did not swap');
+  bindKey('punch','KeyQ');bindKey('reset','KeyN');
+  bindKey('punch','KeyJ');
+  requireCheck(gameElement('binding-capture').textContent.includes('P2 Punch'),'Cross-player keyboard conflict was not explained');
+  key('Escape');requireCheck(gameElement('controls-dialog').open && gameElement('cancel-binding').hidden,'Escape did not cancel capture without closing controls');
+  query('[data-bind-action="punch"][data-bind-device="buttons"]').click();await advance(3);await tap(0,6);
+  gameElement('horizontal-zone').value=60;gameElement('horizontal-zone').dispatchEvent(new Event('input'));
+  gameElement('vertical-zone').value=65;gameElement('vertical-zone').dispatchEvent(new Event('input'));
+  query('[data-control-player="1"]').click();bindKey('punch','KeyU');
+  query('[data-bind-action="punch"][data-bind-device="buttons"]').click();await advance(3);await tap(1,10);
+  query('[data-bind-action="kick"][data-bind-device="buttons"]').click();await advance(3);await tap(1,9);
+  requireCheck(gameElement('controls-dialog').open && gameElement('cancel-binding').hidden,'Start did not cancel controller capture');
+  query('[data-control-player="0"]').click();await advance(3);gameElement('horizontal-zone').focus();await tap(1,15);
+  requireCheck(gameElement('horizontal-zone').value==='65','Controller could not adjust the dead zone');
+  gameElement('horizontal-zone').value=60;gameElement('horizontal-zone').dispatchEvent(new Event('input'));
+  const savedControls=JSON.parse(localStorage.getItem('pdcf-controls-v1'));
+  requireCheck(savedControls.players[0].keyboard.punch==='KeyQ' && savedControls.players[1].buttons.punch===10 && savedControls.players[0].verticalDeadZone===.65,'Control profiles were not saved');
+  passed('Both profiles rebind and save keys/buttons, resolve conflicts, cancel safely and adjust dead zones');
+
+  await loadGameForChecks(true);await advance(3);
+  requireCheck(gameElement('p1-controls').textContent.includes('Q') && gameElement('help-controls-two').textContent.includes('U: Punch'),'Saved keys did not reload into gameplay hints');
+  gameElement('moves-button').focus();await tap(0,0);
+  requireCheck(gameElement('moves-dialog').open && gameElement('move-rows').textContent.includes('Key: Q · Pad: LT / L2'),'Move list did not use saved P1 bindings');
+  query('[data-move-player="1"]').click();requireCheck(gameElement('move-fighter-name').textContent==='Popeye' && gameElement('move-rows').textContent.includes('Key: U · Pad: Left stick click'),'P2 move list did not use the P2 fighter and profile');
+  for(const button of frame.contentDocument.querySelectorAll('[data-move-fighter]')){button.click();requireCheck(gameElement('move-rows').children.length===4 && !gameElement('move-rows').textContent.includes('NaN'),'A fighter move list failed');}
+  await tap(1,1);requireCheck(!gameElement('moves-dialog').open,'Controller Back did not close move lists');
+  passed('Reload preserves controls and all six move lists show current P1/P2 inputs');
+  frame.style.width='390px';frame.style.height='844px';
+  gameElement('settings-button').click();gameElement('configure-controls').click();await advance(3);
+  const fits=id=>{const el=gameElement(id),rect=el.getBoundingClientRect();return rect.left>=0 && rect.right<=390 && el.scrollWidth<=el.clientWidth+1;};
+  requireCheck(fits('controls-dialog'),'Controls overflow the narrow viewport');
+  query('[data-close="controls-dialog"]').click();query('[data-close="settings-dialog"]').click();gameElement('moves-button').click();await advance(3);
+  requireCheck(fits('moves-dialog'),'Move list overflows the narrow viewport');
+  query('[data-close="moves-dialog"]').click();frame.style.width='100%';frame.style.height='900px';await advance(3);
+  passed('Controls and move lists fit a 390px viewport without horizontal dialog overflow');
+
+  query('[data-mode="training"]').click();gameElement('start-button').click();await advance(3);
+  key('KeyQ');await advance(35);requireCheck(gameElement('practice-hit').textContent.includes('PUNCH'),'Remapped keyboard punch did not reach combat');
+  key('KeyN');await advance(3);requireCheck(gameElement('practice-hit').textContent==='—','Remapped keyboard Training reset failed');
+  await tap(0,2);await advance(35);requireCheck(gameElement('practice-hit').textContent==='—','Old controller punch remained active');
+  await tap(0,6);await advance(35);requireCheck(gameElement('practice-hit').textContent.includes('PUNCH'),'Remapped controller punch did not reach combat');
+  await tap(0,9);gameElement('moves-pause').focus();await tap(1,0);
+  const pausedClock=gameElement('timer').textContent;
+  await tap(0,6);await advance(45);await tap(1,1);
+  requireCheck(gameElement('pause-dialog').open && !gameElement('moves-dialog').open && gameElement('timer').textContent===pausedClock,'Closing move lists resumed the underlying pause menu');
+  gameElement('controls-pause').click();await advance(3);
+  await tap(1,1);requireCheck(gameElement('pause-dialog').open && !gameElement('controls-dialog').open,'Closing controls resumed the underlying pause menu');
+  await tap(0,9);key('KeyN');await advance(40);requireCheck(gameElement('practice-hit').textContent==='—','Move-list inputs leaked after resume');
+  pads[0].axes=[.5,0];await advance(20);requireCheck(!gameElement('practice-inputs').textContent.includes('→'),'Below-dead-zone stick drift moved P1');
+  pads[0].axes=[.7,0];await advance(20);requireCheck(gameElement('practice-inputs').textContent.includes('→'),'Above-dead-zone input did not move P1');
+  pads[0].axes=[0,0];await advance(3);
+  passed('Remapped keyboard/controller combat and reset work; nested pause menus stay paused; stick drift is filtered');
+
+  gameElement('back-button').click();query('[data-mode="local"]').click();gameElement('start-button').click();await advance(160);
+  setButton(0,15,true);setButton(1,14,true);await advance(70);setButton(0,15,false);setButton(1,14,false);await advance(3);
+  await tap(1,10);await advance(35);requireCheck(health(0)<100,'Remapped P2 punch did not damage P1');
+  setButton(1,14,true);await advance(20);setButton(1,14,false);await advance(3);const keyboardP2Before=health(0);
+  key('KeyU');await advance(35);requireCheck(health(0)<keyboardP2Before,'Remapped P2 keyboard punch did not damage P1');
+  await tap(0,9);gameElement('controls-pause').click();await advance(3);gameElement('swap-controllers').click();await advance(3);
+  requireCheck(gameElement('assignment-0').textContent.includes('QA virtual pad 1') && gameElement('assignment-1').textContent.includes('QA virtual pad 0'),'Controller swap did not update P1/P2 assignments');
+  pads[0]=null;pads[1]=null;await advance(3);pads[0]=makePad(0);await advance(3);pads[1]=makePad(1);await advance(3);
+  requireCheck(gameElement('assignment-0').textContent.includes('QA virtual pad 1') && gameElement('assignment-1').textContent.includes('QA virtual pad 0'),'Reconnect lost swapped assignments');
+  await tap(0,1);await tap(1,9);const p2Before=health(1);
+  await tap(1,6);await advance(35);requireCheck(health(1)<p2Before,'Swapped P1 controller did not use the P1 profile');
+  await tap(0,9);gameElement('controls-pause').click();await advance(3);gameElement('default-controls').click();
+  requireCheck(query('[data-bind-action="punch"][data-bind-device="keyboard"]').textContent==='F','Restore defaults failed');
+  gameElement('swap-controllers').click();await advance(3);await tap(0,1);await tap(0,9);gameElement('back-button').click();
+  passed('Custom P2 combat, explicit assignments, swapping, reconnect and restoring defaults work');
+
+  localStorage.setItem('pdcf-controls-v1','{corrupt');
   await loadGameForChecks(true,true);await advance(3);
   frame.contentDocument.querySelector('[data-mode="arcade"]').click();
+  requireCheck(gameElement('help-controls-one').textContent.includes('F: Punch'),'Corrupt saved controls did not recover defaults');
   frame.contentDocument.querySelector('[data-fighter="felix"]').click();
   frame.contentDocument.querySelector('[data-difficulty="normal"]').focus();await tap(0,15);await tap(0,0);
   requireCheck(frame.contentDocument.querySelector('[data-difficulty="hard"]').getAttribute('aria-pressed')==='true','Controller could not choose Hard');
@@ -258,12 +336,18 @@ async function runChecks() {
   await tap(0,0);window.arcadeTestResult=0;await advance(3);
   requireCheck(gameElement('arcade-summary').textContent.includes('1/6'),'Storage failure blocked arcade progression');
   passed('Arcade remains playable when browser storage is disabled');
+  gameElement('arcade-exit').click();gameElement('settings-button').click();gameElement('configure-controls').click();
+  frame.contentDocument.querySelector('[data-bind-action="punch"][data-bind-device="keyboard"]').click();
+  frame.contentWindow.dispatchEvent(new frame.contentWindow.KeyboardEvent('keydown',{code:'KeyQ',bubbles:true}));
+  requireCheck(gameElement('controls-save-status').textContent.includes('unavailable') && frame.contentDocument.querySelector('[data-bind-action="punch"][data-bind-device="keyboard"]').textContent==='Q','Storage failure blocked remapping');
+  passed('Controls remain editable and usable when browser storage is disabled');
   lines.push('ALL CONTROLLER CHECKS PASSED');
  } catch(error) { lines.push('FAIL '+error.message); }
  finally {
   checkOutput.textContent=lines.join('\n');
   if(preferences===null)localStorage.removeItem('pdcf-audio-v1');else localStorage.setItem('pdcf-audio-v1',preferences);
   if(checkpoint===null)localStorage.removeItem('pdcf-arcade-v1');else localStorage.setItem('pdcf-arcade-v1',checkpoint);
+  if(bindings===null)localStorage.removeItem('pdcf-controls-v1');else localStorage.setItem('pdcf-controls-v1',bindings);
   pads[0]=makePad(0);pads[1]=makePad(1);refreshHeld();
   testing=false;
   try {await loadGameForChecks(false);}catch(error){checkOutput.textContent+='\nReload failed: '+error.message;}

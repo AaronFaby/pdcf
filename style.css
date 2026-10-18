@@ -1021,6 +1021,38 @@ dialog::backdrop {
   backdrop-filter:blur(4px);
 }
 
+.wide-dialog { max-width:860px; max-height:90dvh; overflow:auto; }
+#moves-dialog h2 { margin:8px 0 12px; font-size:42px; }
+#moves-dialog .control-player-picker,#moves-dialog .move-fighters { margin:12px 0; }
+#move-fighter-name { margin:14px 0 4px; }
+#move-fighter-role { margin:0 0 12px; }
+.wide-dialog h3 { font:700 24px var(--display); margin:20px 0 12px; }
+.controller-assignments { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin:18px 0 0; }
+.controller-assignments p { margin:0; padding:12px; border:1px solid var(--line); overflow-wrap:anywhere; }
+.control-player-picker,.move-fighters { display:flex; flex-wrap:wrap; gap:6px; margin:18px 0; }
+.control-player-picker button,.move-fighters button { padding:11px 14px; background:transparent; border:1px solid var(--line); font:700 12px var(--display); }
+.control-player-picker button[aria-pressed=true],.move-fighters button[aria-pressed=true] { color:var(--paper); background:var(--ink); border-color:var(--ink); }
+.binding-feedback { position:sticky; top:0; z-index:1; background:var(--paper); border-block:1px solid var(--line); padding:8px 0; min-height:44px; }
+.binding-feedback p { margin:0; }
+.table-scroll { overflow-x:auto; }
+.binding-table,.move-table { border-collapse:collapse; width:100%; font-size:12px; }
+.binding-table th,.binding-table td,.move-table th,.move-table td { padding:10px 8px; border-bottom:1px solid var(--line); text-align:left; }
+.binding-table thead,.move-table thead { font-size:10px; letter-spacing:.6px; }
+.binding-button { min-height:40px; width:100%; padding:8px; border:1px solid var(--line); background:transparent; font-size:11px; }
+.binding-button:hover { border-color:var(--accent); }
+.move-table th { width:62%; }
+.move-table strong,.move-table small { display:block; }
+.move-table small { font-weight:400; margin-top:6px; line-height:1.6; color:#68614f; }
+.move-table td { vertical-align:top; }
+.pad-guide { overflow-wrap:anywhere; }
+.pad-guide p { margin:3px 0; }
+@media(max-width:600px) {
+  .wide-dialog { padding:25px 16px; }
+  .controller-assignments { grid-template-columns:1fr; }
+  .binding-table th,.binding-table td,.move-table th,.move-table td { padding:9px 4px; font-size:11px; }
+  .binding-button { font-size:10px; }
+}
+
 dialog h2 {
   font-size:48px;
   letter-spacing:-1px;
