@@ -88,7 +88,7 @@ function soundUI() {
 }
 function audioStatus() {
   $('audio-unlock').hidden = !audio.settings.enabled || (!audio.context && !audio.error) || (audio.context?.state === 'running' && !audio.error);
-  $('audio-status').textContent = audio.error ? 'Sound could not start. Check your connection, then press Enable audio to try again.' : audio.context?.state === 'running' ? `${stageFor(audio.track).music} · Original 32-bar arrangement` : 'Press Enable audio to let the band play.';
+  $('audio-status').textContent = audio.error ? 'Sound could not start. Check your audio output and connection, then press Enable audio to try again.' : audio.context?.state === 'running' ? `${stageFor(audio.track).music} · Original 32-bar arrangement` : 'Press Enable audio to let the band play.';
 }
 function unlockAudio() {
   const pending = audio.unlock(); audioStatus(); pending.then(audioStatus);
@@ -547,6 +547,8 @@ function frame(timestamp) {
       }
     }
   } else {
+    // Keep paused pixels; a tutorial can pause after advancing its final frame.
+    const drawFrame = !paused;
     if (!paused && match.phase !== 'matchover') {
       accumulator += delta;
       while (accumulator >= 1 / 120) {
@@ -565,7 +567,7 @@ function frame(timestamp) {
       }
       if (match.phase === 'matchover' && !$('result-dialog').open) showResult();
     }
-    if (match) drawScene(arenaContext, match, backgrounds.get(match.stage), match.elapsed, { reducedMotion: reducedMotion.matches });
+    if (match && drawFrame) drawScene(arenaContext, match, backgrounds.get(match.stage), match.elapsed, { reducedMotion: reducedMotion.matches });
   }
   requestAnimationFrame(frame);
 }

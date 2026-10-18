@@ -76,6 +76,25 @@ test('animation reel has progress and can retry a failed fighter', async ({ page
   await page.goto('/animation-reel.html');await expect(page.locator('#reel-retry')).toBeVisible();broken=false;await page.locator('#reel-retry').click();await expect(page.locator('#reel-status')).toBeHidden();await expect(page.locator('#reel-cast canvas')).toHaveCount(6);
 });
 
+test('a stalled audio output reports failure, keeps combat usable and retries from a new gesture', async ({ page }) => {
+  await page.addInitScript(() => {
+    const resume = AudioContext.prototype.resume;
+    window.stallAudioOutput = true;
+    AudioContext.prototype.resume = function () { return window.stallAudioOutput ? new Promise(() => {}) : resume.call(this); };
+  });
+  await page.goto('/');await expect(page.locator('#start-button')).toBeEnabled();
+  await page.locator('#settings-button').click();await page.locator('#enable-audio').click();
+  await expect(page.locator('#audio-status')).toContainText('could not start',{timeout:10000});
+  await page.getByRole('button',{name:'Close options',exact:true}).click();
+  await page.locator('[data-mode="training"]').click();await page.locator('#start-button').click();
+  await page.keyboard.press('KeyF');await expect(page.locator('#practice-hit')).toContainText('PUNCH');
+  await page.keyboard.press('Escape');await expect(page.locator('#pause-dialog')).toBeVisible();
+  await page.evaluate(()=>{window.stallAudioOutput=false;});
+  await page.locator('#resume-button').click();
+  await expect(page.locator('#audio-unlock')).toBeHidden();
+  await page.locator('#settings-button').click();await expect(page.locator('#audio-status')).toContainText('Original 32-bar');
+});
+
 test('complete virtual-controller and Arcade regression matrix', async ({ page }) => {
   await page.goto('http://127.0.0.1:4173/controller-simulator.html');await page.getByRole('button',{name:'Run controller checks',exact:true}).click();
   await expect(page.locator('#checks')).toContainText('ALL CONTROLLER CHECKS PASSED',{timeout:60000});

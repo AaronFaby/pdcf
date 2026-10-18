@@ -215,17 +215,25 @@ async function runChecks() {
   setButton(0,15,true);await advance(8);setButton(0,15,false);await advance(3);
   await tap(0,5);await advance(18);
   requireCheck(gameElement('practice-hit').textContent.includes('THROW') && health(1)===86,'P1 controller throw did not connect');
-  await tap(0,9);const canvas=gameElement('arena'),context=canvas.getContext('2d'),throwFrame=canvas.toDataURL(),throwPixels=context.getImageData(0,0,canvas.width,canvas.height).data;
-  await tap(1,2);await advance(90);
-  const pausedFrame=canvas.toDataURL(),pausedPixels=context.getImageData(0,0,canvas.width,canvas.height).data;
-  let changed=0,maxDelta=0;
-  for(let i=0;i<throwPixels.length;i++)if(throwPixels[i]!==pausedPixels[i]){changed++;maxDelta=Math.max(maxDelta,Math.abs(throwPixels[i]-pausedPixels[i]));}
-  requireCheck(gameElement('pause-dialog').open, 'Throw pause dialog closed unexpectedly');
-  requireCheck(pausedFrame===throwFrame,`Throw image changed while paused: ${changed} channels, maximum delta ${maxDelta}`);
-  await tap(1,9);await advance(120);requireCheck(health(1)===100 && gameElement('practice-hit').textContent.includes('THROW'),'Throw did not finish/recover after resume');
+  const checkThrowPause=async player=>{
+    await tap(player,9);requireCheck(gameElement('pause-dialog').open,`P${player+1} did not pause the throw`);
+    const canvas=gameElement('arena'),context=canvas.getContext('2d'),throwFrame=canvas.toDataURL(),throwPixels=context.getImageData(0,0,canvas.width,canvas.height).data,hp=[health(0),health(1)];
+    const drawImage=context.drawImage;let redraws=0;
+    context.drawImage=function(...args){redraws++;return drawImage.apply(this,args);};
+    try {await tap(1-player,2);await advance(90);} finally {context.drawImage=drawImage;}
+    requireCheck(redraws===0,`Paused arena was redrawn ${redraws} times`);
+    const pausedFrame=canvas.toDataURL(),pausedPixels=context.getImageData(0,0,canvas.width,canvas.height).data;
+    let changed=0,maxDelta=0;
+    for(let i=0;i<throwPixels.length;i++)if(throwPixels[i]!==pausedPixels[i]){changed++;maxDelta=Math.max(maxDelta,Math.abs(throwPixels[i]-pausedPixels[i]));}
+    requireCheck(gameElement('pause-dialog').open && health(0)===hp[0] && health(1)===hp[1],'Throw pause changed the dialog or health');
+    requireCheck(pausedFrame===throwFrame && changed===0,`Throw image changed while paused: ${changed} channels, maximum delta ${maxDelta}`);
+    await tap(1-player,9);requireCheck(!gameElement('pause-dialog').open,'Could not resume the throw');
+  };
+  await checkThrowPause(0);await advance(120);requireCheck(health(1)===100 && gameElement('practice-hit').textContent.includes('THROW'),'Throw did not finish/recover after resume');
   gameElement('back-button').click();frame.contentDocument.querySelector('[data-mode="local"]').click();gameElement('start-button').click();await advance(160);
   setButton(0,15,true);setButton(1,14,true);await advance(70);setButton(0,15,false);setButton(1,14,false);await advance(3);
-  await tap(1,5);await advance(100);requireCheck(health(0)===83,'P2 controller throw did not deal one Popeye throw');
+  await tap(1,5);await advance(18);requireCheck(health(0)===83,'P2 controller throw did not connect');
+  await checkThrowPause(1);await advance(100);requireCheck(health(0)===83,'P2 controller throw did not deal one Popeye throw');
   gameElement('back-button').click();await advance(3);
   passed('Both controllers throw opponents; a mid-throw pause freezes the scene and resumes cleanly');
 

@@ -21,6 +21,7 @@ The GitHub Actions workflow runs on pushes and pull requests to `main`, with rea
 | Missing scenery | A bout stays playable, identifies fallback scenery, and can recover the painting without resetting Training readouts |
 | Stalled request | Progress remains visible; controller Start and keyboard activation cannot begin early; completion unlocks play |
 | Fonts/audio | System-font fallback, audio errors leave controls usable, and audio can retry successfully |
+| Stalled audio output | A pending native output startup reports failure after five seconds, Training combat remains usable, and a new gesture can retry |
 | Animation reel | Missing fighter artwork can retry without refreshing |
 | Existing controller harness | All 24 flows, including real combat, throws, guided lessons, saved bindings, disconnect/reconnect, and scripted Arcade progression/endings |
 | Performance pass | All 24 fighter/stage pairings render and produce frame callback/interval measurements |
@@ -49,7 +50,15 @@ The following measurements came from the final headless Playwright run on this m
 
 These observations are approximately 60 FPS in this environment, with 0 sampled intervals over 33.5 ms across the three engines. They do not guarantee frame pacing on lower-end machines, physical high-refresh displays, or during sustained play. The original render path already had headroom, so no speculative rendering or combat-timing rewrite was introduced. Successful atlas caching, concurrent-request sharing, bounded load attempts, reuse of decoded paintings for stage thumbnails, and release measurements are the focused improvements. Each browser run retains its raw `performance.json` with the report.
 
-The Chrome/Edge CI projects are configured but those branded applications are not installed locally, and no hosted Actions run exists until the workflow is pushed. A native Safari UI connection was too slow to complete a useful manual pass; no Safari-application test is claimed.
+The initial hosted checks passed the build, Chromium, branded Chrome, and branded Edge jobs. Firefox's audio recovery and WebKit's paused-throw checks failed on Linux; see the follow-up below. Branded Chrome/Edge remain uninstalled locally. A native Safari UI connection was too slow to complete a useful manual pass; no Safari-application test is claimed.
+
+## Linux regression follow-up — October 18, 2026
+
+The Firefox trace contained no audio asset requests after Enable audio: native output startup remained suspended before loading could begin. Forcing an unavailable output locally reproduced the same unchanged status and failed recovery assertion. Output startup now has a five-second deadline, and each attempt has an identity so an older timeout or completion cannot overwrite a successful retry. Node coverage checks timeout, late completion, successful retry, and stale failure. A ninth browser scenario stalls output startup, checks the error, plays Training while sound is unavailable, and recovers from a new gesture. Linux Firefox CI starts PulseAudio with a null sink so the separate normal asset-failure/recovery scenario exercises native Web Audio with an available output; it does not mock the audio implementation or establish speaker listening.
+
+A diagnostic run on Linux WebKit reproduced a three-channel change with a maximum channel delta of 40 in an otherwise paused frame. The arena was being redrawn on every frame even though simulation time had stopped. Paused bouts now retain their last canvas image; a tutorial that pauses after advancing still draws its final step. The controller harness checks both players' mid-throw pauses, health, zero arena image redraws, exact PNG and RGBA equality, and completion after the other player resumes. It does not loosen pixel tolerances or skip an engine.
+
+The follow-up passes all 73 Node tests, the 48-file/90-reference build check, and all nine browser scenarios in each local Chromium, Firefox, and WebKit engine (27 total). Hosted Linux results must be checked for the specific pushed commit in [Release checks](https://github.com/AaronFaby/pdcf/actions/workflows/release-checks.yml); local results alone do not establish a green hosted run.
 
 ## Release sign-off still requiring people or deployment access
 

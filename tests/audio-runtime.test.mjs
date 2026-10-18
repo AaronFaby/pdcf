@@ -44,6 +44,34 @@ test('an unavailable audio asset fails quietly and can be retried without interr
   } finally { globalThis.window = previousWindow; globalThis.fetch = previousFetch; }
 });
 
+test('a stalled audio output times out, retries, and ignores a late resume', async t => {
+  const previousWindow = globalThis.window, previousFetch = globalThis.fetch;
+  t.mock.timers.enable({ apis: ['setTimeout'] });
+  let finishResume, requests = 0;
+  class StalledContext extends AudioContextFixture {
+    resume() { return new Promise(resolve => { finishResume = resolve; }); }
+  }
+  try {
+    globalThis.window = { AudioContext: StalledContext };
+    globalThis.fetch = async () => { requests++; return { ok: true, arrayBuffer: async () => new ArrayBuffer(4) }; };
+    const audio = new GameAudio(), pending = audio.unlock();
+    assert.equal(audio.error, false); assert.equal(requests, 0);
+    t.mock.timers.tick(5000); await pending;
+    assert.equal(audio.error, true); assert.equal(audio.source, null);
+    finishResume(); await Promise.resolve();
+    assert.equal(audio.error, true); assert.equal(requests, 0, 'late resume cannot finish the timed-out attempt');
+    audio.context.resume = AudioContextFixture.prototype.resume;
+    await audio.unlock();
+    assert.equal(audio.error, false); assert.ok(audio.source); assert.equal(requests, 14);
+    audio.context.resume = StalledContext.prototype.resume;
+    const stale = audio.unlock();
+    audio.context.resume = AudioContextFixture.prototype.resume;
+    await audio.unlock();
+    t.mock.timers.tick(10000); await stale;
+    assert.equal(audio.error, false, 'an older timeout cannot overwrite a successful retry');
+  } finally { globalThis.window = previousWindow; globalThis.fetch = previousFetch; }
+});
+
 test('stage scores load on demand, switch without stale playback, and preserve pause/mute', async () => {
   const previousWindow = globalThis.window, previousFetch = globalThis.fetch;
   try {

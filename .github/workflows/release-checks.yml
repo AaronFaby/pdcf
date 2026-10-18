@@ -45,6 +45,13 @@ jobs:
           name: static-game
           path: dist/
       - run: npx playwright install --with-deps ${{ matrix.browser }}
+      - name: Provide a virtual audio output for Firefox
+        if: matrix.browser == 'firefox'
+        run: |
+          sudo apt-get install -y pulseaudio pulseaudio-utils
+          pulseaudio --start --exit-idle-time=-1
+          pactl load-module module-null-sink sink_name=release-tests
+          pactl set-default-sink release-tests
       - run: npm run test:browser -- --project=${{ matrix.browser }}
       - uses: actions/upload-artifact@v4
         if: ${{ !cancelled() }}

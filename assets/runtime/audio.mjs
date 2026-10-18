@@ -26,7 +26,8 @@ export class GameAudio {
   }
   async unlock() {
     if (!this.settings.enabled) return;
-    const track = this.track;
+    const track = this.track, attempt = this.attempt = (this.attempt || 0) + 1;
+    let timer;
     try {
       this.context ||= new (window.AudioContext || window.webkitAudioContext)();
       if (!this.musicGain) {
@@ -37,7 +38,12 @@ export class GameAudio {
         limiter.attack.value = .003; limiter.release.value = .12;
         this.musicGain.connect(limiter); this.fxGain.connect(limiter); limiter.connect(this.context.destination);
       }
-      await this.context.resume();
+      // A missing output device can leave resume pending indefinitely in Firefox.
+      await Promise.race([
+        this.context.resume(),
+        new Promise((_, reject) => { timer = setTimeout(() => reject(new Error('Audio output did not start')), 5000); })
+      ]);
+      clearTimeout(timer);
       await Promise.all([track, ...CUES].map(name => {
         if (this.buffers.has(name)) return;
         if (!this.loading.has(name)) {
@@ -50,8 +56,9 @@ export class GameAudio {
         }
         return this.loading.get(name);
       }));
-      if (track === this.track) { this.error = false; this.mix(); }
-    } catch { if (track === this.track) this.error = true; }
+      if (track === this.track && attempt === this.attempt) { this.error = false; this.mix(); }
+    } catch { if (track === this.track && attempt === this.attempt) this.error = true; }
+    finally { clearTimeout(timer); }
   }
   async setStage(id) {
     const next = stageFor(id).id;
