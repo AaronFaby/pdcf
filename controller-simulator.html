@@ -90,6 +90,24 @@ async function runChecks() {
   await tap(0,1);requireCheck(!gameElement('help-dialog').open,'P1 Back did not close help');
   passed('Help opens and closes from either controller');
 
+  await frame.contentDocument.fonts.ready;
+  const anchors=['.hero h1','.film-frame','.mode-picker','.casting'];
+  const positions=()=>anchors.map(selector=>{const rect=frame.contentDocument.querySelector(selector).getBoundingClientRect();return rect.top+frame.contentWindow.scrollY;});
+  const baseline=positions();
+  for(const mode of ['arcade','local','training','cpu']) {
+    frame.contentDocument.querySelector(`[data-mode="${mode}"]`).click();await advance(3);
+    requireCheck(positions().every((top,i)=>Math.abs(top-baseline[i])<1),`Selecting ${mode} moved the title, preview, modes or roster`);
+    const stages=[...frame.contentDocument.querySelectorAll('[data-stage]')];
+    requireCheck(stages.every(button=>button.disabled===(mode==='arcade')),'Arcade tour stage controls were not disabled correctly');
+    if(mode==='local'||mode==='training') {
+      frame.contentDocument.querySelector('[data-mode="arcade"]').focus();await tap(0,13);
+      requireCheck(frame.contentDocument.activeElement===(!gameElement('arcade-resume').hidden?gameElement('arcade-resume'):stages[0]),'Controller navigation landed on hidden difficulty controls');
+    }
+    if(mode==='cpu')for(const button of stages){button.click();await advance(3);requireCheck(positions().every((top,i)=>Math.abs(top-baseline[i])<1),'Changing stages moved the page layout');}
+  }
+  frame.contentDocument.querySelector('[data-stage="ink-harbor"]').click();await advance(3);
+  passed('Mode and stage choices keep the title, preview, mode controls and roster stationary');
+
   frame.contentDocument.querySelector('[data-mode="cpu"]').focus();await tap(0,15);await tap(1,0);
   requireCheck(frame.contentDocument.querySelector('[data-mode="local"]').getAttribute('aria-pressed')==='true','Could not select local mode with a controller');
   await tap(0,9); await advance(160);

@@ -103,8 +103,12 @@ function updateSelection() {
   document.querySelector('[data-slot="1"]').hidden = mode === 'arcade';
   $('difficulty-picker').hidden = !['cpu', 'arcade'].includes(mode);
   $('arcade-description').hidden = mode !== 'arcade';
-  $('stage-picker').hidden = mode === 'arcade';
-  for (const button of document.querySelectorAll('[data-stage]')) button.setAttribute('aria-pressed', String(button.dataset.stage === selectedStage));
+  $('stage-description').hidden = mode === 'arcade';
+  $('stage-title').textContent = mode === 'arcade' ? 'ARCADE TOUR' : 'SET THE SCENE';
+  for (const button of document.querySelectorAll('[data-stage]')) {
+    button.disabled = mode === 'arcade';
+    button.setAttribute('aria-pressed', String(button.dataset.stage === preview.stage));
+  }
   $('stage-description').textContent = stageFor(preview.stage).description + ` Music: ${stageFor(preview.stage).music}.`;
   presentStage(preview.stage);
   $('start-button').textContent = mode === 'arcade' ? 'NEW ARCADE RUN →' : 'LET’S MAKE A SCENE →';
@@ -367,7 +371,7 @@ function pollControllers() {
     if (keys.cancel && dialog) { dialog.dispatchEvent(new Event('cancel', { cancelable: true })); if (dialog.open && !['pause-dialog', 'result-dialog'].includes(dialog.id)) dialog.close(); return; }
     if (match && !paused && !dialog) continue;
     const root = dialog || document;
-    const buttons = [...root.querySelectorAll('button:not(:disabled), input[type="range"]')].filter(button => button.getClientRects().length);
+    const buttons = [...root.querySelectorAll('button:not(:disabled), input[type="range"]')].filter(button => button.getClientRects().length && getComputedStyle(button).visibility !== 'hidden');
     const active = document.activeElement;
     if (active?.type === 'range' && (keys.left || keys.right)) {
       active.value = Math.min(100, Math.max(0, Number(active.value) + (keys.right ? 5 : -5))); active.dispatchEvent(new Event('input')); continue;

@@ -62,7 +62,7 @@ Record new asset sources in `assets/provenance.md`. Describe the current art as 
 
 For behavior changes, add a focused regression using `node:test` in the relevant existing test file, then run `npm test` and `git diff --check`. Check changed modules with `node --check path/to/file.mjs`. For documentation-only edits, verify commands, links, and claims against the repository; game tests need not be repeated unless the documentation changes reveal a code issue.
 
-For input, menu, or progression changes, run the game and the local `controller-simulator.html` harness. **Run controller checks** currently covers 14 flows, including both players, pause, reconnect, Training, stage selection, and the Arcade tour. Keep its restoration of the previous saved run and audio settings. Arcade timeout scripting belongs in `tests/fixtures/arcade-engine.mjs`; production must keep importing the real engine directly.
+For input, menu, or progression changes, run the game and the local `controller-simulator.html` harness. **Run controller checks** currently covers 15 flows, including both players, stable menu layout, pause, reconnect, Training, stage selection, and the Arcade tour. Keep its restoration of the previous saved run and audio settings. Arcade timeout scripting belongs in `tests/fixtures/arcade-engine.mjs`; production must keep importing the real engine directly. Hidden controls that reserve layout space must remain excluded from controller navigation.
 
 For UI changes, check the affected mode, dialog focus, keyboard/controller navigation, desktop/mobile layout, reduced motion, and browser console. For combat changes, exercise hit/miss/block, recovery, round transitions, and affected modes/fighters. A screenshot alone does not verify animation or gameplay.
 

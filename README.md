@@ -50,7 +50,7 @@ Choose your fighter and practice dummy, then start immediately in jab range with
 
 ## Stages and music
 
-Use **Set the scene** beneath the matchup preview to choose a stage for CPU, Local, or Training. The preview and music change together. Your choice stays in place for rematches and Training resets during the page session. The Harbor Headliners shortcut always starts Mickey versus Popeye at Ink Harbor. Arcade uses its fixed venue tour instead of the picker.
+Use **Set the scene** beneath the matchup preview to choose a stage for CPU, Local, or Training. The preview and music change together. Your choice stays in place for rematches and Training resets during the page session. The Harbor Headliners shortcut always starts Mickey versus Popeye at Ink Harbor. Arcade shows the four stages as a non-interactive **Arcade tour** preview and uses its fixed venue order. Mode and stage choices keep the title, preview, and roster in place.
 
 | Stage | Animated scenery | Original score |
 | --- | --- | --- |
@@ -142,7 +142,7 @@ git diff --check
 
 The current suite has **49 Node tests** covering combat, CPU matches, round transitions, controllers, Training, Arcade progression/checkpoint validation, cel generation/timing, and audio generation/lifecycle. Stage regressions cover equal combat rules, Training/round resets, the Arcade venue tour and old checkpoints, distinct paintings, deterministic score generation, loop headroom, lazy loading, rapid music switches, and failure recovery. Tests use Node's built-in runner.
 
-With the server running, open [the controller simulator](http://127.0.0.1:4173/controller-simulator.html). Connect P1/P2 for manual checks, or click **Run controller checks** for **14 repeatable browser checks** covering menu navigation, both players, pause/resume, disconnect/reconnect, Training controls, all four stage choices, and Arcade progression/venues/endings. Buttons toggle held state; use **Release** after screen changes. The simulator suppresses iframe focus-loss pausing so its outer controls remain usable.
+With the server running, open [the controller simulator](http://127.0.0.1:4173/controller-simulator.html). Connect P1/P2 for manual checks, or click **Run controller checks** for **15 repeatable browser checks** covering menu navigation, stable mode/stage layout, both players, pause/resume, disconnect/reconnect, Training controls, all four stage choices, and Arcade progression/venues/endings. Buttons toggle held state; use **Release** after screen changes. The simulator suppresses iframe focus-loss pausing so its outer controls remain usable.
 
 Arcade flow checks use `tests/fixtures/arcade-engine.mjs` to script timeout outcomes through the real round-resolution code. They verify progression and recovery, not human-played wins or difficulty balance. The harness restores the previous Arcade checkpoint and audio preferences afterward.
 
