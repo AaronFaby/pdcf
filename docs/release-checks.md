@@ -60,6 +60,8 @@ A diagnostic run on Linux WebKit reproduced a three-channel change with a maximu
 
 The follow-up passes all 73 Node tests, the 48-file/90-reference build check, and all nine browser scenarios in each local Chromium, Firefox, and WebKit engine (27 total). Hosted Linux results must be checked for the specific pushed commit in [Release checks](https://github.com/AaronFaby/pdcf/actions/workflows/release-checks.yml); local results alone do not establish a green hosted run.
 
+The first hosted follow-up passed Firefox and WebKit's strict pause checks, then Linux WebKit reached the controller test's old 60-second deadline while still progressing through its 24 flows. That scenario now allows 120 seconds within a 150-second test budget, and reports an explicit harness failure immediately instead of waiting for the deadline. All 24 passes are still required.
+
 ## Release sign-off still requiring people or deployment access
 
 - Physical controller pairing, reconnects, button labels, and latency.

@@ -96,9 +96,12 @@ test('a stalled audio output reports failure, keeps combat usable and retries fr
 });
 
 test('complete virtual-controller and Arcade regression matrix', async ({ page }) => {
+  test.setTimeout(150000);
   await page.goto('http://127.0.0.1:4173/controller-simulator.html');await page.getByRole('button',{name:'Run controller checks',exact:true}).click();
-  await expect(page.locator('#checks')).toContainText('ALL CONTROLLER CHECKS PASSED',{timeout:60000});
-  expect((await page.locator('#checks').textContent()).split('\n').filter(line=>line.startsWith('PASS '))).toHaveLength(24);
+  const output=page.locator('#checks');
+  await expect(output).toContainText(/ALL CONTROLLER CHECKS PASSED|FAIL /,{timeout:120000});
+  const result=await output.textContent();expect(result).not.toContain('FAIL ');
+  expect(result.split('\n').filter(line=>line.startsWith('PASS '))).toHaveLength(24);
 });
 
 test('all 24 fighter/stage combinations produce a frame-timing report', async ({ page },testInfo) => {
