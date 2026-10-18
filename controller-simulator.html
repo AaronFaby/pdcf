@@ -72,8 +72,10 @@ async function runChecks() {
  const preferences=localStorage.getItem('pdcf-audio-v1');
  const checkpoint=localStorage.getItem('pdcf-arcade-v1');
  const bindings=localStorage.getItem('pdcf-controls-v1');
+ const visuals=localStorage.getItem('pdcf-visuals-v1');
  try {
   localStorage.removeItem('pdcf-controls-v1');
+  localStorage.removeItem('pdcf-visuals-v1');
   pads[0]=makePad(0);pads[1]=makePad(1);
   await loadGameForChecks(true); await advance(3);
   requireCheck(gameElement('controller-status').textContent.includes('P2 CONTROLLER READY'),'Both pads must join');
@@ -92,6 +94,20 @@ async function runChecks() {
   gameElement('help-button').focus();await tap(1,0);requireCheck(gameElement('help-dialog').open,'P2 confirm did not open help');
   await tap(0,1);requireCheck(!gameElement('help-dialog').open,'P1 Back did not close help');
   passed('Help opens and closes from either controller');
+
+  gameElement('settings-button').click();gameElement('visual-motion').focus();await tap(0,0);
+  requireCheck(frame.contentDocument.documentElement.dataset.motion==='reduced' && gameElement('visual-shake').disabled && gameElement('visual-film').getAttribute('aria-pressed')==='false','Reduced motion did not disable decorative effects');
+  await tap(1,0);requireCheck(frame.contentDocument.documentElement.dataset.motion==='full','P2 could not select full motion');
+  for(const name of ['shake','film','backgrounds']){gameElement('visual-'+name).focus();await tap(name==='film'?1:0,0);requireCheck(gameElement('visual-'+name).getAttribute('aria-pressed')==='false','Controller could not disable '+name);}
+  await tap(1,1);await loadGameForChecks(true);await advance(3);
+  gameElement('settings-button').click();
+  requireCheck(gameElement('visual-motion').textContent.includes('FULL') && frame.contentDocument.documentElement.dataset.film==='off' && gameElement('visual-backgrounds').getAttribute('aria-pressed')==='false','Visual preferences did not survive reload');
+  frame.style.width='390px';await advance(3);
+  const picture=gameElement('settings-dialog').getBoundingClientRect();
+  requireCheck(picture.left>=0 && picture.right<=390 && gameElement('settings-dialog').scrollWidth<=gameElement('settings-dialog').clientWidth+1,'Picture options overflow the narrow viewport');
+  frame.style.width='100%';await advance(3);
+  await tap(0,1);localStorage.removeItem('pdcf-visuals-v1');await loadGameForChecks(true);await advance(3);
+  passed('Both controllers configure visual effects; reduced motion overrides decoration and saved preferences reload');
 
   await frame.contentDocument.fonts.ready;
   const anchors=['.hero h1','.film-frame','.mode-picker','.casting'];
@@ -329,6 +345,10 @@ async function runChecks() {
   requireCheck(gameElement('pause-dialog').open && !gameElement('moves-dialog').open && gameElement('timer').textContent===pausedClock,'Closing move lists resumed the underlying pause menu');
   gameElement('controls-pause').click();await advance(3);
   await tap(1,1);requireCheck(gameElement('pause-dialog').open && !gameElement('controls-dialog').open,'Closing controls resumed the underlying pause menu');
+  gameElement('display-pause').focus();await tap(0,0);await tap(1,13);
+  requireCheck(frame.contentDocument.activeElement.id==='music-volume','Nested Options routed controller navigation to Pause');
+  gameElement('visual-motion').focus();await tap(0,0);await tap(1,0);await tap(0,0);await tap(1,1);
+  requireCheck(gameElement('pause-dialog').open && !gameElement('settings-dialog').open,'Controller Back from display settings resumed the paused fight');
   await tap(0,9);key('KeyN');await advance(40);requireCheck(gameElement('practice-hit').textContent==='—','Move-list inputs leaked after resume');
   pads[0].axes=[.5,0];await advance(20);requireCheck(!gameElement('practice-inputs').textContent.includes('→'),'Below-dead-zone stick drift moved P1');
   pads[0].axes=[.7,0];await advance(20);requireCheck(gameElement('practice-inputs').textContent.includes('→'),'Above-dead-zone input did not move P1');
@@ -410,6 +430,9 @@ async function runChecks() {
   frame.contentWindow.dispatchEvent(new frame.contentWindow.KeyboardEvent('keydown',{code:'KeyQ',bubbles:true}));
   requireCheck(gameElement('controls-save-status').textContent.includes('unavailable') && frame.contentDocument.querySelector('[data-bind-action="punch"][data-bind-device="keyboard"]').textContent==='Q','Storage failure blocked remapping');
   passed('Controls remain editable and usable when browser storage is disabled');
+  query('[data-close="controls-dialog"]').click();gameElement('visual-motion').click();await advance(3);
+  requireCheck(gameElement('visual-storage').textContent.includes('could not be saved') && frame.contentDocument.documentElement.dataset.motion==='reduced','Storage failure blocked visual preferences');
+  passed('Visual settings remain usable when browser storage is disabled');
   lines.push('ALL CONTROLLER CHECKS PASSED');
  } catch(error) { lines.push('FAIL '+error.message); }
  finally {
@@ -417,6 +440,7 @@ async function runChecks() {
   if(preferences===null)localStorage.removeItem('pdcf-audio-v1');else localStorage.setItem('pdcf-audio-v1',preferences);
   if(checkpoint===null)localStorage.removeItem('pdcf-arcade-v1');else localStorage.setItem('pdcf-arcade-v1',checkpoint);
   if(bindings===null)localStorage.removeItem('pdcf-controls-v1');else localStorage.setItem('pdcf-controls-v1',bindings);
+  if(visuals===null)localStorage.removeItem('pdcf-visuals-v1');else localStorage.setItem('pdcf-visuals-v1',visuals);
   pads[0]=makePad(0);pads[1]=makePad(1);refreshHeld();
   testing=false;
   try {await loadGameForChecks(false);}catch(error){checkOutput.textContent+='\nReload failed: '+error.message;}

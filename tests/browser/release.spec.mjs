@@ -101,7 +101,7 @@ test('complete virtual-controller and Arcade regression matrix', async ({ page }
   const output=page.locator('#checks');
   await expect(output).toContainText(/ALL CONTROLLER CHECKS PASSED|FAIL /,{timeout:120000});
   const result=await output.textContent();expect(result).not.toContain('FAIL ');
-  expect(result.split('\n').filter(line=>line.startsWith('PASS '))).toHaveLength(24);
+  expect(result.split('\n').filter(line=>line.startsWith('PASS '))).toHaveLength(26);
 });
 
 test('all 24 fighter/stage combinations produce a frame-timing report', async ({ page },testInfo) => {
@@ -112,4 +112,96 @@ test('all 24 fighter/stage combinations produce a frame-timing report', async ({
   for(const result of report.results){expect(result.samples).toBeGreaterThan(20);expect(result.callbackMs.p95).toBeGreaterThanOrEqual(0);}
   const file=testInfo.outputPath('performance.json');await writeFile(file,JSON.stringify(report,null,2));
   await testInfo.attach('performance.json',{path:file,contentType:'application/json'});
+});
+
+test('visual preferences follow system changes, support keyboard choices and survive reload', async ({page})=>{
+  await page.emulateMedia({reducedMotion:'reduce'});await page.goto('/');
+  await expect(page.locator('html')).toHaveAttribute('data-motion','reduced');await expect(page.locator('.paper-grain')).toBeHidden();
+  await page.locator('#settings-button').click();await expect(page.locator('#visual-shake')).toBeDisabled();
+  await page.locator('#visual-motion').press('Enter');await page.locator('#visual-motion').press('Space');
+  await expect(page.locator('html')).toHaveAttribute('data-motion','full');
+  for(const name of ['shake','film','backgrounds']){await page.locator('#visual-'+name).click();await expect(page.locator('#visual-'+name)).toHaveAttribute('aria-pressed','false');}
+  await page.reload();await page.locator('#settings-button').click();
+  await expect(page.locator('#visual-motion')).toHaveText('MOTION: FULL');await expect(page.locator('#visual-backgrounds')).toHaveAttribute('aria-pressed','false');
+  await expect(page.locator('.paper-grain')).toBeHidden();
+  expect(await page.evaluate(()=>JSON.parse(localStorage.getItem('pdcf-visuals-v1')))).toEqual({motion:'full',shake:false,film:false,backgrounds:false});
+  await page.locator('#visual-motion').click();await expect(page.locator('html')).toHaveAttribute('data-motion','reduced');
+  await page.emulateMedia({reducedMotion:'no-preference'});await expect(page.locator('html')).toHaveAttribute('data-motion','full');
+  await expect(page.locator('#visual-shake')).toBeEnabled();await expect(page.locator('#visual-shake')).toHaveAttribute('aria-pressed','false');
+  await page.locator('#visual-film').press('Enter');await expect(page.locator('.paper-grain')).toBeVisible();
+});
+
+test('corrupt or blocked visual storage falls back safely and changes still apply',async({page})=>{
+  await page.emulateMedia({reducedMotion:'no-preference'});
+  await page.addInitScript(()=>{if(location.search.includes('storage-blocked'))Object.defineProperty(window,'localStorage',{get(){throw Error('Storage blocked');}});else localStorage.setItem('pdcf-visuals-v1','{broken');});
+  await page.goto('/');await expect(page.locator('#start-button')).toBeEnabled();await page.locator('#settings-button').click();
+  await expect(page.locator('#visual-motion')).toHaveText('MOTION: FOLLOW SYSTEM');await page.locator('#visual-motion').click();
+  expect(await page.evaluate(()=>JSON.parse(localStorage.getItem('pdcf-visuals-v1')).motion)).toBe('reduced');
+  await page.goto('/?storage-blocked');await expect(page.locator('#start-button')).toBeEnabled();await page.locator('#settings-button').click();await page.locator('#visual-motion').click();
+  await expect(page.locator('#visual-storage')).toContainText('could not be saved');await expect(page.locator('html')).toHaveAttribute('data-motion','reduced');
+  await page.getByRole('button',{name:'Close options',exact:true}).click();await page.locator('[data-mode="training"]').click();await page.locator('#start-button').click();
+  await page.keyboard.press('KeyF');await expect(page.locator('#practice-hit')).toContainText('PUNCH');
+});
+
+test('reduced effects preserve every mode and readable HUD/canvas proportions at narrow sizes',async({page})=>{
+  await page.addInitScript(()=>localStorage.setItem('pdcf-visuals-v1',JSON.stringify({motion:'reduced',shake:false,film:false,backgrounds:false})));
+  await page.goto('/');await expect(page.locator('#start-button')).toBeEnabled();
+  for(const mode of ['cpu','local','training','arcade']){
+    await page.locator(`[data-mode="${mode}"]`).click();await page.locator('#start-button').click();
+    if(mode==='arcade')await page.locator('#arcade-play').click();
+    await expect(page.locator('#game')).toBeVisible();await expect(page.locator('html')).toHaveAttribute('data-motion','reduced');
+    for(const viewport of [{width:1280,height:720},{width:390,height:844},{width:800,height:500}]){
+      await page.setViewportSize(viewport);
+      const canvas=await page.locator('#arena').boundingBox(),hud=await page.locator('.fight-hud').boundingBox();
+      expect(canvas.width/canvas.height).toBeCloseTo(16/9,2);expect(hud.y+hud.height).toBeLessThanOrEqual(canvas.y+1);
+      expect(hud.x).toBeGreaterThanOrEqual(0);expect(hud.x+hud.width).toBeLessThanOrEqual(viewport.width);
+      expect(await page.locator('.meter-label').first().evaluate(el=>parseFloat(getComputedStyle(el).fontSize))).toBeGreaterThanOrEqual(10);
+      await expect.poll(()=>page.locator('#hp-one').evaluate(el=>el.textContent===document.getElementById('health-one').getAttribute('aria-valuenow'))).toBe(true);
+      await expect(page.locator('#meter-one')).toHaveAttribute('role','meter');
+    }
+    await page.keyboard.press('Escape');await page.locator('#display-pause').click();await page.locator('#visual-motion').click();
+    await page.getByRole('button',{name:'Close options',exact:true}).click();await expect(page.locator('#pause-dialog')).toBeVisible();
+    await page.locator('#resume-button').click();await page.locator('#back-button').click();
+    await page.setViewportSize({width:1280,height:720});
+    // Restore the reduced profile through the same player-facing controls.
+    await page.locator('#settings-button').click();
+    for(let i=0;i<3&&await page.locator('#visual-motion').textContent()!=='MOTION: REDUCED';i++)await page.locator('#visual-motion').click();
+    await expect(page.locator('#visual-motion')).toHaveText('MOTION: REDUCED');
+    await page.getByRole('button',{name:'Close options',exact:true}).click();
+  }
+});
+
+test('fullscreen enters from Options, preserves focus/aspect and pauses safely on external exit',async({page},testInfo)=>{
+  await page.goto('/');await expect(page.locator('#start-button')).toBeEnabled();await page.locator('#settings-button').click();
+  const supported=await page.evaluate(()=>!!(document.fullscreenEnabled&&document.documentElement.requestFullscreen&&document.exitFullscreen));
+  if(!supported){await expect(page.locator('#fullscreen-button')).toBeDisabled();await expect(page.locator('#fullscreen-status')).toContainText('Windowed play');testInfo.annotations.push({type:'fullscreen',description:'Native fullscreen unavailable; windowed fallback verified.'});return;}
+  await page.locator('#fullscreen-button').press('Enter');await expect.poll(()=>page.evaluate(()=>!!document.fullscreenElement)).toBe(true);
+  await expect(page.locator('#settings-dialog')).toBeVisible();await expect(page.locator('#fullscreen-button')).toBeFocused();
+  await expect(page.locator('#fullscreen-button')).toHaveText('EXIT FULLSCREEN');
+  await page.getByRole('button',{name:'Close options',exact:true}).click();await page.locator('[data-mode="training"]').click();await page.locator('#start-button').click();
+  const canvas=await page.locator('#arena').boundingBox();expect(canvas.width/canvas.height).toBeCloseTo(16/9,2);
+  const wrap=await page.locator('.arena-wrap').boundingBox();expect(wrap.y).toBeGreaterThanOrEqual(0);expect(wrap.y+wrap.height).toBeLessThanOrEqual(page.viewportSize().height);
+  await page.keyboard.down('KeyD');await page.evaluate(()=>document.exitFullscreen());await page.keyboard.up('KeyD');
+  await expect(page.locator('#pause-dialog')).toBeVisible();await expect(page.locator('#pause-message')).toContainText('Fullscreen ended');
+  await page.locator('#display-pause').click();await page.locator('#fullscreen-button').click();await expect.poll(()=>page.evaluate(()=>!!document.fullscreenElement)).toBe(true);
+  await page.getByRole('button',{name:'Close options',exact:true}).click();await expect(page.locator('#pause-dialog')).toBeVisible();await page.locator('#display-pause').click();
+  await page.locator('#fullscreen-button').click();await expect.poll(()=>page.evaluate(()=>!!document.fullscreenElement)).toBe(false);
+  await page.getByRole('button',{name:'Close options',exact:true}).click();await expect(page.locator('#pause-dialog')).toBeVisible();
+  await page.locator('#resume-button').click();await expect(page.locator('#arena')).toBeFocused();
+  await page.keyboard.press('KeyF');await expect(page.locator('#practice-hit')).toContainText('PUNCH');
+});
+
+test('fullscreen rejection and unsupported browsers retain usable settings and windowed play',async({page})=>{
+  await page.addInitScript(()=>{
+    Object.defineProperty(document,'fullscreenEnabled',{configurable:true,value:!location.search.includes('no-fullscreen')});
+    Element.prototype.requestFullscreen=()=>location.search.includes('fullscreen-noop')?Promise.resolve():Promise.reject(Error('Test: fullscreen denied'));
+    document.exitFullscreen=()=>Promise.resolve();
+  });
+  await page.goto('/');await page.locator('#settings-button').click();await page.locator('#fullscreen-button').click();
+  await expect(page.locator('#fullscreen-status')).toContainText('could not start');await expect(page.locator('#fullscreen-button')).toBeEnabled();await expect(page.locator('#settings-dialog')).toBeVisible();
+  await page.goto('/?fullscreen-noop');await page.locator('#settings-button').click();await page.locator('#fullscreen-button').click();
+  await expect(page.locator('#fullscreen-status')).toContainText('could not start');await expect(page.locator('#fullscreen-button')).toBeEnabled();
+  await page.goto('/?no-fullscreen');await page.locator('#settings-button').click();await expect(page.locator('#fullscreen-button')).toBeDisabled();
+  await page.locator('#visual-motion').click();await expect(page.locator('html')).toHaveAttribute('data-motion','reduced');
+  await page.getByRole('button',{name:'Close options',exact:true}).click();await expect(page.locator('#start-button')).toBeEnabled();await page.locator('#start-button').click();await expect(page.locator('#game')).toBeVisible();
 });

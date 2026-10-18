@@ -10,6 +10,7 @@ import { Controllers } from './assets/runtime/controllers.mjs';
 import { GameAudio } from './assets/runtime/audio.mjs';
 import { ARCADE_KEY, ENDINGS, createArcade, arcadeMatch, finishArcade, restoreArcade } from './assets/runtime/arcade.mjs';
 import { STAGES, stageFor, arcadeVenue } from './assets/runtime/stages.mjs';
+import { VISUALS_KEY, MOTION_MODES, visualSettings, visualEffects } from './assets/runtime/visuals.mjs';
 
 const $ = id => document.getElementById(id);
 const selection = ['mickey', 'popeye'];
@@ -23,12 +24,76 @@ let celsReady = false, assetsLoading = false;
 const loadedAssets = new Set(), failedAssets = new Map();
 const arena = $('arena'), arenaContext = arena.getContext('2d');
 const showcaseContext = $('showcase').getContext('2d');
-const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
+const motionQuery = matchMedia('(prefers-reduced-motion: reduce)');
+let visuals = visualSettings(), visualsStored = true;
+try { visuals = visualSettings(JSON.parse(localStorage.getItem(VISUALS_KEY))); } catch { visualsStored = false; }
+let effects = visualEffects(visuals, motionQuery.matches);
 const backgrounds = new Map();
 const held = new Set(), edges = new Set(), touches = new Map(), touchEdges = new Set();
 const controls = new ControlPanel(controllers, () => { clearInput(); refreshControlHints(); if ($('moves-dialog').open) renderMoves(); if (match?.training) updatePractice(); });
 let moveFighter = 'mickey', movePlayer = 0;
 const portraits = [];
+
+function updateVisuals() {
+  effects = visualEffects(visuals, motionQuery.matches);
+  document.documentElement.dataset.motion = effects.reducedMotion ? 'reduced' : 'full';
+  document.documentElement.dataset.film = effects.film ? 'on' : 'off';
+  $('visual-motion').textContent = `MOTION: ${{ system: 'FOLLOW SYSTEM', reduced: 'REDUCED', full: 'FULL' }[visuals.motion]}`;
+  for (const name of ['shake', 'film', 'backgrounds']) {
+    const button = $('visual-' + name);
+    button.textContent = `${{ shake: 'SCREEN SHAKE', film: 'FILM EFFECTS', backgrounds: 'MOVING SCENERY' }[name]}: ${effects[name] ? 'ON' : 'OFF'}`;
+    button.setAttribute('aria-pressed', String(effects[name])); button.disabled = effects.reducedMotion;
+  }
+  $('visual-summary').textContent = effects.reducedMotion ? 'Reduced motion: still scenery and idle poses, no shake or film effects. Attacks keep their animation cues.' : 'Full motion. Adjust decorative effects below; fighting speed and attack cues stay the same.';
+  $('visual-storage').textContent = visualsStored ? 'Visual preferences are saved on this browser.' : 'Visual preferences apply now, but could not be saved on this browser.';
+  portraitFrame = -1;
+  if (match && paused) drawScene(arenaContext, match, backgrounds.get(match.stage), match.elapsed, effects);
+}
+for (const name of ['motion', 'shake', 'film', 'backgrounds']) $('visual-' + name).addEventListener('click', () => {
+  visuals[name] = name === 'motion' ? MOTION_MODES[(MOTION_MODES.indexOf(visuals.motion) + 1) % MOTION_MODES.length] : !visuals[name];
+  try { localStorage.setItem(VISUALS_KEY, JSON.stringify(visuals)); visualsStored = true; } catch { visualsStored = false; }
+  clearInput(); updateVisuals();
+});
+motionQuery.addEventListener('change', updateVisuals);
+
+let fullscreen = !!document.fullscreenElement;
+let fullscreenBusy = false;
+const fullscreenButton = $('fullscreen-button');
+const fullscreenSupported = !!(document.fullscreenEnabled && document.documentElement.requestFullscreen && document.exitFullscreen);
+function fullscreenUI() {
+  fullscreenButton.disabled = !fullscreenSupported || fullscreenBusy;
+  fullscreenButton.textContent = !fullscreenSupported ? 'FULLSCREEN UNAVAILABLE' : document.fullscreenElement ? 'EXIT FULLSCREEN' : 'ENTER FULLSCREEN';
+  fullscreenButton.setAttribute('aria-pressed', String(!!document.fullscreenElement));
+}
+fullscreenButton.addEventListener('click', async () => {
+  clearInput(); fullscreenBusy = true; fullscreenUI();
+  const entering = !document.fullscreenElement;
+  try {
+    if (entering) await document.documentElement.requestFullscreen(); else await document.exitFullscreen();
+    if (!!document.fullscreenElement !== entering) throw Error('Fullscreen state did not change');
+    $('fullscreen-status').textContent = 'Use this button or your browser’s Escape key to leave fullscreen. Leaving a fight pauses it.';
+  } catch { $('fullscreen-status').textContent = 'Fullscreen could not start. Click the button or press Enter on it to try again; windowed play is still available.'; }
+  fullscreenBusy = false; fullscreenUI();
+  if ($('settings-dialog').open) fullscreenButton.focus({ preventScroll: true });
+});
+document.addEventListener('fullscreenchange', () => {
+  const leaving = fullscreen && !document.fullscreenElement;
+  fullscreen = !!document.fullscreenElement; clearInput(); fullscreenUI();
+  if (fullscreen) {
+    // WebKit can put fullscreen above existing dialogs; restore parents before Options.
+    const dialogs = [...document.querySelectorAll('dialog[open]:not(#settings-dialog)')];
+    if ($('settings-dialog').open) dialogs.push($('settings-dialog'));
+    for (const dialog of dialogs) {
+      const top = dialog.scrollTop; dialog.close(); dialog.showModal(); dialog.scrollTop = top;
+    }
+  }
+  if (leaving && match) pause('Fullscreen ended. Release held inputs, then resume when you’re ready.');
+  const dialog = document.activeElement?.closest('dialog[open]');
+  if (dialog?.id === 'settings-dialog') fullscreenButton.focus({ preventScroll: true });
+  if (!dialog && match && !paused) arena.focus({ preventScroll: true });
+});
+fullscreenUI();
+if (!fullscreenSupported) $('fullscreen-status').textContent = 'This browser or embedded view does not offer fullscreen. Windowed play remains available.';
 
 function assetStatus() {
   const total = ROSTER.length + STAGES.length;
@@ -239,7 +304,10 @@ function updateHUD() {
     const side = i ? 'two' : 'one';
     $(`health-${side}`).firstElementChild.style.width = f.hp + '%';
     $(`health-${side}`).setAttribute('aria-valuenow', String(Math.round(f.hp)));
+    $(`hp-${side}`).textContent = Math.round(f.hp);
     $(`meter-${side}`).firstElementChild.style.width = f.meter + '%';
+    $(`meter-${side}`).setAttribute('aria-valuenow', String(Math.round(f.meter)));
+    $(`meter-${side}`).nextElementSibling.textContent = `INK ${Math.round(f.meter)}`;
     $(`meter-${side}`).classList.toggle('ready', f.meter >= SPECIAL_COST);
     $(`wins-${side}`).innerHTML = `<span class="${f.wins > 0 ? 'won' : ''}"></span><span class="${f.wins > 1 ? 'won' : ''}"></span>`;
     $(`wins-${side}`).setAttribute('aria-label', `${f.name}: ${f.wins} rounds won`);
@@ -401,10 +469,12 @@ for (const name of ['help', 'settings', 'training', 'controls', 'moves']) $(name
     paused = false; audio.setScene(match.phase === 'matchover' ? 'menu' : 'fight'); arena.focus({ preventScroll: true });
   }
 });
-$('settings-button').addEventListener('click', () => {
+function openSettings() {
   if (match) { paused = true; clearInput(); audio.pause(); }
   $('settings-dialog').showModal();
-});
+}
+$('settings-button').addEventListener('click', openSettings);
+$('display-pause').addEventListener('click', openSettings);
 function refreshControlHints() {
   controls.settings.players.forEach((profile, i) => {
     const root = $(i ? 'p2-controls' : 'p1-controls'), title = document.createElement('b'); title.textContent = `P${i + 1}`;
@@ -458,6 +528,7 @@ document.querySelectorAll('[data-close]').forEach(button => button.addEventListe
 
 window.addEventListener('keydown', event => {
   if (controls.keydown(event)) return;
+  if (event.code === 'Escape' && document.fullscreenElement) { if (match && !document.querySelector('dialog[open]')) pause(); return; }
   if (event.code === 'Escape' && !$('arcade').hidden && !document.querySelector('dialog[open]')) { event.preventDefault(); returnToSelection(); return; }
   if (!match || event.ctrlKey || event.metaKey || event.altKey) return;
   if (event.code === 'Escape') {
@@ -535,15 +606,15 @@ function frame(timestamp) {
   if (!$('arcade').hidden) {
     const complete = arcade.status === 'complete', id = complete ? arcade.fighter : arcade.ladder[arcade.index];
     const context = $('arcade-portrait').getContext('2d'); context.clearRect(0, 0, 300, 300);
-    drawFighter(context, { ...ROSTER.find(f => f.id === id), face: 1, y: 0, vx: 0 }, { x: 140, y: 285, scale: .95, time: reducedMotion.matches ? 0 : time, ...(complete ? { animation: 'victory', progress: reducedMotion.matches ? 1 : (time % 1.2) / 1.2 } : {}) });
+    drawFighter(context, { ...ROSTER.find(f => f.id === id), face: 1, y: 0, vx: 0 }, { x: 140, y: 285, scale: .95, time: effects.reducedMotion ? 0 : time, ...(complete ? { animation: 'victory', progress: effects.reducedMotion ? 1 : (time % 1.2) / 1.2 } : {}) });
   } else if (!match) {
-    drawScene(showcaseContext, preview, backgrounds.get(preview.stage), reducedMotion.matches ? 0 : time, { showcase: true, reducedMotion: reducedMotion.matches });
-    const pf = reducedMotion.matches ? 0 : Math.floor(time * 12);
+    drawScene(showcaseContext, preview, backgrounds.get(preview.stage), effects.reducedMotion ? 0 : time, { showcase: true, ...effects });
+    const pf = effects.reducedMotion ? 0 : Math.floor(time * 12);
     if (pf !== portraitFrame) {
       portraitFrame = pf;
       for (const { context, fighter } of portraits) {
         context.clearRect(0, 0, 320, 300);
-        drawFighter(context, { ...fighter, face: 1, y: 0, vx: 0 }, { x: 150, y: 294, scale: fighter.id === 'oswald' ? 1.04 : 1.15, time: reducedMotion.matches ? 0 : time, portrait: true });
+        drawFighter(context, { ...fighter, face: 1, y: 0, vx: 0 }, { x: 150, y: 294, scale: fighter.id === 'oswald' ? 1.04 : 1.15, time: effects.reducedMotion ? 0 : time, portrait: true });
       }
     }
   } else {
@@ -567,10 +638,10 @@ function frame(timestamp) {
       }
       if (match.phase === 'matchover' && !$('result-dialog').open) showResult();
     }
-    if (match && drawFrame) drawScene(arenaContext, match, backgrounds.get(match.stage), match.elapsed, { reducedMotion: reducedMotion.matches });
+    if (match && drawFrame) drawScene(arenaContext, match, backgrounds.get(match.stage), match.elapsed, effects);
   }
   requestAnimationFrame(frame);
 }
 
-buildRoster(); updateSelection(); soundUI(); requestAnimationFrame(frame);
+buildRoster(); updateSelection(); soundUI(); updateVisuals(); requestAnimationFrame(frame);
 loadArtwork();

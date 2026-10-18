@@ -1,6 +1,6 @@
 # Desktop release verification
 
-The release scope is desktop browser play: CPU, local multiplayer, Arcade, and Training. Simulation remains fixed at 120 Hz. No visual-comfort settings or combat balance changes are included in this milestone.
+The release scope is desktop browser play: CPU, local multiplayer, Arcade, and Training. Simulation remains fixed at 120 Hz. Saved visual-comfort settings and native fullscreen affect presentation only; combat balance is unchanged.
 
 ## Repeatable checks
 
@@ -23,8 +23,13 @@ The GitHub Actions workflow runs on pushes and pull requests to `main`, with rea
 | Fonts/audio | System-font fallback, audio errors leave controls usable, and audio can retry successfully |
 | Stalled audio output | A pending native output startup reports failure after five seconds, Training combat remains usable, and a new gesture can retry |
 | Animation reel | Missing fighter artwork can retry without refreshing |
-| Existing controller harness | All 24 flows, including real combat, throws, guided lessons, saved bindings, disconnect/reconnect, and scripted Arcade progression/endings |
+| Existing controller harness | All 26 flows, including real combat, throws, guided lessons, saved bindings/visual preferences, storage failures, disconnect/reconnect, and scripted Arcade progression/endings |
 | Performance pass | All 24 fighter/stage pairings render and produce frame callback/interval measurements |
+| Saved picture settings | System motion changes, keyboard choices, explicit overrides, independent effects, and persistence after reload |
+| Visual storage recovery | Corrupt values recover defaults; blocked storage still applies choices and leaves Training playable |
+| Reduced effects and readability | CPU, Local, Training and Arcade; 1280×720, 390×844 and 800×500 layouts; HUD outside the 16:9 canvas; numeric health/ink; nested display/pause navigation |
+| Native fullscreen | Gesture entry, active-state label/focus, canvas proportions, external exit pausing/clearing held input, nested re-entry/exit, and resumed combat; unsupported environments report the fallback instead |
+| Fullscreen failure | Rejected requests, acknowledged requests that leave fullscreen inactive, and unsupported browsers keep usable settings and windowed play |
 
 Arcade victory scripting verifies progression, not human difficulty or balance. Virtual controllers verify the input code, not hardware pairing, latency, or physical button layouts. Browser WebKit is not the Safari application or an exhaustive Safari version/device matrix.
 
@@ -61,6 +66,14 @@ A diagnostic run on Linux WebKit reproduced a three-channel change with a maximu
 The follow-up passes all 73 Node tests, the 48-file/90-reference build check, and all nine browser scenarios in each local Chromium, Firefox, and WebKit engine (27 total). Hosted Linux results must be checked for the specific pushed commit in [Release checks](https://github.com/AaronFaby/pdcf/actions/workflows/release-checks.yml); local results alone do not establish a green hosted run.
 
 The first hosted follow-up passed Firefox and WebKit's strict pause checks, then Linux WebKit reached the controller test's old 60-second deadline while still progressing through its 24 flows. That scenario now allows 120 seconds within a 150-second test budget, and reports an explicit harness failure immediately instead of waiting for the deadline. All 24 passes are still required.
+
+## Accessibility and display follow-up — October 18, 2026
+
+The visual preferences validate motion/effect choices before use and save separately from progress, audio and controls. Reduced motion preserves combat timing and attack/throw cues; independent decoration switches affect rendering only. The HUD now sits outside the scaled arena with numeric health/ink readouts. Focus indicators, reading sizes and muted-text contrast were improved, and the skip link moves keyboard focus into the main content.
+
+Fullscreen entry initially exposed a WebKit top-layer issue: the existing modal remained open but the fullscreen page covered it. Fullscreen changes now restore parent dialogs before Options, retaining scroll/focus. Nested Options follows Pause in DOM order so virtual-controller navigation and Back reach the active dialog. The native check exercises closing Options back to a usable paused menu while still fullscreen, as well as entry, external exit, re-entry and resumed combat. The arena retains its 16:9 ratio and fits vertically at the tested 1280×720 fullscreen viewport. Denied, inactive and unavailable requests have explicit fallbacks.
+
+Final local validation passed **77 Node tests**, the **49-file/92-reference** production build, and **42 browser release tests**: fourteen scenarios each in Chromium, Firefox and WebKit on this macOS ARM host. Each engine passed all **26 controller flows**, including saved visual settings, 390px Options layout and nested display/pause navigation. Native fullscreen entry/exit passed in all three engines. The interactive in-app-browser pass also checked the skip link, keyboard focus, visual Options and Training HUD, with no captured console errors or warnings. The existing workflow will include the new scenarios on its five browser projects after publication; this local result does not establish a new hosted CI run or deployment. Physical controllers, the Safari application, and assistive-technology/compliance certification are not established by these checks.
 
 ## Release sign-off still requiring people or deployment access
 

@@ -2,7 +2,7 @@
 :root {
   --paper:#eee7d6;
   --ink:#25251f;
-  --muted:#797665;
+  --muted:#625d4f;
   --accent:#b6442b;
   --gold:#dfb755;
   --line:#c6bfac;
@@ -1491,7 +1491,7 @@ dialog .primary-button {
 }
 
 @media(prefers-reduced-motion:reduce) {
-  *,*:before,*:after {
+  :root:not([data-motion="full"]) *,:root:not([data-motion="full"]) *:before,:root:not([data-motion="full"]) *:after {
     animation:none!important;
     transition:none!important;
     scroll-behavior:auto!important;
@@ -1654,4 +1654,55 @@ dialog .primary-button {
   .notice-summary { padding:18px; }
   .notice-copy th,.notice-copy td { padding:10px; }
   .notice-copy th[scope=row] { width:34%; }
+}
+
+/* Keep reading sizes independent of the canvas scale. */
+.art-status,.controller-status,.pad-guide,.stage-description { font-size:12px; line-height:1.7; }
+.featured-bout span,.play-note,.mode span,.difficulty-picker>span { font-size:10px; }
+.stage-picker .eyebrow,.difficulty-picker button,#arcade-resume { font-size:11px; }
+.control-strip>div,.control-strip p { font-size:11px; line-height:1.8; }
+.control-strip kbd { min-width:22px; height:24px; font-size:12px; }
+.practice-timing,.practice-stats p,.input-readout>span,.input-readout small { font-size:12px; }
+.arcade-ladder small,.arcade-ladder .ladder-venue,.arcade-actions button,.arcade-save-status { font-size:12px; }
+.arcade-copy p,dialog p,.binding-table,.move-table { font-size:14px; }
+.binding-table thead,.move-table thead,.binding-button,.move-table small { font-size:12px; }
+button:focus-visible,a:focus-visible,input:focus-visible,canvas:focus-visible { outline:3px solid var(--ink); outline-offset:3px; box-shadow:0 0 0 6px var(--paper); }
+#settings-dialog { max-height:90dvh; overflow:auto; }
+.visual-options { margin:24px 0; padding:20px 0; border-block:1px solid var(--line); }
+.visual-options h3 { font:800 26px var(--display); margin:0 0 12px; }
+.visual-buttons { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+.visual-options .secondary-button { width:100%; margin:0; padding:14px 12px; font-size:12px; line-height:1.4; }
+.visual-options button[aria-pressed=true] { background:var(--ink); color:var(--paper); }
+.visual-options button:disabled { opacity:.65; }
+.visual-options #fullscreen-button { margin-top:14px; }
+:root[data-film="off"] .paper-grain { display:none; }
+:root[data-motion="reduced"] *,:root[data-motion="reduced"] *:before,:root[data-motion="reduced"] *:after { animation:none!important; transition:none!important; scroll-behavior:auto!important; }
+.arena-wrap { display:flex; flex-direction:column; width:min(100%,max(260px,calc((100dvh - 350px) * 16 / 9 + 12px))); margin-inline:auto; }
+.arena-wrap>canvas { max-height:none; flex:none; }
+.fight-hud { position:static; order:-1; grid-template-columns:minmax(0,1fr) 68px minmax(0,1fr); gap:14px; padding:12px; background:var(--paper); border:0; border-bottom:2px solid var(--ink); }
+.fighter-hud { min-width:0; }
+.hud-name { gap:4px; flex-wrap:wrap; }
+.hud-name strong { font-size:clamp(14px,2vw,22px); line-height:1.2; }
+.hud-name>span,.meter-label,.clock>span { font-size:11px; letter-spacing:0; }
+.health-track { height:20px; position:relative; }
+.health-value { position:absolute; right:3px; top:0; color:var(--paper); background:var(--ink); font:700 12px/16px var(--body); padding:0 3px; }
+.hud-under { flex-wrap:wrap; height:auto; min-height:18px; gap:6px; }
+.special-track { width:70px; height:8px; }
+.meter-label { color:var(--ink); font-weight:700; white-space:nowrap; }
+.clock>strong { font-size:36px; }
+:root:fullscreen { background:var(--paper); overflow:auto; }
+:root:fullscreen .masthead { height:64px; }
+:root:fullscreen .arena-wrap { width:min(100%,max(260px,calc((100dvh - 310px) * 16 / 9 + 12px))); }
+@media(max-width:760px) {
+  .fight-hud { grid-template-columns:minmax(0,1fr) 52px minmax(0,1fr); padding:8px; gap:8px; }
+  .hud-name strong { font-size:15px; }
+  .hud-name>span,.meter-label,.clock>span { font-size:10px; }
+  .health-track { height:18px; }
+  .health-value { line-height:15px; font-size:11px; }
+  .special-track { width:52px; height:7px; }
+  .clock>strong { font-size:30px; }
+  .visual-buttons { grid-template-columns:1fr; }
+  .arena-heading { flex-wrap:wrap; }
+  .arena-heading>span,.arena-heading .text-button { font-size:11px; }
+  :root:fullscreen .masthead { height:auto; min-height:70px; }
 }

@@ -15,7 +15,7 @@ export function drawFighter(c, f, { x = f.x, y = FLOOR + f.y, scale = 1, time = 
   if (f.buff > 0) {
     c.save(); c.translate(x, y); c.scale(scale, scale);
     c.strokeStyle = '#b88432'; c.lineWidth = 3;
-    const heldTime = Math.floor(time * 12) / 12;
+    const heldTime = animation.reducedMotion ? 0 : Math.floor(time * 12) / 12;
     for (let i = 0; i < 9; i++) {
       const a = i / 9 * Math.PI * 2 + heldTime;
       c.beginPath(); c.moveTo(Math.cos(a) * 75, -100 + Math.sin(a) * 110);
@@ -202,16 +202,12 @@ function drawHarborLife(c, time) {
   c.restore();
 }
 
-export function drawScene(c, match, image, time, { showcase = false, reducedMotion = false } = {}) {
+export function drawScene(c, match, image, time, { showcase = false, reducedMotion = false, shake = true, film = true, backgrounds = true } = {}) {
   c.clearRect(0, 0, 1200, 675);
   c.save();
-  if (!showcase && !reducedMotion && match.shake > 0) c.translate(Math.sin(time * 191) * match.shake, Math.cos(time * 153) * match.shake * .45);
-  drawBackdrop(c, image, reducedMotion ? 0 : time, match.stage);
+  if (!showcase && !reducedMotion && shake && match.shake > 0) c.translate(Math.sin(time * 191) * match.shake, Math.cos(time * 153) * match.shake * .45);
+  drawBackdrop(c, image, reducedMotion || !backgrounds ? 0 : time, match.stage);
   const fighters = match.fighters;
-  if (!showcase) {
-    c.fillStyle = 'rgba(244,236,217,.72)';
-    c.fillRect(0, 0, 1200, 118);
-  }
   for (const [index, f] of fighters.entries()) {
     c.save(); c.fillStyle = 'rgba(28,26,20,.22)';
     c.beginPath(); c.ellipse(f.x, FLOOR + 6, Math.max(25, 61 + f.y * .1), 12, 0, 0, 7); c.fill(); c.restore();
@@ -276,8 +272,7 @@ export function drawScene(c, match, image, time, { showcase = false, reducedMoti
       c.font = 'italic bold 66px Georgia'; c.textAlign = 'center'; c.fillStyle = INK; c.fillText(label, 0, 22); c.restore();
     }
   }
-  // Film texture stays static when reduced motion is requested.
-  if (!reducedMotion) {
+  if (!reducedMotion && film) {
     c.save(); c.globalAlpha = .07; c.fillStyle = INK;
     const frame = Math.floor(time * 12);
     for (let i = 0; i < 70; i++) c.fillRect((i * 197 + frame * 41) % 1200, (i * 139 + frame * 19) % 675, i % 4 === 0 ? 1 : 2, i % 4 === 0 ? 20 : 2);

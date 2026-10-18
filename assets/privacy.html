@@ -26,7 +26,7 @@
         <section id="information"><h2>1. Information the game uses</h2>
           <p>The current game has no player registration, login, payment form, online multiplayer, chat, or player-upload feature. It does not ask for your name, email address, date of birth, precise location, or payment details.</p>
           <p>Keyboard, touch, and controller inputs are processed on your device to run the game. Training displays recent inputs and combat results locally. Controller identifiers, button/axis state, and player assignments are read through your browser’s Gamepad API to support controls and reconnects; the game does not transmit these to the maintainer. Audio playback uses output sound, not microphone recording. The game does not request microphone, camera, or location access.</p>
-          <p>Temporary match state, Training feedback, guided-lesson progress, and controller assignments remain in the page’s memory and are discarded when the page closes or reloads. Your browser’s reduced-motion preference is used to adjust animation.</p>
+          <p>Temporary match state, Training feedback, guided-lesson progress, and controller assignments remain in the page’s memory and are discarded when the page closes or reloads. Your browser’s reduced-motion preference is used when motion is set to Follow system. Fullscreen is requested only from a player action and is not restored automatically on reload.</p>
         </section>
         <section id="storage"><h2>2. Saved browser data</h2>
           <p>The game uses <em>local storage</em>, a browser feature separate from cookies. These entries are stored for this site in the browser profile you use:</p>
@@ -34,6 +34,7 @@
             <tr><th scope="row"><code>pdcf-arcade-v1</code></th><td>Your selected fighter, difficulty, ladder, cleared bouts, attempts, losses, and run status, including an unlocked ending. Starting a new run replaces the previous checkpoint.</td></tr>
             <tr><th scope="row"><code>pdcf-controls-v1</code></th><td>P1/P2 keyboard bindings, controller action bindings, and horizontal/vertical stick dead zones. It does not save your controller’s device identifier or a history of key presses.</td></tr>
             <tr><th scope="row"><code>pdcf-audio-v1</code></th><td>Sound enabled/muted and music/effects volume preferences.</td></tr>
+            <tr><th scope="row"><code>pdcf-visuals-v1</code></th><td>Your motion mode (follow system, reduced, or full), screen shake, film effects, and moving-scenery preferences. Fullscreen state is not saved.</td></tr>
           </tbody></table></div>
           <p>These entries are not sent to a game server or synced by the game across devices. People using the same browser profile may see or replace the same saves. Browser or device backup/sync features, if enabled separately, are controlled by your browser or device provider.</p>
           <p>Saved entries have no automatic expiry in the game. They remain until replaced, cleared by you, or removed by your browser. Blocking storage leaves play and settings available for the current page session, but saved progress and preferences may not survive a reload.</p>
