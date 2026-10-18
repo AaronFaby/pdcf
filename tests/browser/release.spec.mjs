@@ -1,9 +1,16 @@
 import { test, expect } from '@playwright/test';
 import { writeFile } from 'node:fs/promises';
+import { execFileSync } from 'node:child_process';
 
 test('packaged game starts all stages, plays Training, pauses and keeps legal pages separate', async ({ page }) => {
   const errors=[];page.on('pageerror',error=>errors.push(error.message));
   await page.goto('/');await expect(page.locator('#start-button')).toBeEnabled();
+  const commit=process.env.WORKERS_CI_COMMIT_SHA||execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim();
+  const buildLink=page.locator('#build-info a');
+  await expect(buildLink).toContainText(`Build ${commit.slice(0,7)}`);await expect(buildLink).toHaveAttribute('href',`https://github.com/AaronFaby/pdcf/commit/${commit}`);
+  await page.setViewportSize({width:390,height:844});await buildLink.scrollIntoViewIfNeeded();
+  const bounds=await buildLink.boundingBox();expect(bounds.x).toBeGreaterThanOrEqual(0);expect(bounds.x+bounds.width).toBeLessThanOrEqual(390);
+  await page.setViewportSize({width:1280,height:720});
   for(const stage of ['ink-harbor','silverscreen-theater','moonlight-midway','midnight-junction']) {
     await page.locator('[data-mode="training"]').click();await page.locator(`[data-stage="${stage}"]`).click();await page.locator('#start-button').click();
     await expect(page.locator('#game')).toBeVisible();await expect(page.locator('#timer')).toHaveText('∞');

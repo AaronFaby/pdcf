@@ -88,7 +88,7 @@ Report what actually ran. Separate Node tests, scripted browser outcomes, normal
 
 ## Static packaging and delivery
 
-Cloudflare build/deploy settings are managed outside the repository. The current static build command is documented in `README.md`; it copies named root runtime files plus all of `assets/` into `dist/`. New root imports need a corresponding copy-command update; runtime helpers under `assets/runtime/` are already copied. Preserve the directory structure for their imports of `../../engine.mjs`.
+Cloudflare build/deploy settings are managed outside the repository. The required static build command is `npm run check`, documented in `README.md`; it copies named root runtime files plus all of `assets/` into `dist/` and stamps the footer with the build's commit ID. Keep the source HTML placeholder for local development; never fetch the latest GitHub commit at runtime to label a cached release. Local modified builds must remain marked. New root imports need an update to `ROOT_FILES` in `scripts/build.mjs`; runtime helpers under `assets/runtime/` are already copied. Preserve the directory structure for their imports of `../../engine.mjs`.
 
 Keep the simulator, tests/fixtures, scripts, docs, and local server out of production assets. Check that a copied build resolves new imports and assets. Do not commit `dist/`, temporary QA pages, or unrelated previews.
 

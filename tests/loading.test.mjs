@@ -52,9 +52,40 @@ test('release build includes runtime/notices, excludes development files, and re
   t.after(() => rm(directory, { recursive: true, force: true }));
   await build(directory); const checked = await checkBuild(directory);
   assert.ok(checked.files > 20); assert.ok(checked.references > 30);
+  const index = await readFile(join(directory, 'index.html'), 'utf8');
+  assert.match(index, /id="build-info">(?:<a href="https:\/\/github.com\/AaronFaby\/pdcf\/commit\/[a-f0-9]{40}"|Unversioned build)/i);
+  await writeFile(join(directory, 'index.html'), index.replace(/id="build-info">[\s\S]*?<\/p>/, 'id="build-info">Local development</p>'));
+  await assert.rejects(checkBuild(directory), /Missing build identity/);
+  await writeFile(join(directory, 'index.html'), index);
   const file = join(directory, 'assets/privacy.html'), html = await readFile(file, 'utf8');
   await writeFile(file, html.replace('#storage', '#missing-section'));
   await assert.rejects(checkBuild(directory), /Missing anchor/);
   await writeFile(file, html.replace('href="legal.html"', 'href="missing.html"'));
   await assert.rejects(checkBuild(directory), /Missing local file/);
+});
+
+test('build label uses the Cloudflare revision, handles missing Git and rejects malformed metadata', async t => {
+  const directory = await mkdtemp(join(tmpdir(), 'pdcf-version-test-'));
+  const original = process.env.WORKERS_CI_COMMIT_SHA, originalPath = process.env.PATH;
+  t.after(async () => {
+    if (original === undefined) delete process.env.WORKERS_CI_COMMIT_SHA; else process.env.WORKERS_CI_COMMIT_SHA = original;
+    if (originalPath === undefined) delete process.env.PATH; else process.env.PATH = originalPath;
+    await rm(directory, { recursive: true, force: true });
+  });
+  process.env.WORKERS_CI_COMMIT_SHA = 'a'.repeat(40);
+  await build(directory);
+  const html = await readFile(join(directory, 'index.html'), 'utf8');
+  assert.ok(html.includes(`href="https://github.com/AaronFaby/pdcf/commit/${'a'.repeat(40)}"`));
+  assert.ok(html.includes('Build aaaaaaa'));
+  process.env.PATH = '';
+  await build(directory);
+  assert.ok((await readFile(join(directory, 'index.html'), 'utf8')).includes('Build aaaaaaa'));
+  delete process.env.WORKERS_CI_COMMIT_SHA;
+  await build(directory);
+  const unversioned = await readFile(join(directory, 'index.html'), 'utf8');
+  assert.ok(unversioned.includes('id="build-info">Unversioned build</p>'));
+  await checkBuild(directory);
+  process.env.WORKERS_CI_COMMIT_SHA = '"><script>bad</script>';
+  await assert.rejects(build(directory), /Invalid build commit SHA/);
+  assert.equal(await readFile(join(directory, 'index.html'), 'utf8'), unversioned);
 });

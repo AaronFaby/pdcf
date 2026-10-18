@@ -12,6 +12,8 @@ The privacy policy documents the three local-storage entries, temporary inputs/T
 
 The pages live under `assets/` so the existing Cloudflare copy command includes them without a dashboard change. Keep the policy accurate when adding network services, telemetry, storage keys, accounts, or purchases. Hosting-level analytics, security cookies and log retention depend on Cloudflare configuration and must be checked separately before treating the policy as a full operational/compliance review. No legal review of the notices or finished art is implied.
 
+The bottom of the game page shows **Build `<short commit ID>`**, linked to the exact GitHub commit used by the build. Compare it with the commit from a push to confirm which release is displayed. The label is embedded in the built HTML and works without JavaScript or a separate version request. Local builds with uncommitted changes say **local changes**; the development server shows **Local development**.
+
 ## Run locally
 
 Requires Node.js 22 or newer. No package installation is needed.
@@ -172,7 +174,7 @@ npm test
 git diff --check
 ```
 
-The current suite has **71 Node tests** covering combat, CPU matches, round transitions, controllers, Training, Arcade progression/checkpoint validation, cel generation/timing, audio generation/lifecycle, image failure/timeout/retry, shared atlas requests, and static packaging/link integrity. Stage regressions cover equal combat rules, Training/round resets, the Arcade venue tour and old checkpoints, distinct paintings, deterministic score generation, loop headroom, lazy loading, rapid music switches, and failure recovery. Tests use Node's built-in runner.
+The current suite has **72 Node tests** covering combat, CPU matches, round transitions, controllers, Training, Arcade progression/checkpoint validation, cel generation/timing, audio generation/lifecycle, image failure/timeout/retry, shared atlas requests, build identity, and static packaging/link integrity. Stage regressions cover equal combat rules, Training/round resets, the Arcade venue tour and old checkpoints, distinct paintings, deterministic score generation, loop headroom, lazy loading, rapid music switches, and failure recovery. Tests use Node's built-in runner.
 
 With the server running, open [the controller simulator](http://127.0.0.1:4173/controller-simulator.html). Connect P1/P2 for manual checks, or click **Run controller checks** for **24 repeatable browser checks** covering menu navigation, stable mode/stage layout, both players, pause/resume, disconnect/reconnect, Training controls, all four stage choices, Arcade progression/venues/endings, saved remapping for both players, key conflicts, dead zones, controller swapping, nested pause menus, storage failures, 390px dialog layout, throws from both controllers with mid-throw pause/resume, the complete guided course, remapped lesson prompts, retry/skip, and free-practice restoration. Buttons toggle held state; use **Release** after screen changes. The simulator suppresses iframe focus-loss pausing so its outer controls remain usable.
 
@@ -199,15 +201,17 @@ Open [the performance pass](http://127.0.0.1:4173/tests/browser/performance.html
 
 The existing [release](https://pdcf.aaronfaby.com) uses Cloudflare Workers with GitHub builds on pushes to `main`. The build/deploy settings are managed in the Cloudflare dashboard; this repository contains no Wrangler configuration or deployment workflow.
 
-The current build command runs tests and copies an explicit set of static files:
+Set the Cloudflare dashboard **Build command** to:
 
 ```sh
-npm test && mkdir -p dist && cp index.html animation-reel.html style.css app.mjs art.mjs cels.mjs engine.mjs reel.mjs dist/ && cp -R assets dist/
+npm run check
 ```
 
-Serve `dist/` as static assets. Keep the relative directory structure: runtime modules under `assets/runtime/` import the root engine. New root runtime files must be added to the copy command. The simulator, tests/fixtures, generators, documentation, and development server are excluded. Do not use `server.mjs` as a production backend or commit the generated `dist/` directory.
+This runs tests, makes a clean static build, stamps the footer with its commit ID, and checks local references. Replace the older `npm test && ... cp ...` command: a plain copy leaves the footer marked **Local development**. Keep the existing deploy command targeting `dist/`. This repository change does not alter the dashboard configuration.
 
-The existing dashboard command remains compatible. For the clean build plus link/import checks now used in CI, the dashboard build command can instead be `npm run check`. This repository change does not alter the dashboard configuration.
+The build uses Cloudflare's [`WORKERS_CI_COMMIT_SHA`](https://developers.cloudflare.com/workers/ci-cd/builds/configuration/#default-variables), falling back to the local Git HEAD. It shows **Unversioned build** if neither is available, and rejects malformed commit metadata. It never asks GitHub for the latest commit at runtime, so an old page cannot label itself as the latest release.
+
+Serve `dist/` as static assets. Keep the relative directory structure: runtime modules under `assets/runtime/` import the root engine. New root runtime files must be added to `ROOT_FILES` in `scripts/build.mjs`. The simulator, tests/fixtures, generators, documentation, and development server are excluded. Do not use `server.mjs` as a production backend or commit the generated `dist/` directory.
 
 Pushing starts the configured deployment; verify its result separately before reporting a release as live.
 

@@ -17,6 +17,9 @@ export async function checkBuild(directory = resolve(SOURCE, 'dist')) {
   assert.deepEqual((await readdir(root)).sort(), [...ROOT_FILES, 'assets'].sort(), 'Unexpected files in the production build');
   await walk(root);
   const source = new Map(await Promise.all(files.filter(file => ['.html', '.mjs', '.css'].includes(extname(file))).map(async file => [file, await readFile(file, 'utf8')])));
+  const index = source.get(resolve(root, 'index.html'));
+  assert.doesNotMatch(index, /<!-- BUILD_INFO -->/, 'Build label was not stamped; use npm run build');
+  assert.match(index, /id="build-info">(?:<a[^>]+>Build [a-f0-9]{7}|Unversioned build)/i, 'Missing build identity');
   for (const [file, text] of source) if (extname(file) === '.html') {
     const ids = [...text.matchAll(/\bid=["']([^"']+)["']/g)].map(match => match[1]);
     assert.equal(ids.length, new Set(ids).size, `Duplicate HTML ID in ${file}`); pages.set(file, new Set(ids));

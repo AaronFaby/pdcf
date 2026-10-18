@@ -1606,11 +1606,12 @@ dialog .primary-button {
 .independence-notice strong { font:800 13px var(--display); letter-spacing:1px; }
 .independence-notice p { margin:6px 0 0; font-size:12px; line-height:1.7; }
 .independence-notice a,.site-footer a,.notice-document a { text-decoration:underline; text-underline-offset:3px; }
-.site-footer { max-width:1440px; margin:32px auto 0; padding:24px 58px 36px; border-top:1px solid var(--line); display:flex; justify-content:space-between; gap:24px; font-size:11px; line-height:1.8; }
+.site-footer { max-width:1440px; margin:32px auto 0; padding:24px 58px 36px; border-top:1px solid var(--line); display:flex; flex-wrap:wrap; justify-content:space-between; gap:24px; font-size:11px; line-height:1.8; }
 .site-footer p { margin:0; max-width:620px; }
 .site-footer strong { font:800 13px var(--display); letter-spacing:1px; }
 .site-footer nav { display:flex; flex-wrap:wrap; gap:12px 24px; align-content:start; }
 .site-footer a { padding:4px 0; }
+.site-footer .build-info { flex-basis:100%; max-width:none; color:#67604f; font-family:monospace; }
 .notice-page .masthead nav { font-size:12px; font-weight:700; }
 .notice-page .masthead nav a { padding:10px 0; }
 .skip-link { position:absolute; top:8px; left:8px; z-index:20; padding:12px; background:var(--ink); color:var(--paper); transform:translateY(-150%); }
