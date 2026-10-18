@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#eee7d6">
+  <meta name="description" content="How Public Domain Cartoon Fighters handles local saves, controls, hosting requests, fonts, and privacy choices.">
+  <title>Privacy Policy — Public Domain Cartoon Fighters</title>
+  <link rel="stylesheet" href="../style.css">
+</head>
+<body class="notice-page">
+  <a class="skip-link" href="#notice-content">Skip to privacy policy</a>
+  <div class="paper-grain" aria-hidden="true"></div>
+  <header class="masthead">
+    <a class="brand" href="../" aria-label="Public Domain Cartoon Fighters home"><span class="brand-mark" aria-hidden="true">✦</span><span>PUBLIC DOMAIN<br><b>CARTOON FIGHTERS</b></span></a>
+    <nav aria-label="Site navigation"><a href="../">Play the game</a><a href="legal.html">Legal notices</a></nav>
+  </header>
+  <main id="notice-content" class="notice-document">
+    <header class="notice-heading"><p class="eyebrow">YOUR PRIVACY. PLAINLY EXPLAINED.</p><h1>Privacy policy.</h1><p class="notice-date">Effective and last updated: <time datetime="2026-10-18">October 18, 2026</time></p><p>This policy covers Public Domain Cartoon Fighters at <a href="https://pdcf.aaronfaby.com/" rel="noreferrer">pdcf.aaronfaby.com</a>, including its game and information pages. “We” and “the maintainer” mean the independent project maintainer identified by the <a href="https://github.com/AaronFaby/pdcf" rel="noreferrer">AaronFaby/pdcf repository</a>.</p></header>
+    <div class="notice-summary"><strong>The short version</strong><p>You can play without an account. Saves and control/audio preferences stay in your browser. The game does not upload your button presses, matches, or tutorial progress. Loading the site still sends normal network requests to its hosting provider, Cloudflare, and to Google Fonts.</p></div>
+    <div class="notice-layout">
+      <nav class="notice-contents" aria-label="Privacy policy contents"><strong>IN THIS POLICY</strong><ol>
+        <li><a href="#information">Information the game uses</a></li><li><a href="#storage">Saved browser data</a></li><li><a href="#cookies">Cookies &amp; tracking</a></li><li><a href="#providers">Hosting, fonts &amp; links</a></li><li><a href="#purposes">Purposes &amp; legal bases</a></li><li><a href="#sharing">Sharing &amp; transfers</a></li><li><a href="#retention">Retention &amp; security</a></li><li><a href="#choices">Your choices &amp; rights</a></li><li><a href="#children">Children &amp; families</a></li><li><a href="#changes">Changes to this policy</a></li><li><a href="#contact">Contact</a></li>
+      </ol></nav>
+      <article class="notice-copy" aria-label="Full privacy policy">
+        <section id="information"><h2>1. Information the game uses</h2>
+          <p>The current game has no player registration, login, payment form, online multiplayer, chat, or player-upload feature. It does not ask for your name, email address, date of birth, precise location, or payment details.</p>
+          <p>Keyboard, touch, and controller inputs are processed on your device to run the game. Training displays recent inputs and combat results locally. Controller identifiers, button/axis state, and player assignments are read through your browser’s Gamepad API to support controls and reconnects; the game does not transmit these to the maintainer. Audio playback uses output sound, not microphone recording. The game does not request microphone, camera, or location access.</p>
+          <p>Temporary match state, Training feedback, guided-lesson progress, and controller assignments remain in the page’s memory and are discarded when the page closes or reloads. Your browser’s reduced-motion preference is used to adjust animation.</p>
+        </section>
+        <section id="storage"><h2>2. Saved browser data</h2>
+          <p>The game uses <em>local storage</em>, a browser feature separate from cookies. These entries are stored for this site in the browser profile you use:</p>
+          <div class="notice-table-wrap"><table><caption>Game data saved on your device</caption><thead><tr><th scope="col">Entry</th><th scope="col">What it remembers</th></tr></thead><tbody>
+            <tr><th scope="row"><code>pdcf-arcade-v1</code></th><td>Your selected fighter, difficulty, ladder, cleared bouts, attempts, losses, and run status, including an unlocked ending. Starting a new run replaces the previous checkpoint.</td></tr>
+            <tr><th scope="row"><code>pdcf-controls-v1</code></th><td>P1/P2 keyboard bindings, controller action bindings, and horizontal/vertical stick dead zones. It does not save your controller’s device identifier or a history of key presses.</td></tr>
+            <tr><th scope="row"><code>pdcf-audio-v1</code></th><td>Sound enabled/muted and music/effects volume preferences.</td></tr>
+          </tbody></table></div>
+          <p>These entries are not sent to a game server or synced by the game across devices. People using the same browser profile may see or replace the same saves. Browser or device backup/sync features, if enabled separately, are controlled by your browser or device provider.</p>
+          <p>Saved entries have no automatic expiry in the game. They remain until replaced, cleared by you, or removed by your browser. Blocking storage leaves play and settings available for the current page session, but saved progress and preferences may not survive a reload.</p>
+        </section>
+        <section id="cookies"><h2>3. Cookies, analytics &amp; advertising</h2>
+          <p>The game code does not set cookies, include advertising, install advertising pixels, or send gameplay analytics, session recordings, or behavioral profiles to the maintainer. Local storage is used for the player features listed above, not for advertising.</p>
+          <p>This does not mean that visiting the site creates no technical records. Cloudflare processes requests to deliver and protect the site and may use security cookies or similar mechanisms where its services require them. Hosting-level traffic/security statistics are distinct from the game’s local input history. Your browser may also cache game assets and font files.</p>
+          <p>The game does not implement a separate response to Do Not Track or Global Privacy Control signals because its code does not perform advertising tracking, sell personal information, or share it for cross-context behavioral advertising. Browser controls and provider-specific choices still apply to network services.</p>
+        </section>
+        <section id="providers"><h2>4. Hosting, fonts &amp; external links</h2>
+          <h3>Cloudflare hosting and security</h3><p>The site is delivered through Cloudflare Workers and its network. Requests necessarily expose information such as your IP address, requested URL, time, browser/request headers, and routing/security information to Cloudflare. These are used for delivery, reliability, and protection against abuse. Cloudflare may derive traffic statistics from requests. Its handling of this information is described in <a href="https://www.cloudflare.com/privacypolicy/" rel="noreferrer">Cloudflare’s privacy policy</a>.</p>
+          <h3>Google Fonts</h3><p>The shared stylesheet requests Barlow Condensed and DM Sans from Google Fonts, including on these information pages. Your browser contacts <code>fonts.googleapis.com</code> and may download font files from <code>fonts.gstatic.com</code>. Those requests disclose your IP address and normal request metadata, such as browser information and potentially a referrer, to Google. Google states that its Fonts API is not used to build end-user profiles or for advertising. See <a href="https://fonts.googleblog.com/2022/11/your-privacy-and-google-fonts.html" rel="noreferrer">Google’s Fonts privacy explanation</a> and <a href="https://policies.google.com/privacy" rel="noreferrer">Google’s privacy policy</a>. System fonts are used if web fonts cannot load.</p>
+          <h3>GitHub and other linked sites</h3><p>The source, issue tracker, and reference materials are external links. Following them takes you to a separate service with its own privacy practices. The GitHub icon is an inline image, not an embedded GitHub tracking widget. Game-footer links open in a new tab so you can keep your game open. If you contact the maintainer through an issue, GitHub handles the submission under <a href="https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement" rel="noreferrer">GitHub’s privacy statement</a>; your username and posted content can be public.</p>
+        </section>
+        <section id="purposes"><h2>5. Purposes &amp; applicable legal bases</h2>
+          <p>Information is used to provide the game you request, remember optional preferences and progress, serve fonts/assets, keep the site available and secure, and respond to inquiries you choose to send. It is not used by the game to make automated decisions with legal or similarly significant effects.</p>
+          <p>Where privacy law requires a legal basis, service delivery and requested features may be necessary to provide the requested service; reasonable security and reliability processing may rely on legitimate interests, subject to your rights. If an applicable law requires consent for a particular nonessential feature, that requirement applies; this policy itself is not a consent request and playing does not waive your privacy rights. Providers describe their own processing bases in their policies.</p>
+        </section>
+        <section id="sharing"><h2>6. Disclosure &amp; international processing</h2>
+          <p>The maintainer does not sell personal information or share it for targeted or cross-context behavioral advertising. Network services described above receive data as part of serving the site. An inquiry you send is disclosed to the service you choose to send it through. Information held by the maintainer may also be disclosed where legally required or reasonably necessary to address abuse, security incidents, or legal claims.</p>
+          <p>Cloudflare, Google, and GitHub operate internationally, so network or inquiry data may be processed outside your country, including in the United States. Their policies describe applicable transfer arrangements. The game itself does not upload local saves for international storage.</p>
+        </section>
+        <section id="retention"><h2>7. Retention &amp; security</h2>
+          <p>Local save retention is controlled by your browser and the actions described in section 2. Temporary gameplay state ends with the page session. The maintainer does not run a separate player-account or gameplay-history database.</p>
+          <p>Hosting/security records follow the applicable Cloudflare service configuration and policies; this notice does not promise a fixed deletion period for provider records. Public GitHub issues can remain in the repository’s history and in third-party copies. Maintainer-held correspondence, if any, is kept as needed to address the inquiry and any applicable legal obligations.</p>
+          <p>The hosted site uses HTTPS. Browser storage is not an encrypted personal vault: anyone with access to the same browser profile, device, or suitable browser extensions may be able to access it. No website can guarantee absolute security. Do not include passwords, identity documents, or other sensitive information in issues or game data.</p>
+        </section>
+        <section id="choices"><h2>8. Your choices &amp; privacy rights</h2>
+          <ul><li><strong>Delete saves:</strong> use your browser’s site-data settings to clear data for <code>pdcf.aaronfaby.com</code> (or the address where you play a copy). This removes the Arcade checkpoint and control/audio preferences. Reload or close open game tabs afterward so old in-memory settings are not saved again.</li><li><strong>Reset controls:</strong> Options → Controls → Restore both players’ defaults changes the control profiles. It does not erase your Arcade run or audio preferences.</li><li><strong>Limit persistence:</strong> block site storage or use a private browser session. Your browser decides what is removed and when.</li><li><strong>Limit external requests:</strong> browser privacy/network controls can block Google Fonts; the game has system-font fallbacks. Blocking the game’s hosting requests prevents it from loading.</li><li><strong>Control sound and motion:</strong> use the sound options and your browser/device’s reduced-motion setting.</li></ul>
+          <p>Depending on your location and the law that applies, you may have rights to access, correct, delete, or obtain a copy of personal information; restrict or object to processing; withdraw consent where processing relies on it; and complain to a relevant privacy authority. These rights have legal conditions and exceptions. Contact the maintainer using the method below to raise a request; do not post sensitive verification documents publicly.</p>
+          <p>The maintainer cannot remotely read or delete a save that exists only in your browser. Requests about data held independently by Cloudflare, Google, or GitHub can also be directed through those providers’ privacy channels.</p>
+        </section>
+        <section id="children"><h2>9. Children &amp; families</h2><p>The game does not ask players for their age or other identifying details and has no player chat, registration, or upload feature. Cartoon presentation is not an assurance that every external site is suitable for children. Parents and guardians should supervise external links and public issue submissions. If you believe a child has provided personal information to the project, contact the maintainer without posting the child’s details publicly.</p></section>
+        <section id="changes"><h2>10. Changes to this policy</h2><p>We will revise this page and its update date when relevant practices change. New features such as accounts, online play, analytics, or purchases would require a fresh privacy review and updated disclosures before introduction. Any notice or consent required by applicable law will still be required.</p></section>
+        <section id="contact"><h2>11. Contact the maintainer</h2><p>Use <a href="https://github.com/AaronFaby/pdcf/issues" rel="noreferrer">the project’s GitHub Issues page</a> for privacy questions, corrections, or requests. <strong>GitHub issues are public and require a GitHub account to post.</strong> No public email address is provided. If a matter involves personal information, first ask how to arrange an appropriate private channel without including the information itself. Do not post identification documents, private contact information, or information about a child.</p><p>For character and intellectual-property questions, see the separate <a href="legal.html#contact">legal contact guidance</a>.</p></section>
+      </article>
+    </div>
+  </main>
+  <footer class="site-footer"><p>PUBLIC DOMAIN CARTOON FIGHTERS<br>Independent project. No studio affiliation or endorsement.</p><nav aria-label="Privacy and legal information"><a href="../">Back to the game</a><a href="privacy.html" aria-current="page">Privacy policy</a><a href="legal.html">Legal &amp; character notices</a></nav></footer>
+</body>
+</html>

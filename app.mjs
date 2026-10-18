@@ -430,7 +430,7 @@ window.addEventListener('keydown', event => {
     if (!document.querySelector('dialog[open]')) { event.preventDefault(); pause(); }
     return;
   }
-  if (paused || document.querySelector('dialog[open]') || event.target.closest?.('button, input')) return;
+  if (paused || document.querySelector('dialog[open]') || event.target.closest?.('a, button, input')) return;
   if (match.training && controls.settings.players.some(profile => profile.keyboard.reset === event.code)) { event.preventDefault(); resetPractice(); return; }
   if (controls.settings.players.some(profile => Object.entries(profile.keyboard).some(([action, key]) => action !== 'reset' && key === event.code))) {
     event.preventDefault();

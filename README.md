@@ -4,6 +4,14 @@ A browser-based, side-view 2D fighter with six cartoon stars, rubber-hose animat
 
 **[Play the game](https://pdcf.aaronfaby.com)** · [Contributor guidance](AGENTS.md) · [Asset provenance](assets/provenance.md)
 
+## Privacy and legal notices
+
+The casting screen carries a prominent independent-project/non-endorsement notice. A site-wide footer links to the [privacy policy](assets/privacy.html) and [legal and character notices](assets/legal.html), opening in a new tab to preserve an ongoing game. Both pages work without JavaScript and match the game’s paper-and-ink presentation.
+
+The privacy policy documents the three local-storage entries, temporary inputs/Training state, Cloudflare hosting/security requests, Google Fonts, external links, retention, deletion choices, applicable privacy rights, and children/family considerations. Contact uses public GitHub Issues; no email address is published. Do not post sensitive information there. The legal notice identifies intended early character versions, U.S./international limits, ongoing trademark rights, Popeye’s separate spinach-source limitation, asset provenance/reuse, and qualified game-use/warranty notices. It does not certify rights clearance.
+
+The pages live under `assets/` so the existing Cloudflare copy command includes them without a dashboard change. Keep the policy accurate when adding network services, telemetry, storage keys, accounts, or purchases. Hosting-level analytics, security cookies and log retention depend on Cloudflare configuration and must be checked separately before treating the policy as a full operational/compliance review. No legal review of the notices or finished art is implied.
+
 ## Run locally
 
 Requires Node.js 22 or newer. No package installation is needed.
