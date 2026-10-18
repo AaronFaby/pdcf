@@ -1,3 +1,5 @@
+import { stageFor } from './stages.mjs';
+
 const KEY = 'pdcf-audio-v1';
 const DEFAULTS = { enabled: true, music: .45, effects: .7 };
 const CUES = ['hit', 'heavy', 'block', 'swing', 'bell', 'ko', 'jump', 'land', 'dash', 'throw', 'special', 'spinach', 'select'];
@@ -14,7 +16,8 @@ export class GameAudio {
   constructor() {
     try { this.settings = audioSettings(JSON.parse(window.localStorage.getItem(KEY))); } catch { this.settings = { ...DEFAULTS }; }
     this.context = null; this.buffers = new Map(); this.scene = 'menu'; this.source = null;
-    this.voices = new Set(); this.loading = null; this.error = false; this.lastCue = new Map();
+    this.voices = new Set(); this.loading = new Map(); this.error = false; this.lastCue = new Map();
+    this.track = 'ink-harbor';
   }
   configure(values) {
     this.settings = audioSettings({ ...this.settings, ...values });
@@ -23,6 +26,7 @@ export class GameAudio {
   }
   async unlock() {
     if (!this.settings.enabled) return;
+    const track = this.track;
     try {
       this.context ||= new (window.AudioContext || window.webkitAudioContext)();
       if (!this.musicGain) {
@@ -34,15 +38,32 @@ export class GameAudio {
         this.musicGain.connect(limiter); this.fxGain.connect(limiter); limiter.connect(this.context.destination);
       }
       await this.context.resume();
-      this.error = false;
-      this.loading ||= Promise.all(['ink-harbor', ...CUES].map(async name => {
-        const response = await fetch(new URL(`../audio/${name}.wav`, import.meta.url));
-        if (!response.ok) throw new Error('Audio asset unavailable');
-        this.buffers.set(name, await this.context.decodeAudioData(await response.arrayBuffer()));
-      })).catch(error => { this.loading = null; throw error; });
-      await this.loading;
-      this.mix();
-    } catch { this.error = true; }
+      await Promise.all([track, ...CUES].map(name => {
+        if (this.buffers.has(name)) return;
+        if (!this.loading.has(name)) {
+          const pending = (async () => {
+            const response = await fetch(new URL(`../audio/${name}.wav`, import.meta.url));
+            if (!response.ok) throw new Error('Audio asset unavailable');
+            this.buffers.set(name, await this.context.decodeAudioData(await response.arrayBuffer()));
+          })().finally(() => this.loading.delete(name));
+          this.loading.set(name, pending);
+        }
+        return this.loading.get(name);
+      }));
+      if (track === this.track) { this.error = false; this.mix(); }
+    } catch { if (track === this.track) this.error = true; }
+  }
+  async setStage(id) {
+    const next = stageFor(id).id;
+    if (next === this.track) return;
+    this.stopMusic(); this.track = next; this.offset = 0; this.error = false;
+    if (this.context && this.settings.enabled) await this.unlock();
+  }
+  stopMusic() {
+    if (!this.source) return;
+    const now = this.context.currentTime, source = this.source;
+    this.offset = ((this.offset || 0) + now - this.started) % source.buffer.duration;
+    source.fade.gain.setTargetAtTime(0, now, .025); source.stop(now + .12); this.source = null;
   }
   setScene(scene) { this.scene = scene; this.mix(); }
   mix() {
@@ -52,17 +73,19 @@ export class GameAudio {
     this.musicGain.gain.setTargetAtTime(on ? this.settings.music * (this.scene === 'menu' ? .55 : .85) : 0, now, .04);
     this.fxGain.gain.setTargetAtTime(on ? this.settings.effects * .7 : 0, now, .025);
     if (!on) {
-      if (this.source) { this.source.stop(now + .18); this.source = null; }
+      this.stopMusic();
       for (const voice of this.voices) { try { voice.stop(now + .12); } catch { /* A cue may have just ended. */ } }
       this.voices.clear();
-    } else if (!this.source && this.buffers.has('ink-harbor')) {
-      const source = this.context.createBufferSource(); source.buffer = this.buffers.get('ink-harbor'); source.loop = true;
-      source.onended = () => source.disconnect();
-      source.connect(this.musicGain); source.start(0, this.offset || 0); this.started = now; this.source = source;
+    } else if (!this.source && this.buffers.has(this.track)) {
+      const source = this.context.createBufferSource(); source.buffer = this.buffers.get(this.track); source.loop = true;
+      source.fade = this.context.createGain(); source.fade.gain.value = 0;
+      source.fade.gain.setTargetAtTime(1, now, .04);
+      source.onended = () => { source.disconnect(); source.fade.disconnect(); };
+      source.connect(source.fade); source.fade.connect(this.musicGain);
+      source.start(0, this.offset || 0); this.started = now; this.source = source;
     }
   }
   pause() {
-    if (this.source) this.offset = ((this.offset || 0) + this.context.currentTime - this.started) % this.source.buffer.duration;
     this.setScene('paused');
   }
   play(event) {

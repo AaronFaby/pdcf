@@ -1,5 +1,6 @@
 import { mkdir, writeFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
+import { STAGES, stageFor } from '../assets/runtime/stages.mjs';
 
 export const RATE = 22050;
 export const TEMPO = 144;
@@ -33,6 +34,7 @@ function note(output, start, pitch, duration, instrument, volume, random) {
     if (instrument === 'piano') value = (Math.sin(p + 1.5 * Math.exp(-t * 24) * Math.sin(p * 2.002)) + .36 * Math.sin(p * 2.003) * Math.exp(-t * 8) + .15 * Math.sin(p * 3.008) * Math.exp(-t * 12)) * Math.exp(-t * 5);
     else if (instrument === 'bass') value = (Math.sin(p) + .25 * Math.sin(2 * p) + .12 * Math.sin(3 * p)) * Math.exp(-t * 8);
     else if (instrument === 'banjo') value = (Math.sin(p + .8 * Math.sin(p * 3) * Math.exp(-t * 25)) + .4 * Math.sin(2 * p) + .2 * Math.sin(p * 4.01)) * Math.exp(-t * 19);
+    else if (instrument === 'calliope') value = (Math.sin(p + .018 * Math.sin(tau * 6 * t)) + .22 * Math.sin(2 * p) + .12 * Math.sin(4 * p)) * (.9 + .1 * Math.sin(tau * 3 * t));
     else {
       const vibrato = .035 * Math.sin(tau * 5.2 * t) * Math.min(1, t * 8), phase = p + vibrato;
       value = instrument === 'reed'
@@ -97,6 +99,59 @@ export function composeHarbor() {
   return output;
 }
 
+const SCORES = {
+  'silverscreen-theater': {
+    chords: [[53,57,60,62],[50,54,57,60],[55,58,62,65],[48,52,55,58],[57,60,64,67],[50,54,57,60],[55,58,62,65],[48,52,55,58]],
+    melody: [[77,81,84,86,84,81,79,77],[78,81,84,86,85,84,81,78],[79,82,86,89,86,82,81,79],[76,79,82,84,82,79,77,76],[81,84,88,91,88,86,84,81],[86,85,84,81,78,76,74,78],[79,82,86,89,88,86,82,79],[84,82,79,76,72,76,79,76]]
+  },
+  'moonlight-midway': {
+    chords: [[50,53,57,62],[57,61,64,67],[50,53,57,62],[48,52,55,58],[53,57,60,65],[55,58,62,67],[57,61,64,67],[50,53,57,62]],
+    melody: [[86,89,93,89,88,86],[85,88,91,88,85,81],[86,89,93,96,93,89],[84,88,91,88,86,84],[89,93,96,93,91,89],[91,94,98,94,93,91],[97,94,91,88,85,81],[86,89,93,89,88,86]]
+  },
+  'midnight-junction': {
+    chords: [[43,47,50,53],[48,52,55,58],[43,47,50,53],[43,47,50,53],[48,52,55,58],[48,52,55,58],[50,54,57,60],[43,47,50,53]],
+    melody: [[67,70,71,74,77,74,71,70],[72,75,76,79,82,79,76,75],[74,77,79,81,79,77,74,71],[70,71,74,77,74,71,69,67],[79,82,84,86,84,82,79,76],[82,79,76,75,72,76,79,82],[81,78,74,72,69,72,74,78],[79,77,74,71,70,69,67,71]]
+  }
+};
+
+export function composeStage(id) {
+  const stage = stageFor(id);
+  if (stage.id === 'ink-harbor') return composeHarbor();
+  const beat = 60 / stage.tempo, beats = stage.beats, score = SCORES[stage.id];
+  const output = new Float32Array(Math.round(BARS * beats * beat * RATE)), random = noise(stage.tempo * 1937);
+  const waltz = beats === 3, rail = stage.id === 'midnight-junction';
+  // Original AABA arrangements: theater stride, minor-key carousel waltz, and railway shuffle.
+  for (let bar = 0; bar < BARS; bar++) {
+    const bridge = bar >= 16 && bar < 24, chord = score.chords[bar % 8].map(p => p + (bridge ? 5 : 0));
+    const start = bar * beats * beat, phrase = score.melody[bar % 8];
+    for (let b = 0; b < beats; b++) {
+      const at = start + b * beat;
+      if (!waltz || b === 0) note(output, at, chord[0] - 12 + (b % 2 ? 7 : 0), beat * .72, 'bass', .19, random);
+      if (b > 0 || !waltz) for (const pitch of chord.slice(b % 2 ? 1 : 0)) {
+        note(output, at + .008, pitch + (waltz ? 12 : 0), beat * (waltz ? .33 : .45), rail ? 'banjo' : 'piano', rail ? .055 : .065, random);
+      }
+      drum(output, at, b === 0 || (rail && b % 2 === 0) ? 'kick' : 'brush', .075, random);
+      if (rail) {
+        drum(output, at + beat * .66, 'brush', .055, random);
+        drum(output, at + beat * .33, 'block', .026, random);
+      } else if (!waltz) drum(output, at + beat * .64, 'block', .022, random);
+    }
+    for (let n = 0; n < beats * 2; n++) {
+      if (bar % 4 === 3 && n >= beats * 2 - 2) continue;
+      const onset = Math.floor(n / 2) + (n % 2 ? waltz ? .5 : .66 : 0);
+      const pitch = phrase[n] + (bridge ? 5 : 0) + (bar >= 24 && n < 2 ? -12 : 0);
+      const voice = waltz ? 'calliope' : rail ? bar % 8 < 4 ? 'brass' : 'reed' : bar % 8 < 4 ? 'piano' : 'reed';
+      note(output, start + onset * beat, pitch, beat * (n % 2 ? .28 : .52), voice, waltz ? .075 : .11, random);
+      if (!waltz && bar % 8 >= 4 && n % 2 === 0) note(output, start + onset * beat, pitch - 12, beat * .3, 'piano', .04, random);
+    }
+    if (bar % 4 === 3) for (let n = 0; n < 4; n++) note(output, start + (beats - 1 + n * .24) * beat, chord[n] + 24, beat * .17, waltz ? 'calliope' : 'piano', .075, random);
+  }
+  let peak = 0;
+  for (const value of output) peak = Math.max(peak, Math.abs(value));
+  for (let i = 0; i < output.length; i++) output[i] = Math.tanh(output[i] / peak * 1.05) * .83;
+  return output;
+}
+
 export const EFFECTS = ['hit', 'heavy', 'block', 'swing', 'bell', 'ko', 'jump', 'land', 'dash', 'throw', 'special', 'spinach', 'select'];
 export function effect(kind) {
   const duration = kind === 'ko' ? 1.1 : kind === 'bell' ? .85 : kind === 'spinach' ? .75 : .28;
@@ -132,7 +187,7 @@ export function effect(kind) {
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
   const directory = new URL('../assets/audio/', import.meta.url);
   await mkdir(directory, { recursive: true });
-  await writeFile(new URL('ink-harbor.wav', directory), wav(composeHarbor()));
+  for (const stage of STAGES) await writeFile(new URL(`${stage.id}.wav`, directory), wav(composeStage(stage.id)));
   for (const kind of EFFECTS) await writeFile(new URL(`${kind}.wav`, directory), wav(effect(kind)));
-  console.log(`Rendered original ${BARS}-bar harbor score and ${EFFECTS.length} Foley cues.`);
+  console.log(`Rendered ${STAGES.length} original ${BARS}-bar stage scores and ${EFFECTS.length} Foley cues.`);
 }

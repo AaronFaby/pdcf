@@ -25,3 +25,23 @@ The animated tugboat, steam, water glints, gulls and lantern glow are native Can
 ## Arcade character endings
 
 The six two-part ending stories in `assets/runtime/arcade.mjs` are original fictional vignettes written for this game. The ladder and ending screens use the existing vector character atlases and original UI styling. No historic dialogue, film stills, third-party stories, new generated images, or additional music recordings were imported.
+
+## Stage expansion — October 17, 2026
+
+Three new 1672 × 941 background paintings were generated for this project with the built-in imagegen tool, then copied unchanged into the repository:
+
+- `assets/stages/silverscreen-theater.png`: an empty vaudeville theater with proscenium, balconies, blank silver screen, footlights, and wooden stage.
+- `assets/stages/moonlight-midway.png`: a moonlit carnival with tents, bunting, carousel, and open boardwalk.
+- `assets/stages/midnight-junction.png`: a steam-era station with canopy, blank clock, misty rear tracks, and a stone platform.
+
+The exact final generation prompts are in `scripts/stage-prompts.json`. No reference images, historic frames, characters, text, or studio marks were supplied or imported. These are generated background illustrations, not paintings by a human background artist.
+
+`art.mjs` supplies original native Canvas overlays: theater spotlight sweeps, curtain movement, reel projection, dust and footlight glows; a rotating Ferris wheel with upright gondolas, balloons and carousel bulb chase; a passing train with moving wheels, steam, mist and station-clock hands. These run on held 12-fps exposures and freeze under reduced motion. All action is behind the common fighting plane.
+
+Three new original 32-bar synthesized scores are authored in `scripts/build-audio.mjs` and rendered as mono 22,050 Hz / 16-bit PCM WAV files:
+
+- `assets/audio/silverscreen-theater.wav`: **Footlight Foxtrot**, 128 BPM, 4/4 stride-piano and reed foxtrot.
+- `assets/audio/moonlight-midway.wav`: **Carousel Capers**, 156 BPM, 3/4 minor-key calliope waltz.
+- `assets/audio/midnight-junction.wav`: **Midnight Rail Shuffle**, 168 BPM, 4/4 brass/reed, banjo and train-rhythm shuffle.
+
+Melodies, chord arrangements, software instrument voices, and percussion were authored for this game. No recordings, third-party tunes, downloaded samples, soundfonts, or character voices were used. The existing Ink Harbor score and thirteen Foley assets retain their previous sources.

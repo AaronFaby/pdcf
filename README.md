@@ -1,6 +1,6 @@
 # Public Domain Cartoon Fighters
 
-A browser-based, side-view 2D fighter with six cartoon stars, rubber-hose animation, original swing music, and a warm black-and-white theatrical presentation. Play Arcade, Training, single CPU matches, or local two-player on the animated Ink Harbor stage.
+A browser-based, side-view 2D fighter with six cartoon stars, rubber-hose animation, original period-inspired music, and a warm black-and-white theatrical presentation. Play Arcade, Training, single CPU matches, or local two-player across four animated stages.
 
 **[Play the game](https://pdcf.aaronfaby.com)** · [Contributor guidance](AGENTS.md) · [Asset provenance](assets/provenance.md)
 
@@ -32,6 +32,8 @@ Select **Arcade**, choose your star and **Easy / Normal / Hard**, then start a *
 - **Save & Casting** leaves a fight. **Resume Arcade** restores your star, difficulty, ladder, and cleared bouts. An interrupted fight restarts from round one without adding a loss. Changing the difficulty selector does not change a resumed run.
 - Clear all six bouts for your character's original story ending and animated victory portrait. **View Ending** reopens the completed ending; **Play Again** creates a new ladder with the same star and difficulty.
 
+Arcade tours Ink Harbor → Silverscreen Theater → Moonlight Midway → Midnight Junction → Silverscreen Theater → Ink Harbor. Venue names appear on the ladder. A continue or resumed bout keeps its venue; existing v1 checkpoints remain compatible.
+
 One checkpoint is stored per browser and device; a new run replaces it. If browser storage is unavailable, the run remains playable while the page stays open. Audio preferences are saved separately.
 
 Difficulty changes CPU reactions and decisions, including guarding, evasion, attacks, throws, dashes, and hit-confirm combos. Fighter health, speed, and damage remain equal across settings. Later ladder bouts shorten CPU decision intervals slightly. Training uses normal CPU behavior.
@@ -45,6 +47,19 @@ Choose your fighter and practice dummy, then start immediately in jab range with
 - Unlimited ink keeps both meters full. Turn it off for normal costs and meter gain.
 - Inspect last-hit damage, uninterrupted combo hits/damage, attack phase/startup timing, and the last eight P1 inputs. Timings use 60-fps frame notation; held directions do not flood the history.
 - **Backspace**, controller **View / Select**, or **Reset** clears combat state and readouts while keeping the chosen cast and practice settings.
+
+## Stages and music
+
+Use **Set the scene** beneath the matchup preview to choose a stage for CPU, Local, or Training. The preview and music change together. Your choice stays in place for rematches and Training resets during the page session. The Harbor Headliners shortcut always starts Mickey versus Popeye at Ink Harbor. Arcade uses its fixed venue tour instead of the picker.
+
+| Stage | Animated scenery | Original score |
+| --- | --- | --- |
+| Ink Harbor | Tugboat, steam, gulls, and water glints | **Ink Harbor Stomp** — 144 BPM swing |
+| Silverscreen Theater | Sweeping spotlights, swaying curtain edges, film-reel projection, footlights, and dust | **Footlight Foxtrot** — 128 BPM stride-piano foxtrot |
+| Moonlight Midway | Rotating Ferris wheel with upright gondolas, bobbing balloons, and chasing carousel bulbs | **Carousel Capers** — 156 BPM, 3/4 calliope waltz |
+| Midnight Junction | Passing train with turning wheels, steam, drifting mist, and moving station-clock hands | **Midnight Rail Shuffle** — 168 BPM railway jazz |
+
+All venues share the same floor, boundaries, combat rules, and camera. Scenery adds no hazards. Each score is an original 32-bar arrangement. Music loads on demand and is cached for the session; stage changes fade out the previous score and start the new one. Pause/resume preserves the current track position. Muting and failed music loads do not block fighting.
 
 ## Controls
 
@@ -90,9 +105,9 @@ The six transparent SVG atlases contain **288 discrete vector cels: 48 drawings 
 
 This is script-authored digital vector cel-style animation. Portraits, gameplay, and endings share the same atlases. Open [the animation reel](animation-reel.html) to preview actions, mirror the cast, or scrub through drawings. The [older base-animation GIF](outputs/cel-animation-reel.gif) is an archival preview.
 
-Ink Harbor combines a generated background painting with Canvas tugboat, steam, water, gull, and lantern animation. Reduced motion freezes ambient animation and idle poses and disables camera shake and film movement while preserving combat telegraphs.
+The four stages combine generated background paintings with native Canvas animation. Reduced motion freezes ambient animation and idle poses and disables camera shake and film movement while preserving combat telegraphs. The three newer paintings live in `assets/stages/`; their final built-in imagegen prompts are recorded in [scripts/stage-prompts.json](scripts/stage-prompts.json).
 
-**Ink Harbor Stomp** is an original 32-bar, 144 BPM swing arrangement with synthesized piano-, reed-, muted-brass-, bass-, and banjo-style voices. Thirteen original Foley/stinger cues accompany combat and menus. No historic recordings, cartoon themes, downloaded samples, or live band recordings were imported. See [asset provenance](assets/provenance.md) for artwork sources and generation details.
+The scores use synthesized piano-, reed-, muted-brass-, bass-, banjo-, and calliope-style voices. Thirteen original Foley/stinger cues accompany combat and menus. No historic recordings, cartoon themes, downloaded samples, or live band recordings were imported. See [asset provenance](assets/provenance.md) for artwork sources and generation details.
 
 ## Development
 
@@ -103,7 +118,7 @@ The game uses native ES modules, Canvas 2D, Web Audio, and the Gamepad API. Ther
 | `engine.mjs` | DOM-free combat simulation, CPU behavior, roster, and move timing |
 | `app.mjs` | Screens, keyboard/touch input, controller polling, sound, and the fixed 120 Hz simulation loop |
 | `art.mjs` / `cels.mjs` | Scene rendering, atlas loading, and cel selection |
-| `assets/runtime/` | Arcade progression/endings, controller handling, and audio playback/settings |
+| `assets/runtime/` | Stage catalog/tour, Arcade progression/endings, controllers, and audio playback/settings |
 | `scripts/` | Source generators for checked-in SVG atlases and WAV files |
 | `tests/` | Node regression tests and the browser-only Arcade outcome fixture |
 | `controller-simulator.html` | Development harness for two virtual standard controllers |
@@ -125,9 +140,9 @@ npm test
 git diff --check
 ```
 
-The current suite has **43 Node tests** covering combat, CPU matches, round transitions, controllers, Training, Arcade progression/checkpoint validation, cel generation/timing, and audio generation/lifecycle. Tests use Node's built-in runner.
+The current suite has **49 Node tests** covering combat, CPU matches, round transitions, controllers, Training, Arcade progression/checkpoint validation, cel generation/timing, and audio generation/lifecycle. Stage regressions cover equal combat rules, Training/round resets, the Arcade venue tour and old checkpoints, distinct paintings, deterministic score generation, loop headroom, lazy loading, rapid music switches, and failure recovery. Tests use Node's built-in runner.
 
-With the server running, open [the controller simulator](http://127.0.0.1:4173/controller-simulator.html). Connect P1/P2 for manual checks, or click **Run controller checks** for **13 repeatable browser checks** covering menu navigation, both players, pause/resume, disconnect/reconnect, Training controls, and Arcade progression/endings. Buttons toggle held state; use **Release** after screen changes. The simulator suppresses iframe focus-loss pausing so its outer controls remain usable.
+With the server running, open [the controller simulator](http://127.0.0.1:4173/controller-simulator.html). Connect P1/P2 for manual checks, or click **Run controller checks** for **14 repeatable browser checks** covering menu navigation, both players, pause/resume, disconnect/reconnect, Training controls, all four stage choices, and Arcade progression/venues/endings. Buttons toggle held state; use **Release** after screen changes. The simulator suppresses iframe focus-loss pausing so its outer controls remain usable.
 
 Arcade flow checks use `tests/fixtures/arcade-engine.mjs` to script timeout outcomes through the real round-resolution code. They verify progression and recovery, not human-played wins or difficulty balance. The harness restores the previous Arcade checkpoint and audio preferences afterward.
 
@@ -161,4 +176,4 @@ Popeye's spinach mechanic relies on Duke's finding that the relevant 1931 strip 
 
 ## Remaining work
 
-There is currently one stage. Additional stages, online multiplayer, and a larger story campaign are future work. Art direction, accessibility, browser/device coverage, controller calibration, audio listening, and sustained balance playtests still need production review.
+Online multiplayer and a larger story campaign are future work. Art direction, accessibility, browser/device coverage, controller calibration, speaker listening, and sustained balance playtests still need production review.

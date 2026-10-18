@@ -1,4 +1,5 @@
 import { ROSTER, CPU_DIFFICULTIES, createMatch } from '../../engine.mjs';
+import { arcadeVenue } from './stages.mjs';
 
 export const ARCADE_KEY = 'pdcf-arcade-v1';
 export const ENDINGS = {
@@ -67,7 +68,7 @@ export function createArcade(fighter, difficulty = 'normal', random = Math.rando
 export function arcadeMatch(run) {
   if (!['ready', 'lost'].includes(run.status) || run.index >= 6) return null;
   run.status = 'fighting'; run.attempts++;
-  const match = createMatch(run.fighter, run.ladder[run.index], 'arcade', run.difficulty);
+  const match = createMatch(run.fighter, run.ladder[run.index], 'arcade', run.difficulty, arcadeVenue(run.index).id);
   match.arcadeStage = run.index; match.arcadeAttempt = run.attempts;
   return match;
 }

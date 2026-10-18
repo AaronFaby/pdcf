@@ -4,11 +4,13 @@ import { loadCels } from './cels.mjs';
 import { Controllers } from './assets/runtime/controllers.mjs';
 import { GameAudio } from './assets/runtime/audio.mjs';
 import { ARCADE_KEY, ENDINGS, createArcade, arcadeMatch, finishArcade, restoreArcade } from './assets/runtime/arcade.mjs';
+import { STAGES, stageFor, arcadeVenue } from './assets/runtime/stages.mjs';
 
 const $ = id => document.getElementById(id);
 const selection = ['mickey', 'popeye'];
 let slot = 0, mode = 'cpu', match = null, paused = false, accumulator = 0, lastTime = 0;
 let difficulty = 'normal', arcade = null;
+let selectedStage = 'ink-harbor';
 try { arcade = restoreArcade(JSON.parse(localStorage.getItem(ARCADE_KEY))); } catch { /* A new run works without browser storage. */ }
 let preview = createMatch(...selection);
 const controllers = new Controllers(), audio = new GameAudio();
@@ -16,7 +18,7 @@ let celsReady = false;
 const arena = $('arena'), arenaContext = arena.getContext('2d');
 const showcaseContext = $('showcase').getContext('2d');
 const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
-const background = new Image(); background.src = './assets/ink-harbor.png';
+const backgrounds = new Map(STAGES.map(stage => { const image = new Image(); image.src = stage.image; return [stage.id, image]; }));
 const held = new Set(), edges = new Set(), touches = new Map(), touchEdges = new Set();
 const keymaps = [
   { left: 'KeyA', right: 'KeyD', jump: 'KeyW', guard: 'KeyS', punch: 'KeyF', kick: 'KeyG', special: 'KeyH', throw: 'KeyR', dash: 'ShiftLeft' },
@@ -49,13 +51,21 @@ function soundUI() {
   $('music-value').textContent = `${$('music-volume').value}%`;
   $('effects-value').textContent = `${$('effects-volume').value}%`;
 }
+function audioStatus() {
+  $('audio-unlock').hidden = !audio.settings.enabled || (!audio.context && !audio.error) || (audio.context?.state === 'running' && !audio.error);
+  $('audio-status').textContent = audio.error ? 'Sound could not start. Check your connection, then press Enable audio to try again.' : audio.context?.state === 'running' ? `${stageFor(audio.track).music} · Original 32-bar arrangement` : 'Press Enable audio to let the band play.';
+}
 function unlockAudio() {
-  const pending = audio.unlock();
-  $('audio-unlock').hidden = !audio.settings.enabled || (audio.context?.state === 'running' && !audio.error);
-  pending.then(() => {
-    $('audio-unlock').hidden = !audio.settings.enabled || (audio.context?.state === 'running' && !audio.error);
-    $('audio-status').textContent = audio.error ? 'Sound could not start. Check your connection, then press Enable audio to try again.' : audio.context?.state === 'running' ? 'Ink Harbor Stomp · Original 32-bar swing arrangement' : 'Press Enable audio to let the band play.';
-  });
+  const pending = audio.unlock(); audioStatus(); pending.then(audioStatus);
+}
+function presentStage(id) {
+  const stage = stageFor(id);
+  $('preview-stage').textContent = `${String(STAGES.indexOf(stage) + 1).padStart(2, '0')} / ${stage.name.toUpperCase()}`;
+  $('arena-stage').textContent = stage.name.toUpperCase();
+  $('arena-tagline').textContent = stage.tagline;
+  $('showcase').setAttribute('aria-label', `An animated preview of the selected fighters at ${stage.name}`);
+  $('arena').setAttribute('aria-label', `Fighting arena at ${stage.name}. Player one uses A D to move, W to jump, S to guard, and F G H to attack. Press Escape to pause.`);
+  audio.setStage(stage.id).then(audioStatus);
 }
 $('sound-button').addEventListener('click', () => {
   audio.configure({ enabled: !audio.settings.enabled }); soundUI(); unlockAudio();
@@ -81,7 +91,7 @@ function buildRoster() {
   }
 }
 function updateSelection() {
-  preview = createMatch(...selection);
+  preview = createMatch(...selection, 'cpu', 'normal', mode === 'arcade' ? 'ink-harbor' : selectedStage);
   preview.fighters[0].x = 365; preview.fighters[1].x = 835;
   const current = ROSTER.find(f => f.id === selection[slot]);
   $('detail-title').textContent = current.title.toUpperCase();
@@ -93,6 +103,10 @@ function updateSelection() {
   document.querySelector('[data-slot="1"]').hidden = mode === 'arcade';
   $('difficulty-picker').hidden = !['cpu', 'arcade'].includes(mode);
   $('arcade-description').hidden = mode !== 'arcade';
+  $('stage-picker').hidden = mode === 'arcade';
+  for (const button of document.querySelectorAll('[data-stage]')) button.setAttribute('aria-pressed', String(button.dataset.stage === selectedStage));
+  $('stage-description').textContent = stageFor(preview.stage).description + ` Music: ${stageFor(preview.stage).music}.`;
+  presentStage(preview.stage);
   $('start-button').textContent = mode === 'arcade' ? 'NEW ARCADE RUN →' : 'LET’S MAKE A SCENE →';
   for (const button of document.querySelectorAll('[data-difficulty]')) button.setAttribute('aria-pressed', String(button.dataset.difficulty === difficulty));
   updateResume();
@@ -115,6 +129,14 @@ function updateSelection() {
 document.querySelectorAll('.slot').forEach(button => button.addEventListener('click', () => { slot = Number(button.dataset.slot); updateSelection(); }));
 document.querySelectorAll('.mode').forEach(button => button.addEventListener('click', () => { mode = button.dataset.mode; if (mode === 'arcade') slot = 0; updateSelection(); }));
 document.querySelectorAll('[data-difficulty]').forEach(button => button.addEventListener('click', () => { difficulty = button.dataset.difficulty; updateSelection(); }));
+for (const stage of STAGES) {
+  const button = document.createElement('button'); button.className = 'stage-card'; button.dataset.stage = stage.id;
+  button.setAttribute('aria-label', `${stage.name}. ${stage.description}`); button.setAttribute('aria-pressed', String(stage.id === selectedStage));
+  const image = document.createElement('img'); image.src = stage.image; image.alt = ''; image.width = 160; image.height = 90;
+  const name = document.createElement('span'); name.textContent = stage.name;
+  button.append(image, name); button.addEventListener('click', () => { selectedStage = stage.id; updateSelection(); audio.play({ type: 'select' }); });
+  $('stage-choices').append(button);
+}
 
 function updateResume() {
   $('arcade-resume').hidden = !arcade;
@@ -142,9 +164,10 @@ function showArcade() {
     state.textContent = i < arcade.index ? 'CLEARED ✓' : i === 5 ? 'MIRROR FINALE' : i === arcade.index ? 'UP NEXT' : 'CHALLENGER';
     li.classList.toggle('cleared', i < arcade.index);
     if (i === arcade.index) li.setAttribute('aria-current', 'step');
-    li.append(number, name, state); return li;
+    const venue = document.createElement('small'); venue.className = 'ladder-venue'; venue.textContent = arcadeVenue(i).name;
+    li.append(number, name, state, venue); return li;
   }));
-  $('arcade-bout-label').textContent = complete ? 'A PUBLIC DOMAIN CARTOON FIGHTERS ORIGINAL' : `BOUT ${arcade.index + 1} / 6 · BEST OF THREE${arcade.index === 5 ? ' · MIRROR FINALE' : ''}`;
+  $('arcade-bout-label').textContent = complete ? 'A PUBLIC DOMAIN CARTOON FIGHTERS ORIGINAL' : `BOUT ${arcade.index + 1} / 6 · ${arcadeVenue(arcade.index).name.toUpperCase()} · BEST OF THREE${arcade.index === 5 ? ' · MIRROR FINALE' : ''}`;
   $('arcade-bout-title').textContent = complete ? ENDINGS[player.id].title : `${player.short} vs. ${opponent.short}`;
   $('arcade-bout-copy').hidden = complete;
   $('arcade-bout-copy').textContent = lost ? 'The ladder is still yours to climb. Continue with a fresh match against the same challenger. Your cleared bouts stay cleared.' : arcade.index === 5 ? 'One last rival knows every trick you do. Beat your own reflection to claim the harbor crown.' : `${opponent.quote} Win two rounds to move up the bill. Every new bout begins with full health and fresh ink.`;
@@ -152,7 +175,7 @@ function showArcade() {
   $('ending-story').replaceChildren(...ENDINGS[player.id].story.map(text => { const p = document.createElement('p'); p.textContent = text; return p; }));
   $('ending-closing').textContent = ENDINGS[player.id].closing;
   $('arcade-play').textContent = complete ? 'PLAY AGAIN →' : lost ? 'CONTINUE →' : arcade.index ? 'NEXT BOUT →' : 'FIRST BELL →';
-  saveArcade(); audio.setScene('menu'); $('arcade-play').focus({ preventScroll: true }); window.scrollTo({ top: 0, behavior: 'instant' });
+  saveArcade(); audio.setScene('menu'); presentStage(arcadeVenue(complete ? 5 : arcade.index).id); $('arcade-play').focus({ preventScroll: true }); window.scrollTo({ top: 0, behavior: 'instant' });
 }
 function playArcade() {
   if (arcade.status === 'complete') { arcade = createArcade(arcade.fighter, arcade.difficulty); showArcade(); return; }
@@ -227,7 +250,8 @@ for (const [id, key] of [['infinite-health', 'infiniteHealth'], ['infinite-ink',
 function startMatch(bout) {
   if (!celsReady) return;
   for (const id of ['result-dialog', 'pause-dialog', 'help-dialog', 'settings-dialog', 'training-dialog']) if ($(id).open) $(id).close();
-  clearInput(); paused = false; match = bout || createMatch(...selection, mode, mode === 'training' ? 'normal' : difficulty);
+  clearInput(); paused = false; match = bout || createMatch(...selection, mode, mode === 'training' ? 'normal' : difficulty, selectedStage);
+  presentStage(match.stage);
   $('selection').hidden = $('arcade').hidden = true; $('game').hidden = false;
   $('name-one').textContent = match.fighters[0].name; $('name-two').textContent = match.fighters[1].name;
   $('opponent-tag').textContent = mode === 'training' ? 'DUMMY' : mode !== 'local' ? 'CPU' : 'P2';
@@ -245,7 +269,7 @@ function returnToSelection() {
   match = null; paused = false; clearInput();
   for (const id of ['result-dialog', 'pause-dialog', 'help-dialog', 'settings-dialog', 'training-dialog']) if ($(id).open) $(id).close();
   audio.setScene('menu');
-  $('selection').hidden = false; $('game').hidden = $('arcade').hidden = true; updateResume(); $('start-button').focus({ preventScroll: true });
+  $('selection').hidden = false; $('game').hidden = $('arcade').hidden = true; updateSelection(); $('start-button').focus({ preventScroll: true });
 }
 function pause(reason = 'The projector’s still running. Your fight can wait.') {
   if (!match || paused || match.phase === 'matchover') return;
@@ -264,7 +288,7 @@ function showResult() {
   clearInput(); audio.setScene('menu'); $('result-dialog').showModal(); $('rematch-button').focus();
 }
 $('start-button').addEventListener('click', startSelected);
-$('featured-button').addEventListener('click', () => { if (mode === 'arcade') mode = 'cpu'; selection[0] = 'mickey'; selection[1] = 'popeye'; updateSelection(); startSelected(); });
+$('featured-button').addEventListener('click', () => { if (mode === 'arcade') mode = 'cpu'; selectedStage = 'ink-harbor'; selection[0] = 'mickey'; selection[1] = 'popeye'; updateSelection(); startSelected(); });
 $('back-button').addEventListener('click', returnToSelection);
 $('pause-button').addEventListener('click', pause);
 $('resume-button').addEventListener('click', resume);
@@ -366,7 +390,7 @@ function frame(timestamp) {
     const context = $('arcade-portrait').getContext('2d'); context.clearRect(0, 0, 300, 300);
     drawFighter(context, { ...ROSTER.find(f => f.id === id), face: 1, y: 0, vx: 0 }, { x: 140, y: 285, scale: .95, time: reducedMotion.matches ? 0 : time, ...(complete ? { animation: 'victory', progress: reducedMotion.matches ? 1 : (time % 1.2) / 1.2 } : {}) });
   } else if (!match) {
-    drawScene(showcaseContext, preview, background, reducedMotion.matches ? 0 : time, { showcase: true, reducedMotion: reducedMotion.matches });
+    drawScene(showcaseContext, preview, backgrounds.get(preview.stage), reducedMotion.matches ? 0 : time, { showcase: true, reducedMotion: reducedMotion.matches });
     const pf = reducedMotion.matches ? 0 : Math.floor(time * 12);
     if (pf !== portraitFrame) {
       portraitFrame = pf;
@@ -391,7 +415,7 @@ function frame(timestamp) {
       }
       if (match.phase === 'matchover' && !$('result-dialog').open) showResult();
     }
-    if (match) drawScene(arenaContext, match, background, match.elapsed, { reducedMotion: reducedMotion.matches });
+    if (match) drawScene(arenaContext, match, backgrounds.get(match.stage), match.elapsed, { reducedMotion: reducedMotion.matches });
   }
   requestAnimationFrame(frame);
 }

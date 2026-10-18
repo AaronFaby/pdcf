@@ -173,6 +173,21 @@ async function runChecks() {
   requireCheck(gameElement('training-panel').hidden && gameElement('timer').textContent==='60' && gameElement('opponent-tag').textContent==='CPU','Practice settings leaked into a normal match');
   passed('Training shows hits/inputs, recovers health, and keeps options through controller reset');
 
+  const venues=['ink-harbor','silverscreen-theater','moonlight-midway','midnight-junction'];
+  const venueNames=['INK HARBOR','SILVERSCREEN THEATER','MOONLIGHT MIDWAY','MIDNIGHT JUNCTION'];
+  gameElement('back-button').click();await advance(3);
+  frame.contentDocument.querySelector('[data-mode="training"]').click();
+  for(let i=0;i<venues.length;i++) {
+    const button=frame.contentDocument.querySelector(`[data-stage="${venues[i]}"]`);
+    button.focus();await tap(0,0);
+    requireCheck(button.getAttribute('aria-pressed')==='true' && gameElement('preview-stage').textContent.includes(venueNames[i]),'Stage picker did not update the preview');
+    gameElement('start-button').click();await advance(3);
+    requireCheck(gameElement('arena-stage').textContent===venueNames[i] && gameElement('timer').textContent==='∞','Training started on the wrong stage');
+    await tap(0,8);requireCheck(gameElement('arena-stage').textContent===venueNames[i],'Training reset lost the venue');
+    gameElement('back-button').click();await advance(3);
+  }
+  passed('All four stages select from a controller and survive Training start/reset/return');
+
   await loadGameForChecks(true,true);await advance(3);
   frame.contentDocument.querySelector('[data-mode="arcade"]').click();
   frame.contentDocument.querySelector('[data-fighter="felix"]').click();
@@ -193,7 +208,10 @@ async function runChecks() {
   requireCheck(!gameElement('arcade-resume').hidden && gameElement('arcade-resume').textContent.includes('BOUT 2/6'),'Interrupted run was not restored');
   gameElement('arcade-resume').focus();await tap(0,0);await tap(0,0);
   requireCheck(gameElement('name-two').textContent===opponent && gameElement('timer').textContent==='60' && health(0)===100,'Resume changed the rival or carried old combat state');
+  requireCheck(gameElement('arena-stage').textContent==='SILVERSCREEN THEATER','Resume lost the second-bout venue');
+  const tour=['INK HARBOR','SILVERSCREEN THEATER','MOONLIGHT MIDWAY','MIDNIGHT JUNCTION','SILVERSCREEN THEATER','INK HARBOR'];
   for(let i=1;i<6;i++) {
+    requireCheck(gameElement('arena-stage').textContent===tour[i],'Arcade did not tour the correct venue');
     window.arcadeTestResult=0;await advance(3);
     requireCheck(gameElement('arcade-summary').textContent.includes(`${i+1}/6`),'A bout did not advance exactly once');
     if(i<5)await tap(0,0);

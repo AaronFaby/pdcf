@@ -1,3 +1,5 @@
+import { stageFor } from './assets/runtime/stages.mjs';
+
 export const ROSTER = [
   { id: 'mickey', name: 'Mickey Mouse', short: 'Mickey', year: '1928', title: 'The headliner', style: 'ALL-ROUNDER', speed: 278, power: 1, reach: 114, special: 'Steamboat blast', quote: 'A little mouse. A big right hook.' },
   { id: 'minnie', name: 'Minnie Mouse', short: 'Minnie', year: '1928', title: 'The showstopper', style: 'SPEED', speed: 325, power: .86, reach: 105, special: 'Charleston rush', quote: 'Light on her feet. Heavy on the hits.' },
@@ -40,8 +42,8 @@ function fighter(id, index) {
   return { ...spec, x: index ? 860 : 340, y: 0, vx: 0, vy: 0, face: index ? -1 : 1, hp: 100, meter: 35, wins: 0, attack: null, hurt: 0, reaction: null, land: 0, cooldown: 0, guard: false, buff: 0, walk: 0, buffer: null, dash: 0, dashCooldown: 0, dashFace: 1, combo: 0, comboDamage: 0, comboTime: 0 };
 }
 
-export function createMatch(a = 'mickey', b = 'popeye', mode = 'cpu', difficulty = 'normal') {
-  const match = { fighters: [fighter(a, 0), fighter(b, 1)], mode, difficulty: Object.hasOwn(CPU_DIFFICULTIES, difficulty) ? difficulty : 'normal', phase: 'countdown', phaseTime: 2.4, time: 60, round: 1, projectiles: [], effects: [], events: [], winner: null, roundWinner: null, elapsed: 0, hitstop: 0, shake: 0, ai: { clock: 0, action: {} } };
+export function createMatch(a = 'mickey', b = 'popeye', mode = 'cpu', difficulty = 'normal', stage = 'ink-harbor') {
+  const match = { fighters: [fighter(a, 0), fighter(b, 1)], mode, difficulty: Object.hasOwn(CPU_DIFFICULTIES, difficulty) ? difficulty : 'normal', stage: stageFor(stage).id, phase: 'countdown', phaseTime: 2.4, time: 60, round: 1, projectiles: [], effects: [], events: [], winner: null, roundWinner: null, elapsed: 0, hitstop: 0, shake: 0, ai: { clock: 0, action: {} } };
   if (mode === 'training') {
     match.training = { dummy: 'stand', infiniteHealth: true, infiniteInk: true, lastHit: null, inputs: [], previousInput: {} };
     resetTraining(match);
@@ -51,7 +53,7 @@ export function createMatch(a = 'mickey', b = 'popeye', mode = 'cpu', difficulty
 
 export function resetTraining(match) {
   if (!match.training) return;
-  const fresh = createMatch(...match.fighters.map(f => f.id), 'local');
+  const fresh = createMatch(...match.fighters.map(f => f.id), 'local', 'normal', match.stage);
   Object.assign(match, fresh, { mode: 'training', phase: 'fight', training: { ...match.training, lastHit: null, inputs: [], previousInput: {} } });
   match.fighters[0].x = 520; match.fighters[1].x = 620;
   if (match.training.infiniteInk) for (const f of match.fighters) f.meter = 100;

@@ -26,12 +26,15 @@ export function drawFighter(c, f, { x = f.x, y = FLOOR + f.y, scale = 1, time = 
   drawCel(c, f, { x, y, scale, time, ...animation });
 }
 
-export function drawBackdrop(c, image, time = 0) {
+export function drawBackdrop(c, image, time = 0, stage = 'ink-harbor') {
   if (image?.complete && image.naturalWidth) {
     const ratio = Math.max(1200 / image.naturalWidth, 675 / image.naturalHeight);
     const w = image.naturalWidth * ratio, h = image.naturalHeight * ratio;
     c.drawImage(image, (1200 - w) / 2, (675 - h) / 2, w, h);
     c.fillStyle = 'rgba(244,236,217,.08)'; c.fillRect(0, 0, 1200, 675);
+  } else if (stage !== 'ink-harbor') {
+    c.fillStyle = stage === 'silverscreen-theater' ? '#b3a58b' : '#81857f'; c.fillRect(0, 0, 1200, 675);
+    c.fillStyle = '#aaa18b'; c.fillRect(0, 510, 1200, 165);
   } else {
     c.fillStyle = '#c5beaa'; c.fillRect(0, 0, 1200, 675);
     c.fillStyle = '#eee6d2'; c.beginPath(); c.arc(840, 130, 66, 0, 7); c.fill();
@@ -47,10 +50,115 @@ export function drawBackdrop(c, image, time = 0) {
     for (let i = 0; i < 14; i++) { c.beginPath(); c.moveTo(i * 100 - 60, 530); c.lineTo(i * 115 - 135, 675); c.stroke(); }
     for (let y = 535; y < 675; y += 30) { c.beginPath(); c.moveTo(0, y); c.lineTo(1200, y); c.stroke(); }
   }
-  drawHarborLife(c, Math.floor(time * 12) / 12);
+  const exposure = Math.floor(time * 12) / 12;
+  if (stage === 'silverscreen-theater') drawTheaterLife(c, exposure);
+  else if (stage === 'moonlight-midway') drawMidwayLife(c, exposure);
+  else if (stage === 'midnight-junction') drawJunctionLife(c, exposure);
+  else drawHarborLife(c, exposure);
   const vignette = c.createRadialGradient(600, 300, 150, 600, 320, 760);
   vignette.addColorStop(0, 'rgba(20,18,14,0)'); vignette.addColorStop(1, 'rgba(20,18,14,.45)');
   c.fillStyle = vignette; c.fillRect(0, 0, 1200, 675);
+}
+
+function drawTheaterLife(c, time) {
+  c.save();
+  // Soft beams and a silent-picture iris stay behind the actors and fighting floor.
+  for (let i = 0; i < 2; i++) {
+    const x = i ? 1090 : 110, center = 600 + Math.sin(time * .32 + i * 2) * 235;
+    const beam = c.createLinearGradient(x, 65, center, 510);
+    beam.addColorStop(0, 'rgba(255,243,204,.015)'); beam.addColorStop(1, 'rgba(255,243,204,.12)');
+    c.beginPath(); c.moveTo(x, 65); c.lineTo(center - 125, 510); c.lineTo(center + 125, 510); c.closePath(); c.fillStyle = beam; c.fill();
+  }
+  c.globalAlpha = .07 + Math.sin(time * 6) * .012;
+  c.fillStyle = '#fff6da'; c.fillRect(441, 180, 313, 173);
+  c.globalAlpha = .12; c.strokeStyle = '#655e4a'; c.lineWidth = 1;
+  c.beginPath(); c.ellipse(598, 266, 61 + Math.sin(time * .6) * 8, 61, 0, 0, Math.PI * 2); c.stroke();
+  for (let i = 0; i < 8; i++) {
+    const a = time * .24 + i * Math.PI / 4;
+    c.beginPath(); c.arc(598 + Math.cos(a) * 39, 266 + Math.sin(a) * 39, 8, 0, 7); c.stroke();
+  }
+  c.globalAlpha = .18; c.fillStyle = '#29251f';
+  for (let i = 0; i < 2; i++) {
+    c.beginPath(); c.moveTo(i ? 1200 : 0, 0);
+    c.bezierCurveTo(i ? 1150 : 50, 150, i ? 1193 - Math.sin(time * .7) * 9 : 7 + Math.sin(time * .7) * 9, 370, i ? 1190 : 10, 510);
+    c.lineTo(i ? 1200 : 0, 510); c.closePath(); c.fill();
+  }
+  for (let i = 0; i < 13; i++) {
+    const x = 90 + i * 85, glow = c.createRadialGradient(x, 509, 0, x, 509, 24);
+    glow.addColorStop(0, `rgba(255,232,180,${.12 + (Math.sin(time * 1.2 + i) + 1) * .035})`); glow.addColorStop(1, 'rgba(255,232,180,0)');
+    c.globalAlpha = 1; c.fillStyle = glow; c.fillRect(x - 24, 485, 48, 48);
+  }
+  c.globalAlpha = .28; c.fillStyle = '#f4ecd9';
+  for (let i = 0; i < 16; i++) {
+    const x = 300 + (i * 91 + Math.sin(time * .2 + i) * 20) % 600, y = 140 + (i * 47 + time * (2 + i % 3)) % 335;
+    c.beginPath(); c.arc(x, y, 1.1, 0, 7); c.fill();
+  }
+  c.restore();
+}
+
+function drawMidwayLife(c, time) {
+  c.save(); c.strokeStyle = '#b6ae97'; c.fillStyle = '#6b6a61'; c.lineWidth = 2;
+  const x = 394, y = 213, radius = 128;
+  c.globalAlpha = .85;
+  path(c, [[x - 48, 399], [x - 8, y], [x + 8, y], [x + 48, 399]], '#777467');
+  c.beginPath(); c.arc(x, y, radius, 0, Math.PI * 2); c.stroke();
+  c.beginPath(); c.arc(x, y, radius - 7, 0, Math.PI * 2); c.stroke();
+  for (let i = 0; i < 12; i++) {
+    const a = i * Math.PI / 6 + time * .075, px = x + Math.cos(a) * radius, py = y + Math.sin(a) * radius;
+    c.beginPath(); c.moveTo(x, y); c.lineTo(px, py); c.stroke();
+    // Gondolas hang upright while the wheel rotates.
+    c.fillStyle = i % 2 ? '#b4aa90' : '#8f8978'; c.fillRect(px - 10, py + 1, 20, 13); c.strokeRect(px - 10, py + 1, 20, 13);
+    c.fillStyle = '#ece0b9'; c.beginPath(); c.arc(px, py - 2, 2, 0, 7); c.fill();
+  }
+  c.fillStyle = '#e1d6b3'; c.beginPath(); c.arc(x, y, 8, 0, 7); c.fill();
+  for (let i = 0; i < 3; i++) {
+    const bx = 865 + i * 25 + Math.sin(time * .7 + i) * 7, by = 248 - i * 25 + Math.cos(time * .65 + i) * 6;
+    c.strokeStyle = '#b5aa8b'; c.lineWidth = 1;
+    c.beginPath(); c.moveTo(895, 416); c.quadraticCurveTo(bx + 12, 330, bx, by + 15); c.stroke();
+    c.fillStyle = i % 2 ? '#d5c5a0' : '#888b80'; c.beginPath(); c.ellipse(bx, by, 11, 15, -.15, 0, 7); c.fill(); c.stroke();
+  }
+  for (let i = 0; i < 15; i++) {
+    const px = 963 + i * 16, py = 275 - Math.sin(i / 14 * Math.PI) * 10;
+    c.globalAlpha = .25 + (Math.sin(time * 2 - i * .8) + 1) * .3;
+    c.fillStyle = '#fff0bc'; c.beginPath(); c.arc(px, py, 2.6, 0, 7); c.fill();
+  }
+  c.restore();
+}
+
+function drawJunctionLife(c, time) {
+  c.save(); c.strokeStyle = '#383b36'; c.lineWidth = 2;
+  // A long passing train runs on the rear track, never across the fighting plane.
+  const x = (time * 73 + 300) % 2600 - 950, y = 458;
+  c.save(); c.translate(x, y); c.globalAlpha = .8;
+  for (let i = 0; i < 4; i++) {
+    const left = i * 245;
+    c.fillStyle = i ? '#626861' : '#474d48'; c.fillRect(left, -93, 233, 78); c.strokeRect(left, -93, 233, 78);
+    c.fillStyle = '#989b86';
+    for (let n = 0; n < 5; n++) { c.fillRect(left + 17 + n * 40, -78, 26, 34); c.strokeRect(left + 17 + n * 40, -78, 26, 34); }
+    c.fillStyle = '#343b36'; c.fillRect(left - 3, -103, 238, 10);
+    for (const wx of [left + 32, left + 199]) {
+      c.save(); c.translate(wx, -7); c.rotate(time * 3.5);
+      c.fillStyle = '#424840'; c.beginPath(); c.arc(0, 0, 14, 0, 7); c.fill(); c.stroke();
+      c.beginPath(); c.moveTo(-11, 0); c.lineTo(11, 0); c.stroke(); c.restore();
+    }
+  }
+  c.fillStyle = '#3c433d'; c.fillRect(945, -135, 26, 42);
+  for (let i = 0; i < 8; i++) {
+    const age = (time * .24 + i / 8) % 1;
+    c.globalAlpha = (1 - age) * .23; c.fillStyle = '#d5d4bf';
+    c.beginPath(); c.ellipse(957 - age * 165, -140 - age * 100, 9 + age * 35, 6 + age * 22, -.3, 0, 7); c.fill();
+  }
+  c.restore();
+  c.strokeStyle = '#514c3e'; c.lineCap = 'round';
+  c.save(); c.translate(1042, 137); c.rotate(time * .025);
+  c.lineWidth = 4; c.beginPath(); c.moveTo(0, 0); c.lineTo(-5, -37); c.stroke();
+  c.rotate(time * .22 + 1.8); c.lineWidth = 2; c.beginPath(); c.moveTo(0, 9); c.lineTo(0, -57); c.stroke(); c.restore();
+  c.globalAlpha = .1; c.fillStyle = '#eee7d6';
+  for (let i = 0; i < 6; i++) {
+    const px = (i * 260 + time * 12) % 1600 - 200;
+    c.beginPath(); c.ellipse(px, 473 + i % 2 * 9, 145, 13, 0, 0, 7); c.fill();
+  }
+  c.restore();
 }
 
 function drawHarborLife(c, time) {
@@ -98,7 +206,7 @@ export function drawScene(c, match, image, time, { showcase = false, reducedMoti
   c.clearRect(0, 0, 1200, 675);
   c.save();
   if (!showcase && !reducedMotion && match.shake > 0) c.translate(Math.sin(time * 191) * match.shake, Math.cos(time * 153) * match.shake * .45);
-  drawBackdrop(c, image, reducedMotion ? 0 : time);
+  drawBackdrop(c, image, reducedMotion ? 0 : time, match.stage);
   const fighters = match.fighters;
   if (!showcase) {
     c.fillStyle = 'rgba(244,236,217,.72)';

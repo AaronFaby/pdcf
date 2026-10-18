@@ -4,7 +4,7 @@
 
 This is a static browser game using native JavaScript ES modules, Canvas 2D, Web Audio, and the Gamepad API. It has no installed runtime dependencies, bundler, account system, or production backend. Use the existing modules and browser/Node APIs before adding packages or infrastructure.
 
-The current game has six fighters (Mickey, Minnie, Oswald, Felix, Betty, Popeye), one Ink Harbor stage, Arcade, Training, CPU play, and local two-player. Preserve working modes and controls when extending a milestone. Read `README.md` for player-facing behavior and `assets/provenance.md` for asset sources.
+The current game has six fighters (Mickey, Minnie, Oswald, Felix, Betty, Popeye), four stages (Ink Harbor, Silverscreen Theater, Moonlight Midway, Midnight Junction), Arcade, Training, CPU play, and local two-player. Preserve working modes and controls when extending a milestone. Read `README.md` for player-facing behavior and `assets/provenance.md` for asset sources.
 
 ## Code map
 
@@ -15,6 +15,7 @@ The current game has six fighters (Mickey, Minnie, Oswald, Felix, Betty, Popeye)
 | `art.mjs` | Canvas scene, fighters, effects, and animated stage |
 | `cels.mjs` | Atlas loading/measurement and pose selection synchronized to combat timing |
 | `assets/runtime/arcade.mjs` | Ladder generation, bout progression, checkpoint validation, and six original endings |
+| `assets/runtime/stages.mjs` | Stage names/assets/music metadata, safe default, and the derived Arcade venue tour; keep it DOM-free |
 | `assets/runtime/controllers.mjs` | Standard gamepad mapping, player assignment, neutral arming, and pending input edges |
 | `assets/runtime/audio.mjs` | Audio loading/playback, pause/resume, and validated saved preferences |
 | `index.html` / `style.css` | Main interface, dialogs, responsive layout, and accessibility markup |
@@ -44,6 +45,7 @@ Keep the existing `.mjs` imports, relative asset URLs, and small function-based 
 - Attacks are one-shot edges; movement and guard are held state. Preserve pending edges across render frames with no simulation step. Joining, pausing, resuming, and changing screens require neutral controller input. Clear pending combat buffers on those transitions, and keep player assignments stable across reconnects.
 - Focus loss and assigned-controller disconnects pause the match. Preserve keyboard fallback, menu confirm/back, and controls for both players.
 - Arcade clears one bout per accepted result, rejects stale/duplicate results, retries losses against the same rival, and ends after five other fighters plus a mirror finale. Difficulty changes decisions, not fighter health, speed, or damage. Training CPU behavior stays normal.
+- Stage choice is cosmetic: preserve the shared fighting plane and combat rules, stage selection through Training resets/rematches, and venue identity across Arcade retry/resume. The Arcade tour is derived from bout index so existing v1 saves need no new fields. Scenery freezes under reduced motion; scores load on demand, ignore stale asynchronous completions, and retain pause/mute behavior.
 - Treat saved browser data as untrusted. Validate Arcade checkpoints and audio preferences, handle unavailable/corrupt storage, and keep play available without persistence. Preserve `pdcf-arcade-v1` and `pdcf-audio-v1` compatibility or explicitly handle schema migration/recovery. Do not erase player progress as a test shortcut.
 - Training reset preserves cast/options while clearing combat/readout state. Health recovery, unlimited ink, dummy behavior, and normal match round rules must remain independent.
 - Audio needs a browser gesture, supports independent volume/mute, pauses/resumes, and can retry loading failures without interrupting combat. Preserve reduced-motion behavior, semantic buttons, focus handling, accessible labels, and live match announcements.
@@ -60,7 +62,7 @@ Record new asset sources in `assets/provenance.md`. Describe the current art as 
 
 For behavior changes, add a focused regression using `node:test` in the relevant existing test file, then run `npm test` and `git diff --check`. Check changed modules with `node --check path/to/file.mjs`. For documentation-only edits, verify commands, links, and claims against the repository; game tests need not be repeated unless the documentation changes reveal a code issue.
 
-For input, menu, or progression changes, run the game and the local `controller-simulator.html` harness. **Run controller checks** currently covers 13 flows, including both players, pause, reconnect, Training, and Arcade. Keep its restoration of the previous saved run and audio settings. Arcade timeout scripting belongs in `tests/fixtures/arcade-engine.mjs`; production must keep importing the real engine directly.
+For input, menu, or progression changes, run the game and the local `controller-simulator.html` harness. **Run controller checks** currently covers 14 flows, including both players, pause, reconnect, Training, stage selection, and the Arcade tour. Keep its restoration of the previous saved run and audio settings. Arcade timeout scripting belongs in `tests/fixtures/arcade-engine.mjs`; production must keep importing the real engine directly.
 
 For UI changes, check the affected mode, dialog focus, keyboard/controller navigation, desktop/mobile layout, reduced motion, and browser console. For combat changes, exercise hit/miss/block, recovery, round transitions, and affected modes/fighters. A screenshot alone does not verify animation or gameplay.
 
