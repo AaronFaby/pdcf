@@ -75,6 +75,8 @@ Fullscreen entry initially exposed a WebKit top-layer issue: the existing modal 
 
 Final local validation passed **77 Node tests**, the **49-file/92-reference** production build, and **42 browser release tests**: fourteen scenarios each in Chromium, Firefox and WebKit on this macOS ARM host. Each engine passed all **26 controller flows**, including saved visual settings, 390px Options layout and nested display/pause navigation. Native fullscreen entry/exit passed in all three engines. The interactive in-app-browser pass also checked the skip link, keyboard focus, visual Options and Training HUD, with no captured console errors or warnings. The existing workflow will include the new scenarios on its five browser projects after publication; this local result does not establish a new hosted CI run or deployment. Physical controllers, the Safari application, and assistive-technology/compliance certification are not established by these checks.
 
+The first hosted display run exposed Linux Firefox's native fullscreen resize: the trace viewport changed from 1280×720 to 1366×768 while Playwright's configured viewport remained 1280×720. The test now checks the actual document viewport instead of the configured window dimensions. The arena also exceeded the actual fullscreen height by about five pixels, so fullscreen now shares the windowed arena's more conservative size cap instead of enlarging it separately. Hosted results for that repair must be verified on its follow-up commit.
+
 ## Release sign-off still requiring people or deployment access
 
 - Physical controller pairing, reconnects, button labels, and latency.

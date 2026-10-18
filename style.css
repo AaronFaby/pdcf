@@ -1692,7 +1692,6 @@ button:focus-visible,a:focus-visible,input:focus-visible,canvas:focus-visible { 
 .clock>strong { font-size:36px; }
 :root:fullscreen { background:var(--paper); overflow:auto; }
 :root:fullscreen .masthead { height:64px; }
-:root:fullscreen .arena-wrap { width:min(100%,max(260px,calc((100dvh - 310px) * 16 / 9 + 12px))); }
 @media(max-width:760px) {
   .fight-hud { grid-template-columns:minmax(0,1fr) 52px minmax(0,1fr); padding:8px; gap:8px; }
   .hud-name strong { font-size:15px; }
