@@ -1567,3 +1567,32 @@ dialog .primary-button {
   .arcade-copy h2 { font-size:28px; }
   .arcade-actions { align-items:stretch; flex-direction:column; }
 }
+
+/* Guided Training keeps the lesson alongside the fighting plane on desktop. */
+#game.is-guided .training-playfield { display:grid; grid-template-columns:minmax(0,1fr) 300px; gap:18px; align-items:start; }
+.tutorial-panel { padding:20px; border:2px solid var(--ink); background:#e5dcc8; }
+.tutorial-panel h2 { font:800 30px/1.05 var(--display); margin:8px 0 14px; }
+.tutorial-panel p { font-size:12px; line-height:1.7; }
+.lesson-bindings { font-size:11px; line-height:1.8; overflow-wrap:anywhere; border-block:1px solid var(--line); padding:12px 0; }
+.lesson-goals { list-style:none; padding:0; font-size:12px; line-height:1.8; }
+.lesson-goals li { margin:6px 0; }
+.lesson-status { min-height:42px; font-size:12px; line-height:1.7; }
+.lesson-actions { display:flex; flex-wrap:wrap; gap:10px; align-items:center; }
+.tutorial-panel .lesson-actions { display:grid; grid-template-columns:1fr 1fr; }
+.tutorial-panel .lesson-actions button { padding:12px 8px; font-size:10px; }
+.lesson-actions .primary-button,.lesson-actions .secondary-button { margin:0; }
+.combat-feedback { display:flex; gap:14px; align-items:baseline; border-left:4px solid var(--accent); background:#e5dcc8; padding:14px 16px; margin:18px 0; }
+.combat-feedback strong { font:800 18px var(--display); flex-shrink:0; }
+.combat-feedback span { font-size:12px; line-height:1.7; }
+#training-dialog { max-height:90dvh; overflow:auto; }
+#tutorial-menu-view h3 { font:800 28px var(--display); margin:12px 0; }
+#tutorial-menu-view .primary-button { width:100%; }
+@media(max-width:1000px) {
+  #game.is-guided .training-playfield { grid-template-columns:1fr; }
+  .tutorial-panel .lesson-actions { display:flex; }
+}
+@media(max-width:650px) {
+  .training-actions { flex-wrap:wrap; }
+  .combat-feedback { display:block; }
+  .combat-feedback span { display:block; margin-top:8px; }
+}

@@ -3,6 +3,7 @@ import { drawFighter, drawScene } from './art.mjs';
 import { loadCels } from './cels.mjs';
 import { ACTIONS, keyName, buttonName } from './assets/runtime/bindings.mjs';
 import { ControlPanel } from './assets/runtime/control-panel.mjs';
+import { startTutorial, retryLesson, nextLesson, endTutorial, tutorialInput, updateTutorial, lessonView, combatFeedback, combatState } from './assets/runtime/training.mjs';
 import { fighterMoves } from './assets/runtime/move-list.mjs';
 import { Controllers } from './assets/runtime/controllers.mjs';
 import { GameAudio } from './assets/runtime/audio.mjs';
@@ -23,7 +24,7 @@ const showcaseContext = $('showcase').getContext('2d');
 const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
 const backgrounds = new Map(STAGES.map(stage => { const image = new Image(); image.src = stage.image; return [stage.id, image]; }));
 const held = new Set(), edges = new Set(), touches = new Map(), touchEdges = new Set();
-const controls = new ControlPanel(controllers, () => { clearInput(); refreshControlHints(); if ($('moves-dialog').open) renderMoves(); });
+const controls = new ControlPanel(controllers, () => { clearInput(); refreshControlHints(); if ($('moves-dialog').open) renderMoves(); if (match?.training) updatePractice(); });
 let moveFighter = 'mickey', movePlayer = 0;
 const portraits = [];
 
@@ -222,8 +223,54 @@ function practiceSettings() {
   for (const [id, key, label] of [['infinite-health', 'infiniteHealth', 'HEALTH RECOVERY'], ['infinite-ink', 'infiniteInk', 'UNLIMITED INK']]) {
     $(id).setAttribute('aria-pressed', String(t[key])); $(id).textContent = `${label}: ${t[key] ? 'ON' : 'OFF'}`;
   }
-  $('training-hint').textContent = `Dummy: ${t.dummy.toUpperCase()} · ${t.infiniteHealth ? 'Health recovers after each string' : 'Knockouts reset the bout'} · ${t.infiniteInk ? 'Unlimited ink' : 'Normal ink costs'}`;
+  renderTutorial();
+  $('training-hint').textContent = `${t.tutorial ? 'Guided lesson controls the dummy' : `Dummy: ${t.dummy.toUpperCase()}`} · ${t.infiniteHealth ? 'Health recovers after each string' : 'Knockouts reset the bout'} · ${t.infiniteInk ? 'Unlimited ink' : 'Normal ink costs'}`;
 }
+function renderTutorial() {
+  const g = match?.training?.tutorial, view = g ? lessonView(match, controls.settings.players[0]) : null;
+  $('game').classList.toggle('is-guided', !!g);
+  for (const root of document.querySelectorAll('[data-lesson-view]')) {
+    root.hidden = !view;
+    if (!view) continue;
+    for (const field of ['title', 'instruction', 'bindings', 'progress', 'status']) {
+      const node = root.querySelector(`[data-lesson-${field}]`);
+      if (node.textContent !== view[field]) node.textContent = view[field];
+    }
+    const list = root.querySelector('[data-lesson-goals]'), state = JSON.stringify(view.goals);
+    if (list.dataset.state !== state) {
+      list.dataset.state = state;
+      list.replaceChildren(...view.goals.map(([label, done]) => { const item = document.createElement('li'); item.textContent = `${done ? '✓' : '○'} ${label}`; return item; }));
+    }
+  }
+  for (const button of document.querySelectorAll('[data-tutorial-action]')) {
+    const action = button.dataset.tutorialAction;
+    if (action === 'start') { button.hidden = !!g && !g.finished; button.textContent = g?.finished ? 'RESTART GUIDED LESSONS' : button.id === 'training-tutorial' ? 'LEARN TO FIGHT' : 'START GUIDED LESSONS'; }
+    else {
+      button.disabled = !g || (action === 'next' ? !g.ready || g.finished : action !== 'end' && g.finished);
+      if (action === 'next') button.textContent = g?.index === 7 ? 'FINISH COURSE →' : 'NEXT LESSON →';
+    }
+  }
+  $('training-reset').textContent = g ? g.finished ? 'RESTART COURSE ↺' : 'RETRY LESSON ↺' : 'RESET ↺';
+  $('practice-description').hidden = !!g;
+  document.querySelector('.practice-settings').hidden = !!g;
+}
+function guideAction(action) {
+  if (!match?.training) return;
+  if (action === 'start') startTutorial(match);
+  if (action === 'retry') retryLesson(match);
+  if (action === 'next' || action === 'skip') nextLesson(match, action === 'skip');
+  if (action === 'end') endTutorial(match);
+  clearInput(); practiceSettings(); updateHUD();
+  if (match.training.tutorial?.finished) {
+    if (!$('training-dialog').open) openPracticeOptions();
+    $('training-dialog').querySelector('[data-tutorial-action="end"]').focus();
+  } else {
+    if ($('training-dialog').open) $('training-dialog').close();
+    arena.focus({ preventScroll: true });
+    window.scrollTo({ top: 0, behavior: 'instant' });
+  }
+}
+document.querySelectorAll('[data-tutorial-action]').forEach(button => button.addEventListener('click', () => guideAction(button.dataset.tutorialAction)));
 function updatePractice() {
   const t = match.training, hit = t.lastHit;
   $('practice-hit').textContent = hit ? `${hit.attacker ? 'DUMMY' : 'P1'} ${hit.blocked ? 'BLOCKED' : hit.kind.toUpperCase()} · ${Number(hit.damage.toFixed(1))}` : '—';
@@ -231,18 +278,25 @@ function updatePractice() {
   $('practice-damage').textContent = hit && !hit.blocked ? Number(hit.comboDamage.toFixed(1)) : '—';
   const labels = t.inputs.length ? t.inputs : ['Make your first move.'];
   if ($('practice-inputs').textContent !== labels.join('')) $('practice-inputs').replaceChildren(...labels.map(label => { const li = document.createElement('li'); li.textContent = label; return li; }));
-  const f = match.fighters[0], attack = f.attack;
+  const f = match.fighters[0];
   const timings = ['punch', 'kick', 'throw'].map(kind => `${kind.toUpperCase()} ${Math.ceil(moveFor(f, kind).active * 60)}f`).join(' · ');
-  $('practice-timing').textContent = attack ? `${attack.kind.toUpperCase()} · ${attack.time < moveFor(f, attack.kind).active ? 'ANTICIPATION' : attack.time <= moveFor(f, attack.kind).until ? 'ACTIVE' : 'RECOVERY'} | Startup: ${timings}` : `Ready | Startup: ${timings}`;
+  $('practice-timing').textContent = `${combatState(f)} | Startup: ${timings}`;
+  const feedback = combatFeedback(t.feedback, controls.settings.players[0]);
+  for (const [id, value] of [['feedback-title', feedback.title], ['feedback-detail', feedback.detail]]) if ($(id).textContent !== value) $(id).textContent = value;
+  renderTutorial();
 }
 function resetPractice() {
   if (!match?.training) return;
-  resetTraining(match); clearInput(); updateHUD(); audio.play({ type: 'select' }); arena.focus({ preventScroll: true });
+  if (match.training.tutorial?.finished) startTutorial(match);
+  else if (match.training.tutorial) retryLesson(match);
+  else resetTraining(match);
+  clearInput(); practiceSettings(); updateHUD(); audio.play({ type: 'select' }); arena.focus({ preventScroll: true });
 }
 function openPracticeOptions() {
   if (!match?.training) return;
   if ($('pause-dialog').open) $('pause-dialog').close();
   paused = true; clearInput(); audio.pause(); practiceSettings(); $('training-dialog').showModal();
+  if (match.training.tutorial?.ready && !match.training.tutorial.finished) $('lesson-next-menu').focus();
 }
 $('training-options').addEventListener('click', openPracticeOptions);
 $('training-pause-options').addEventListener('click', openPracticeOptions);
@@ -264,6 +318,7 @@ function startMatch(bout) {
   $('training-panel').hidden = $('training-pause-options').hidden = mode !== 'training';
   $('match-format').textContent = mode === 'training' ? 'TRAINING' : mode === 'arcade' ? `ARCADE ${arcade.index + 1}/6 · ${arcade.difficulty.toUpperCase()}` : mode === 'cpu' ? `BEST OF THREE · ${difficulty.toUpperCase()}` : 'BEST OF THREE';
   $('back-button').textContent = mode === 'arcade' ? '← SAVE & CASTING' : '← CASTING CALL';
+  renderTutorial();
   if (match.training) practiceSettings();
   $('match-announcement').textContent = match.training ? `Training. ${match.fighters[0].name} versus ${match.fighters[1].name}.` : `Round one. ${match.fighters[0].name} versus ${match.fighters[1].name}.`;
   updateHUD(); arena.focus({ preventScroll: true }); window.scrollTo({ top: 0, behavior: 'instant' });
@@ -371,12 +426,12 @@ window.addEventListener('keydown', event => {
   if (controls.keydown(event)) return;
   if (event.code === 'Escape' && !$('arcade').hidden && !document.querySelector('dialog[open]')) { event.preventDefault(); returnToSelection(); return; }
   if (!match || event.ctrlKey || event.metaKey || event.altKey) return;
-  if (controls.settings.players.some(profile => profile.keyboard.reset === event.code) && match.training && !paused && !document.querySelector('dialog[open]')) { event.preventDefault(); resetPractice(); return; }
   if (event.code === 'Escape') {
     if (!document.querySelector('dialog[open]')) { event.preventDefault(); pause(); }
     return;
   }
-  if (paused || document.querySelector('dialog[open]')) return;
+  if (paused || document.querySelector('dialog[open]') || event.target.closest?.('button, input')) return;
+  if (match.training && controls.settings.players.some(profile => profile.keyboard.reset === event.code)) { event.preventDefault(); resetPractice(); return; }
   if (controls.settings.players.some(profile => Object.entries(profile.keyboard).some(([action, key]) => action !== 'reset' && key === event.code))) {
     event.preventDefault();
     if (!event.repeat && !held.has(event.code)) edges.add(event.code);
@@ -461,9 +516,12 @@ function frame(timestamp) {
     if (!paused && match.phase !== 'matchover') {
       accumulator += delta;
       while (accumulator >= 1 / 120) {
-        tick(match, [input(0), match.training ? trainingInput(match, 1 / 120) : mode !== 'local' ? cpuInput(match, 1 / 120) : input(1)], 1 / 120);
+        const player = input(0);
+        tick(match, [player, match.training ? match.training.tutorial ? tutorialInput(match) : trainingInput(match, 1 / 120) : mode !== 'local' ? cpuInput(match, 1 / 120) : input(1)], 1 / 120);
+        const learned = updateTutorial(match, player);
         edges.clear(); touchEdges.clear(); accumulator -= 1 / 120;
         match.events.forEach(event => audio.play(event));
+        if (learned) { openPracticeOptions(); break; }
       }
       updateHUD();
       if (match.phase !== lastPhase || match.round !== lastRound) {

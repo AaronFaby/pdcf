@@ -46,7 +46,7 @@ function fighter(id, index) {
 export function createMatch(a = 'mickey', b = 'popeye', mode = 'cpu', difficulty = 'normal', stage = 'ink-harbor') {
   const match = { fighters: [fighter(a, 0), fighter(b, 1)], mode, difficulty: Object.hasOwn(CPU_DIFFICULTIES, difficulty) ? difficulty : 'normal', stage: stageFor(stage).id, phase: 'countdown', phaseTime: 2.4, time: 60, round: 1, projectiles: [], effects: [], events: [], winner: null, roundWinner: null, elapsed: 0, hitstop: 0, shake: 0, ai: { clock: 0, action: {} } };
   if (mode === 'training') {
-    match.training = { dummy: 'stand', infiniteHealth: true, infiniteInk: true, lastHit: null, inputs: [], previousInput: {} };
+    match.training = { dummy: 'stand', infiniteHealth: true, infiniteInk: true, lastHit: null, feedback: null, inputs: [], previousInput: {} };
     resetTraining(match);
   }
   return match;
@@ -55,7 +55,7 @@ export function createMatch(a = 'mickey', b = 'popeye', mode = 'cpu', difficulty
 export function resetTraining(match) {
   if (!match.training) return;
   const fresh = createMatch(...match.fighters.map(f => f.id), 'local', 'normal', match.stage);
-  Object.assign(match, fresh, { mode: 'training', phase: 'fight', training: { ...match.training, lastHit: null, inputs: [], previousInput: {} } });
+  Object.assign(match, fresh, { mode: 'training', phase: 'fight', training: { ...match.training, lastHit: null, feedback: null, inputs: [], previousInput: {} } });
   match.fighters[0].x = 520; match.fighters[1].x = 620;
   if (match.training.infiniteInk) for (const f of match.fighters) f.meter = 100;
 }
@@ -101,13 +101,28 @@ function beginAttack(match, f, kind, index) {
     f.meter -= SPECIAL_COST;
   }
   f.attack = { kind, time: 0, hit: false, connected: false, emitted: false, face: f.face, air: f.y < 0 };
-  match.events.push({ type: 'swing', kind, index, character: f.id });
+  match.events.push({ type: 'swing', kind, index, character: f.id, cancel: !!cancel });
+  if (index === 0 && cancel) trainingFeedback(match, { type: 'cancel', kind });
   return true;
 }
 
+function trainingFeedback(match, feedback) {
+  if (match.training) match.training.feedback = feedback;
+}
+function whiff(match, index, kind) { if (index === 0) trainingFeedback(match, { type: 'whiff', kind }); }
+function rejection(f, kind) {
+  if (f.thrown) return 'thrown';
+  if (f.hurt > 0 || f.hp <= 0) return f.reaction === 'block' ? 'block' : 'hurt';
+  if (f.guard) return 'guard';
+  if (f.dash > 0) return 'dash';
+  if (f.y < 0 && ['throw', 'special'].includes(kind)) return 'air';
+  if (kind === 'special' && f.meter < SPECIAL_COST) return 'ink';
+  return 'recovery';
+}
+
 function hit(match, defender, attacker, damage, push, direction, kind = 'punch', attack = null) {
-  if (defender.hp <= 0 || defender.thrown) return;
-  if (kind === 'throw' && (defender.y < 0 || defender.hurt > 0)) return;
+  if (defender.hp <= 0 || defender.thrown) return false;
+  if (kind === 'throw' && (defender.y < 0 || defender.hurt > 0)) return false;
   const blocked = kind !== 'throw' && defender.guard && defender.y === 0 && defender.face === -direction;
   const amount = blocked ? damage * .15 : damage;
   const combo = !blocked && defender.hurt > 0 && defender.reaction === 'hurt' && attacker.comboTime > 0;
@@ -122,6 +137,7 @@ function hit(match, defender, attacker, damage, push, direction, kind = 'punch',
   defender.meter = Math.min(100, defender.meter + (blocked ? 5 : 9));
   attacker.meter = Math.min(100, attacker.meter + (blocked ? 3 : 7));
   match.effects.push({ x: defender.x - direction * 25, y: FLOOR + defender.y - 105, life: .28, max: .28, blocked, heavy: kind !== 'throw' && damage >= 14, direction, text: blocked ? 'CLINK!' : kind === 'throw' ? 'GOTCHA!' : damage >= 14 ? 'POW!' : 'WHAM!' });
+  if (attack) attack.outcome = blocked ? 'blocked' : 'hit';
   if (!blocked) {
     attacker.combo = combo ? attacker.combo + 1 : 1;
     attacker.comboDamage = combo ? attacker.comboDamage + amount : amount;
@@ -131,10 +147,12 @@ function hit(match, defender, attacker, damage, push, direction, kind = 'punch',
   if (match.training) {
     defender.healthRecovery = true;
     match.training.lastHit = { attacker: match.fighters.indexOf(attacker), kind, damage: amount, blocked, hits: attacker.combo, comboDamage: attacker.comboDamage };
+    trainingFeedback(match, { type: blocked ? 'block' : 'hit', index: match.fighters.indexOf(attacker), kind, damage: amount, hits: attacker.combo });
   }
   match.hitstop = Math.max(match.hitstop, blocked ? .025 : kind === 'throw' || damage >= 14 ? .065 : .045);
   match.shake = blocked ? 2 : damage >= 14 ? 7 : 4;
-  match.events.push({ type: blocked ? 'block' : 'hit', heavy: kind !== 'throw' && damage >= 14, index: match.fighters.indexOf(attacker) });
+  match.events.push({ type: blocked ? 'block' : 'hit', heavy: kind !== 'throw' && damage >= 14, index: match.fighters.indexOf(attacker), kind, damage: amount, hits: attacker.combo });
+  return true;
 }
 
 function advanceThrow(match, f, dt) {
@@ -230,7 +248,10 @@ export function tick(match, inputs, dt) {
     f.vx = 0;
     if (f.buffer) {
       if (beginAttack(match, f, f.buffer.kind, i)) f.buffer = null;
-      else if ((f.buffer.life -= dt) <= 0) f.buffer = null;
+      else if ((f.buffer.life -= dt) <= 0) {
+        if (i === 0) trainingFeedback(match, { type: 'rejected', kind: f.buffer.kind, reason: rejection(f, f.buffer.kind) });
+        f.buffer = null;
+      }
     }
     if (f.attack?.air && f.hurt <= 0) f.vx = airVelocity;
     if (f.hp > 0 && f.hurt <= 0 && !f.guard && !f.attack) {
@@ -268,11 +289,12 @@ export function tick(match, inputs, dt) {
     if (attack.kind === 'special' && !attack.emitted && attack.time >= move.active) {
       attack.emitted = true;
       if (f.id === 'popeye') {
-        f.buff = 6;
+        f.buff = 6; attack.outcome = 'power';
+        if (i === 0) trainingFeedback(match, { type: 'power', kind: 'special' });
         f.hp = Math.min(100, f.hp + 8);
         match.effects.push({ x: f.x, y: FLOOR + f.y - 180, life: .7, max: .7, text: 'SPINACH!', blocked: false });
       } else if (['mickey', 'felix', 'betty'].includes(f.id)) {
-        match.projectiles.push({ x: f.x + attack.face * 65, y: f.y - 95, direction: attack.face, owner: i, kind: f.id, life: 2.5 });
+        match.projectiles.push({ x: f.x + attack.face * 65, y: f.y - 95, direction: attack.face, owner: i, kind: f.id, life: 2.5, attack });
       }
       match.events.push({ type: f.id === 'popeye' ? 'spinach' : 'special', index: i, character: f.id });
     }
@@ -281,7 +303,10 @@ export function tick(match, inputs, dt) {
       attack.hit = true;
       hits.push([other, f, move.damage * f.power * (f.buff > 0 ? 1.5 : 1), move.push, attack.face, attack.kind, attack]);
     }
-    if (attack.time >= move.duration) { f.attack = null; f.cooldown = .08; }
+    if (attack.time >= move.duration) {
+      if (!attack.outcome && melee) whiff(match, i, attack.kind);
+      f.attack = null; f.cooldown = .08;
+    }
   }
   for (const args of hits) hit(match, ...args);
   match.projectiles = match.projectiles.filter(p => {
@@ -289,10 +314,12 @@ export function tick(match, inputs, dt) {
     p.life -= dt;
     const f = match.fighters[p.owner], other = match.fighters[1 - p.owner];
     if (Math.abs(p.x - other.x) < 44 && Math.abs(p.y - (other.y - 95)) < 65) {
-      hit(match, other, f, 17 * f.power, 52, p.direction, 'special');
+      if (!hit(match, other, f, 17 * f.power, 52, p.direction, 'special', p.attack)) whiff(match, p.owner, 'special');
       return false;
     }
-    return p.life > 0 && p.x > -60 && p.x < 1260;
+    const alive = p.life > 0 && p.x > -60 && p.x < 1260;
+    if (!alive) whiff(match, p.owner, 'special');
+    return alive;
   });
   if (match.training) {
     if (match.training.infiniteInk) for (const f of match.fighters) f.meter = 100;

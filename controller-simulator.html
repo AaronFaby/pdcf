@@ -59,6 +59,7 @@ async function advance(count=1) {
 function setButton(player,button,pressed) {pads[player].buttons[button]={pressed,value:pressed?1:0};refreshHeld();}
 async function tap(player,button) {setButton(player,button,true);await advance();setButton(player,button,false);await advance(2);}
 const gameElement=id=>frame.contentDocument.getElementById(id);
+const dialogClosed=id=>new Promise((resolve,reject)=>{const timeout=setTimeout(()=>reject(new Error(`${id} did not close`)),3000);gameElement(id).addEventListener('close',()=>{clearTimeout(timeout);resolve();},{once:true});});
 const health=player=>Number(gameElement(player?'health-two':'health-one').getAttribute('aria-valuenow'));
 function requireCheck(condition,message) {if(!condition)throw Error(message);}
 
@@ -223,6 +224,27 @@ async function runChecks() {
   gameElement('back-button').click();await advance(3);
   passed('Both controllers throw opponents; a mid-throw pause freezes the scene and resumes cleanly');
 
+  frame.contentDocument.querySelector('[data-mode="training"]').click();gameElement('start-button').click();await advance(3);
+  gameElement('training-options').click();gameElement('dummy-mode').click();gameElement('infinite-health').click();gameElement('infinite-ink').click();
+  const practiceClosed=dialogClosed('training-dialog');frame.contentDocument.querySelector('[data-close="training-dialog"]').click();await practiceClosed;await advance(3);
+  await tap(0,9);requireCheck(gameElement('pause-dialog').open,'Tutorial setup: Start did not pause');gameElement('training-pause-options').focus();await tap(0,0);requireCheck(gameElement('training-dialog').open,'Tutorial setup: practice options did not open');gameElement('tutorial-menu-start').focus();requireCheck(frame.contentDocument.activeElement.id==='tutorial-menu-start','Tutorial setup: start button could not focus');const guideStarted=dialogClosed('training-dialog');await tap(1,0);await guideStarted;await advance(3);
+  requireCheck(gameElement('tutorial-panel').textContent.includes('LESSON 1 / 8') && !gameElement('tutorial-panel').hidden,'Controller could not start the guided course: '+gameElement('tutorial-panel').textContent+'; dialogs='+[...frame.contentDocument.querySelectorAll('dialog[open]')].map(d=>d.id)+'; focus='+frame.contentDocument.activeElement.id+'; pads='+gameElement('controller-status').textContent);
+  const continueLesson=async number=>{requireCheck(gameElement('training-dialog').open && gameElement('lesson-next-menu').disabled===false,`Lesson ${number} did not pause on success`);const closed=number<8?dialogClosed('training-dialog'):null;await tap(0,0);if(closed){await closed;await advance(3);}};
+  setButton(0,14,true);await advance(35);setButton(0,14,false);await advance(3);setButton(0,15,true);await advance(35);setButton(0,15,false);await advance(3);await continueLesson(1);
+  await tap(0,0);await advance(70);await continueLesson(2);
+  await tap(0,2);await advance(40);await tap(0,3);await advance(40);await continueLesson(3);
+  setButton(0,4,true);await advance(110);setButton(0,4,false);await advance(3);await continueLesson(4);
+  await tap(0,5);await advance(100);await continueLesson(5);
+  setButton(0,15,true);await advance(2);await tap(0,7);await advance(25);setButton(0,15,false);await advance(3);await continueLesson(6);
+  await tap(0,1);await advance(70);await continueLesson(7);
+  setButton(0,2,true);await advance();setButton(0,2,false);for(let i=0;i<18 && !gameElement('practice-hit').textContent.includes('PUNCH');i++)await advance();
+  await tap(0,3);await advance(40);await continueLesson(8);
+  requireCheck(gameElement('training-dialog').open && gameElement('tutorial-menu-view').textContent.includes('8 of 8 lessons passed; 0 skipped'),'Course completion did not report earned progress');
+  const guideEnded=dialogClosed('training-dialog');await tap(1,0);await guideEnded;await advance(3);
+  requireCheck(gameElement('tutorial-panel').hidden && gameElement('training-hint').textContent.includes('GUARD') && gameElement('infinite-health').getAttribute('aria-pressed')==='false' && gameElement('infinite-ink').getAttribute('aria-pressed')==='false','Ending lessons did not restore free-practice settings');
+  gameElement('back-button').click();await advance(3);
+  passed('Controllers complete all eight real tutorial lessons, auto-pause/continue and restore free-practice options');
+
   const query=selector=>frame.contentDocument.querySelector(selector);
   const key=code=>{frame.contentWindow.dispatchEvent(new frame.contentWindow.KeyboardEvent('keydown',{code,bubbles:true}));frame.contentWindow.dispatchEvent(new frame.contentWindow.KeyboardEvent('keyup',{code,bubbles:true}));};
   const bindKey=(action,code)=>{query(`[data-bind-action="${action}"][data-bind-device="keyboard"]`).click();key(code);};
@@ -263,6 +285,25 @@ async function runChecks() {
   requireCheck(fits('moves-dialog'),'Move list overflows the narrow viewport');
   query('[data-close="moves-dialog"]').click();frame.style.width='100%';frame.style.height='900px';await advance(3);
   passed('Controls and move lists fit a 390px viewport without horizontal dialog overflow');
+  query('[data-mode="training"]').click();gameElement('start-button').click();await advance(3);gameElement('training-tutorial').click();await advance(3);
+  for(let i=0;i<2;i++){query('#tutorial-panel [data-tutorial-action="skip"]').click();await advance(3);}
+  requireCheck(gameElement('tutorial-panel').textContent.includes('Q (keyboard) / LT / L2 (controller)'),'Lesson prompts ignored saved bindings');
+  key('KeyQ');await advance(35);requireCheck(gameElement('tutorial-panel').textContent.includes('✓ Land a punch'),'Remapped keyboard attack did not earn the lesson goal');
+  key('KeyN');await advance(3);requireCheck(gameElement('tutorial-panel').textContent.includes('○ Land a punch') && gameElement('tutorial-panel').textContent.includes('LESSON 3 / 8'),'Reset did not retry the current lesson');
+  await tap(0,6);await advance(35);requireCheck(gameElement('tutorial-panel').textContent.includes('✓ Land a punch'),'Remapped controller attack did not earn the lesson goal');
+  await tap(0,9);gameElement('controls-pause').click();await advance(3);bindKey('kick','KeyV');
+  requireCheck(gameElement('tutorial-panel').textContent.includes('Kick: V') && gameElement('tutorial-panel').textContent.includes('✓ Land a punch'),'Editing bindings reset lesson progress or left stale prompts');
+  bindKey('kick','KeyF');await advance(3);const remapClosed=dialogClosed('controls-dialog');await tap(0,1);await remapClosed;await advance(3);await tap(0,9);requireCheck(!gameElement('pause-dialog').open,'Could not resume after updating lesson bindings');
+  frame.style.width='390px';await advance(3);const lessonRect=gameElement('tutorial-panel').getBoundingClientRect();
+  requireCheck(lessonRect.left>=0 && lessonRect.right<=390 && gameElement('tutorial-panel').scrollWidth<=gameElement('tutorial-panel').clientWidth+1,'Guided Training overflowed at 390px');
+  for(const code of ['KeyN','KeyQ'])requireCheck(query('#tutorial-panel [data-tutorial-action="end"]').dispatchEvent(new frame.contentWindow.KeyboardEvent('keydown',{code,bubbles:true,cancelable:true})),'A saved gameplay binding swallowed a focused lesson button key');
+  frame.style.width='100%';query('#tutorial-panel [data-tutorial-action="end"]').click();await advance(3);
+  setButton(0,14,true);await advance(50);setButton(0,14,false);await advance(3);key('KeyQ');await advance(50);
+  requireCheck(gameElement('feedback-title').textContent.includes('WHIFF'),'Free Training did not explain a missed attack: '+gameElement('feedback-title').textContent+'; inputs='+gameElement('practice-inputs').textContent+'; dialogs='+[...frame.contentDocument.querySelectorAll('dialog[open]')].map(d=>d.id));
+  key('KeyN');await advance(3);requireCheck(gameElement('feedback-title').textContent==='Your next move','Reset did not clear coaching feedback');
+  gameElement('back-button').click();await advance(3);
+  passed('Saved bindings drive lesson prompts and goals; retry/remapping preserve course position; feedback resets and mobile lessons fit');
+
 
   query('[data-mode="training"]').click();gameElement('start-button').click();await advance(3);
   key('KeyQ');await advance(35);requireCheck(gameElement('practice-hit').textContent.includes('PUNCH'),'Remapped keyboard punch did not reach combat');

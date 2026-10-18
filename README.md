@@ -48,6 +48,16 @@ Choose your fighter and practice dummy, then start immediately in jab range with
 - Inspect last-hit damage, uninterrupted combo hits/damage, attack phase/startup timing, and the last eight P1 inputs. Timings use 60-fps frame notation; held directions do not flood the history.
 - **Backspace**, controller **View / Select**, or **Reset** clears combat state and readouts while keeping the chosen cast and practice settings.
 
+### Learn to fight and combat feedback
+
+In Training, choose **Learn to fight** below the arena, or open **Pause → Practice options → Start guided lessons**. Eight lessons cover movement in both directions, jumping and landing, punches/kicks, guarding, throws, directional dashes, signature moves, and a punch-to-kick cancel combo. The lesson appears beside the arena on desktop and below it on smaller screens.
+
+Prompts use P1’s saved keyboard and controller bindings, including changes made while the course is running. Lessons pass on accepted movement or resolved combat outcomes, not just button presses. A throw must land; a combo needs a connected punch cancelled into a connected kick. Popeye’s special lesson checks Spinach Power instead of requiring damage. The special lesson uses normal ink costs; Retry supplies fresh starting ink.
+
+Passing a lesson pauses into the lesson menu so keyboard/controller players can choose **Next**, **Retry**, **Skip**, or **Free practice**. The Reset button or the assigned Reset Training key/button retries the current lesson. Skipped lessons are reported separately from passed lessons. Lessons set up the dummy and practice rules; returning to free practice restores the previous dummy, health recovery, and ink settings, and keeps the cast/stage. Progress lasts for the current Training session; it is not saved across reloads.
+
+Both free and guided Training show coaching notes for connected hits, blocked strikes, misses, combo cancels, Spinach Power, and rejected actions. Feedback explains insufficient ink, guarding, hit/block stun, airborne restrictions, and recovery. A travelling projectile is not called a miss before it hits or expires. The status line shows startup, active/recovery timing, stun, guarding, dashing and knockdown in 60-fps frame notation. Feedback resets with practice.
+
 ## Stages and music
 
 Use **Set the scene** beneath the matchup preview to choose a stage for CPU, Local, or Training. The preview and music change together. Your choice stays in place for rematches and Training resets during the page session. The Harbor Headliners shortcut always starts Mickey versus Popeye at Ink Harbor. Arcade shows the four stages as a non-interactive **Arcade tour** preview and uses its fixed venue order. Mode and stage choices keep the title, preview, and roster in place.
@@ -126,7 +136,7 @@ The game uses native ES modules, Canvas 2D, Web Audio, and the Gamepad API. Ther
 | `engine.mjs` | DOM-free combat simulation, CPU behavior, roster, and move timing |
 | `app.mjs` | Screens, keyboard/touch input, controller polling, sound, and the fixed 120 Hz simulation loop |
 | `art.mjs` / `cels.mjs` | Scene rendering, atlas loading, and cel selection |
-| `assets/runtime/` | Stage catalog/tour, Arcade progression/endings, controller input/assignment, saved bindings/control panel, move-list data, and audio playback/settings |
+| `assets/runtime/` | Stage catalog/tour, Arcade progression/endings, controller input/assignment, saved bindings/control panel, move-list data, guided lessons/coaching, and audio playback/settings |
 | `scripts/` | Source generators for checked-in SVG atlases and WAV files |
 | `tests/` | Node regression tests and the browser-only Arcade outcome fixture |
 | `controller-simulator.html` | Development harness for two virtual standard controllers |
@@ -148,9 +158,9 @@ npm test
 git diff --check
 ```
 
-The current suite has **61 Node tests** covering combat, CPU matches, round transitions, controllers, Training, Arcade progression/checkpoint validation, cel generation/timing, and audio generation/lifecycle. Stage regressions cover equal combat rules, Training/round resets, the Arcade venue tour and old checkpoints, distinct paintings, deterministic score generation, loop headroom, lazy loading, rapid music switches, and failure recovery. Tests use Node's built-in runner.
+The current suite has **68 Node tests** covering combat, CPU matches, round transitions, controllers, Training, Arcade progression/checkpoint validation, cel generation/timing, and audio generation/lifecycle. Stage regressions cover equal combat rules, Training/round resets, the Arcade venue tour and old checkpoints, distinct paintings, deterministic score generation, loop headroom, lazy loading, rapid music switches, and failure recovery. Tests use Node's built-in runner.
 
-With the server running, open [the controller simulator](http://127.0.0.1:4173/controller-simulator.html). Connect P1/P2 for manual checks, or click **Run controller checks** for **22 repeatable browser checks** covering menu navigation, stable mode/stage layout, both players, pause/resume, disconnect/reconnect, Training controls, all four stage choices, Arcade progression/venues/endings, saved remapping for both players, key conflicts, dead zones, controller swapping, nested pause menus, storage failures, 390px dialog layout, and throws from both controllers with mid-throw pause/resume. Buttons toggle held state; use **Release** after screen changes. The simulator suppresses iframe focus-loss pausing so its outer controls remain usable.
+With the server running, open [the controller simulator](http://127.0.0.1:4173/controller-simulator.html). Connect P1/P2 for manual checks, or click **Run controller checks** for **24 repeatable browser checks** covering menu navigation, stable mode/stage layout, both players, pause/resume, disconnect/reconnect, Training controls, all four stage choices, Arcade progression/venues/endings, saved remapping for both players, key conflicts, dead zones, controller swapping, nested pause menus, storage failures, 390px dialog layout, throws from both controllers with mid-throw pause/resume, the complete guided course, remapped lesson prompts, retry/skip, and free-practice restoration. Buttons toggle held state; use **Release** after screen changes. The simulator suppresses iframe focus-loss pausing so its outer controls remain usable.
 
 Arcade flow checks use `tests/fixtures/arcade-engine.mjs` to script timeout outcomes through the real round-resolution code. They verify progression and recovery, not human-played wins or difficulty balance. The harness restores the previous Arcade checkpoint, audio preferences, and control profiles afterward.
 
