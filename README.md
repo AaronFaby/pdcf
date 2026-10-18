@@ -22,6 +22,12 @@ npm start
 
 Open [the local game](http://127.0.0.1:4173), choose a mode and fighter, then start. CPU, Local, and Training let you choose both roster slots, including mirror matches. The development server binds only to localhost.
 
+### Loading and recovery
+
+The casting screen shows progress for six character atlases and four stage paintings. Its Start controls stay locked until the current load attempt finishes and all six character atlases are ready. **Retry missing artwork** retries failed assets without reloading the page, redownloading successful atlases, changing the selected cast/stage, or clearing saves. A request that does not finish within 15 seconds is treated as failed so loading cannot hang indefinitely.
+
+Missing stage paintings use the existing drawn scenery, with an explicit in-match notice and **Retry stage artwork**. Retrying during a bout preserves combat and Training state. The animation reel also reports progress and supports Retry. Fonts retain system fallbacks; audio has its existing independent retry path and does not prevent fighting.
+
 ## Modes
 
 | Mode | What to expect |
@@ -166,13 +172,28 @@ npm test
 git diff --check
 ```
 
-The current suite has **68 Node tests** covering combat, CPU matches, round transitions, controllers, Training, Arcade progression/checkpoint validation, cel generation/timing, and audio generation/lifecycle. Stage regressions cover equal combat rules, Training/round resets, the Arcade venue tour and old checkpoints, distinct paintings, deterministic score generation, loop headroom, lazy loading, rapid music switches, and failure recovery. Tests use Node's built-in runner.
+The current suite has **71 Node tests** covering combat, CPU matches, round transitions, controllers, Training, Arcade progression/checkpoint validation, cel generation/timing, audio generation/lifecycle, image failure/timeout/retry, shared atlas requests, and static packaging/link integrity. Stage regressions cover equal combat rules, Training/round resets, the Arcade venue tour and old checkpoints, distinct paintings, deterministic score generation, loop headroom, lazy loading, rapid music switches, and failure recovery. Tests use Node's built-in runner.
 
 With the server running, open [the controller simulator](http://127.0.0.1:4173/controller-simulator.html). Connect P1/P2 for manual checks, or click **Run controller checks** for **24 repeatable browser checks** covering menu navigation, stable mode/stage layout, both players, pause/resume, disconnect/reconnect, Training controls, all four stage choices, Arcade progression/venues/endings, saved remapping for both players, key conflicts, dead zones, controller swapping, nested pause menus, storage failures, 390px dialog layout, throws from both controllers with mid-throw pause/resume, the complete guided course, remapped lesson prompts, retry/skip, and free-practice restoration. Buttons toggle held state; use **Release** after screen changes. The simulator suppresses iframe focus-loss pausing so its outer controls remain usable.
 
 Arcade flow checks use `tests/fixtures/arcade-engine.mjs` to script timeout outcomes through the real round-resolution code. They verify progression and recovery, not human-played wins or difficulty balance. The harness restores the previous Arcade checkpoint, audio preferences, and control profiles afterward.
 
-Browser checks have covered keyboard combat, two virtual controllers, Training readouts/options, Arcade resume/endings, audio settings, and animation previews. Physical controllers, physical touch devices, speaker listening, Safari/Firefox, mobile Training layout, and sustained human balance testing remain unverified. Virtual pads do not establish hardware mappings, latency, or pairing behavior.
+Browser checks have covered keyboard combat, two virtual controllers, Training readouts/options, Arcade resume/endings, audio settings, animation previews, and 390px menu/Training layout. The release suite also passes in local Chromium, Firefox, and WebKit builds. Physical controllers, physical touch devices, speaker listening, the branded Safari application, and sustained human balance testing remain unverified. Virtual pads do not establish hardware mappings, latency, or pairing behavior.
+
+### Automated release checks and performance
+
+`npm run check` runs Node tests, makes a clean `dist/` build, and verifies local links/anchors, module imports, stage/character assets, and excluded development files. The game and Node checks still need no dependency installation. The browser test runner is a pinned Playwright development dependency; install it with `npm ci`, then install the desired test browsers.
+
+```sh
+npm ci
+npx playwright install chromium firefox webkit
+npm run check
+npm run test:browser -- --project=chromium --project=firefox --project=webkit
+```
+
+The eight browser scenarios per project cover the packaged game on every stage, pause/legal links, loading progress, missing/delayed assets, retry without losing selections or Training state, font/audio fallback and recovery, the reel, the full virtual-controller matrix, and a 24-combination frame-timing pass. `.github/workflows/release-checks.yml` runs build checks and Chromium, Firefox, WebKit, branded Chrome, and branded Edge projects on pushes/PRs to `main`, retaining reports and failure traces. WebKit coverage is not a claim of testing every Safari release or device.
+
+Open [the performance pass](http://127.0.0.1:4173/tests/browser/performance.html) with the server running to measure all six fighters at all four venues. Its timings stay in the test page; it is excluded from production and adds no player telemetry. See [release verification and performance notes](docs/release-checks.md) for methodology, evidence, and hardware limits. GitHub Actions checks do not themselves gate the separately configured Cloudflare deployment or change branch-protection settings.
 
 ## Static hosting
 
@@ -185,6 +206,8 @@ npm test && mkdir -p dist && cp index.html animation-reel.html style.css app.mjs
 ```
 
 Serve `dist/` as static assets. Keep the relative directory structure: runtime modules under `assets/runtime/` import the root engine. New root runtime files must be added to the copy command. The simulator, tests/fixtures, generators, documentation, and development server are excluded. Do not use `server.mjs` as a production backend or commit the generated `dist/` directory.
+
+The existing dashboard command remains compatible. For the clean build plus link/import checks now used in CI, the dashboard build command can instead be `npm run check`. This repository change does not alter the dashboard configuration.
 
 Pushing starts the configured deployment; verify its result separately before reporting a release as live.
 

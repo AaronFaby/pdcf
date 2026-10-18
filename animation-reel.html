@@ -21,7 +21,7 @@
     <p>Compare each character’s poses, step through individual drawings, and watch the action in either direction. In a match, anticipation and impact frames follow the combat timing. All six stars have 48 drawings, with dedicated dash, throw, aerial punch, and aerial kick poses.</p>
     <div class="reel-controls" id="animation-controls" role="group" aria-label="Animation to preview"></div>
     <div class="reel-strip"><button id="play-toggle">PAUSE</button><button id="direction-toggle" aria-pressed="false">FACE LEFT</button><label for="cel-scrub">DRAWING <output id="cel-number">01</output> / 48</label><input id="cel-scrub" type="range" min="0" max="47" value="0" aria-label="Individual cel drawing"></div>
-    <p id="reel-status" role="status">Loading the cast…</p>
+    <p id="reel-status" role="status">Loading the cast…</p><button id="reel-retry" hidden>RETRY MISSING ARTWORK ↻</button>
     <div id="reel-cast" class="reel-cast"></div>
   </main>
   <script type="module" src="reel.mjs"></script>

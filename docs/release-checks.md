@@ -1,0 +1,61 @@
+# Desktop release verification
+
+The release scope is desktop browser play: CPU, local multiplayer, Arcade, and Training. Simulation remains fixed at 120 Hz. No visual-comfort settings or combat balance changes are included in this milestone.
+
+## Repeatable checks
+
+1. Run `npm run check` for the Node regressions, clean production copy, and local references.
+2. Install the development tools with `npm ci` and test engines with `npx playwright install chromium firefox webkit`.
+3. Run `npm run test:browser -- --project=chromium --project=firefox --project=webkit`.
+4. For installed branded browsers, use `npm run test:browser -- --project=chrome --project=msedge`. CI installs these channels in its own ephemeral runners; local installation of system browsers is not automatic.
+5. Inspect `playwright-report/` and the attached performance JSON. A failed test retains a screenshot and trace in `test-results/`.
+
+The GitHub Actions workflow runs on pushes and pull requests to `main`, with read-only repository permissions. It uploads the checked static build and separate reports for Chromium, Firefox, WebKit, Chrome, and Edge. It does not deploy or alter Cloudflare/branch protection. The workflow needs to be committed/pushed before a hosted Actions run exists; a local test run is separate evidence.
+
+## Browser scenarios
+
+| Scenario | What is verified |
+| --- | --- |
+| Packaged game | Training combat on all four stages, pause/resume, and legal pages opening separately without losing the game |
+| Missing character | Start is blocked, the failed fighter is named, retry fetches only missing artwork, and cast/stage selections survive |
+| Missing scenery | A bout stays playable, identifies fallback scenery, and can recover the painting without resetting Training readouts |
+| Stalled request | Progress remains visible; controller Start and keyboard activation cannot begin early; completion unlocks play |
+| Fonts/audio | System-font fallback, audio errors leave controls usable, and audio can retry successfully |
+| Animation reel | Missing fighter artwork can retry without refreshing |
+| Existing controller harness | All 24 flows, including real combat, throws, guided lessons, saved bindings, disconnect/reconnect, and scripted Arcade progression/endings |
+| Performance pass | All 24 fighter/stage pairings render and produce frame callback/interval measurements |
+
+Arcade victory scripting verifies progression, not human difficulty or balance. Virtual controllers verify the input code, not hardware pairing, latency, or physical button layouts. Browser WebKit is not the Safari application or an exhaustive Safari version/device matrix.
+
+## Performance method
+
+Open `/tests/browser/performance.html` on the development server and click **Run performance pass** with the tab active. The harness runs the real app in a 1200px-wide iframe, isolates its preferences, warms each pairing for 12 frames, then samples 60 frames while moving and attacking. Each fighter visits each venue. It measures time inside the app's complete animation callback (simulation, DOM updates, and Canvas command submission) and intervals between callbacks. It does not force a GPU readback, measure end-to-end input latency, or replace a DevTools/Lighthouse trace. Other machine load and browser scheduling can affect results.
+
+The ready-time measurement starts before fetching the game HTML and ends when Start becomes enabled. Cache state is not forced cold, and no network/CPU throttling is applied. Before/after startup numbers must therefore not be advertised as cold-network improvements. Frame budgets are observations and targets; shared CI runners collect reports without a brittle 60-FPS pass/fail threshold.
+
+The baseline on October 18, 2026 used the in-app Chromium browser (reported Chrome 155, macOS/ARM host), a 1280 × 720 outer viewport and the 1200px game iframe. All 24 pairings had a median observed interval of 16.7 ms; the largest per-pair p95 callback time was 2.7 ms, and none of the sampled intervals exceeded 33.5 ms. Initial game-ready time was 320 ms with unspecified browser-cache state. This pass showed enough frame headroom to avoid a speculative renderer rewrite; the focused change is bounded, cached asset recovery.
+
+## Local post-change results — October 18, 2026
+
+`npm run check` passed all 71 Node tests and checked the 48-file production copy with 90 local references. All eight browser scenarios passed in each installed engine: **24 release tests passed**, including the 24-flow controller harness in each engine. Missing/stalled images, successful retry, audio/font failures, and the animation reel were exercised against the built game. The performance/controller harnesses intentionally run from the development server and are excluded from the production copy.
+
+The following measurements came from the final headless Playwright run on this macOS ARM host. Desktop device presets supplied the browsers' user-agent strings; they do not establish Windows hardware testing. Each row covers 1,440 app callbacks across 24 pairings. “Median callback” and “median interval” are medians of the per-pair medians; the p95 columns show the worst per-pair p95. Ready time uses an uncontrolled cache and must not be compared to the interactive baseline as a speedup.
+
+| Engine | Ready time | Median callback CPU time | Worst callback p95 | Median interval | Worst interval p95 | Intervals over 33.5 ms |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| Chromium 156 | 463.2 ms | 0.6 ms | 1.1 ms | 16.7 ms | 16.8 ms | 0 |
+| Firefox 157 | 721 ms | 5 ms | 8 ms | 16.66 ms | 17.48 ms | 0 |
+| WebKit 27.2 | 603 ms | 1 ms | 2 ms | 17 ms | 27 ms | 0 |
+
+These observations are approximately 60 FPS in this environment, with 0 sampled intervals over 33.5 ms across the three engines. They do not guarantee frame pacing on lower-end machines, physical high-refresh displays, or during sustained play. The original render path already had headroom, so no speculative rendering or combat-timing rewrite was introduced. Successful atlas caching, concurrent-request sharing, bounded load attempts, reuse of decoded paintings for stage thumbnails, and release measurements are the focused improvements. Each browser run retains its raw `performance.json` with the report.
+
+The Chrome/Edge CI projects are configured but those branded applications are not installed locally, and no hosted Actions run exists until the workflow is pushed. A native Safari UI connection was too slow to complete a useful manual pass; no Safari-application test is claimed.
+
+## Release sign-off still requiring people or deployment access
+
+- Physical controller pairing, reconnects, button labels, and latency.
+- Actual speaker/headphone listening and sustained human balance playtests.
+- A representative lower-end target machine, high-refresh displays, and physical touch devices if touch support becomes a release promise.
+- Branded Safari/device coverage beyond the tested WebKit build.
+- Verification of the hosted GitHub Actions run and Cloudflare deployment after publication.
+- Existing independent art/branding/legal review and Cloudflare privacy-configuration review.

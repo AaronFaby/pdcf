@@ -1,4 +1,5 @@
 import { ROSTER, moveFor, THROW_HOLD } from './engine.mjs';
+import { loadImage } from './assets/runtime/loading.mjs';
 
 export const CEL_STATES = {
   idle: [0, 1, 2, 3, 4, 5], walk: [6, 7, 8, 9, 10, 11],
@@ -10,6 +11,7 @@ export const CEL_STATES = {
 const HEIGHT = { mickey: 220, minnie: 240, oswald: 270, felix: 224, betty: 228, popeye: 230 };
 const IDLE_RATE = { mickey: 9, minnie: 11, oswald: 10, felix: 8, betty: 10, popeye: 8 };
 const atlases = new Map();
+const pending = new Map();
 
 export function celFor(f, { time = 0, animation, progress = 0, defeatTime, victoryTime, reducedMotion = false } = {}) {
   if (animation) {
@@ -61,28 +63,39 @@ export function measureAtlas(pixels, width, height) {
   });
 }
 
-export async function loadCels() {
-  await Promise.all(ROSTER.map(async ({ id }) => {
-    const image = new Image();
-    image.src = new URL(`./assets/cels/${id}.svg`, import.meta.url).href;
-    await image.decode();
+export function loadCel(id) {
+  if (!ROSTER.some(f => f.id === id)) return Promise.reject(new Error('Unknown fighter: ' + id));
+  if (atlases.has(id)) return Promise.resolve();
+  if (pending.has(id)) return pending.get(id);
+  const loading = (async () => {
+    const image = await loadImage(new URL(`./assets/cels/${id}.svg`, import.meta.url).href);
     const surface = document.createElement('canvas');
     surface.width = image.naturalWidth; surface.height = image.naturalHeight;
     const context = surface.getContext('2d', { willReadFrequently: true });
     context.drawImage(image, 0, 0);
-    const pixels = context.getImageData(0, 0, surface.width, surface.height).data;
-    const frames = measureAtlas(pixels, surface.width, surface.height);
+    let frames;
+    try { frames = measureAtlas(context.getImageData(0, 0, surface.width, surface.height).data, surface.width, surface.height); }
+    finally { surface.width = 0; }
     const ground = frames.slice(0, 6).map(frame => frame.baseline).sort((a, b) => a - b)[3];
     // Use the authored registration peg, not each silhouette's center, so punches keep their feet planted.
     frames.forEach((frame, index) => {
       if (index >= 30 && index <= 32) return;
-      frame.pivotX = (index % 6 + 245 / 512) * surface.width / 6;
-      frame.baseline = Math.floor(index / 6) * surface.width / 6 + ground;
+      frame.pivotX = (index % 6 + 245 / 512) * image.naturalWidth / 6;
+      frame.baseline = Math.floor(index / 6) * image.naturalWidth / 6 + ground;
     });
     const referenceHeight = frames.slice(0, 6).map(f => f.height).sort((a, b) => a - b)[3];
     atlases.set(id, { image, frames, scale: HEIGHT[id] / referenceHeight });
-    surface.width = 0;
+  })().finally(() => pending.delete(id));
+  pending.set(id, loading);
+  return loading;
+}
+
+export async function loadCels(onProgress = () => {}) {
+  let completed = 0;
+  const results = await Promise.allSettled(ROSTER.map(async ({ id }) => {
+    try { await loadCel(id); } finally { onProgress(++completed, ROSTER.length); }
   }));
+  if (results.some(result => result.status === 'rejected')) throw new Error('Some character artwork could not load');
 }
 
 export function drawCel(context, f, { x, y, scale = 1, ...animation } = {}) {

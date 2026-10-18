@@ -1,0 +1,29 @@
+<!doctype html><html lang="en"><meta charset="utf-8"><title>Desktop performance pass — PDCF</title><style>body{font:14px system-ui;background:#eee7d6;color:#25251f;margin:20px}button{padding:12px}iframe{width:1200px;height:850px;border:0;max-width:100%}pre{white-space:pre-wrap}</style><h1>Desktop performance pass</h1><p>Measures the real app’s frame callback and observed frame intervals across all 24 fighter/stage combinations. Local timings include browser/machine load; they are not a hardware or Lighthouse certification. Preferences are isolated.</p><button id="run" disabled>Run performance pass</button><pre id="report">Loading the game…</pre><iframe id="game"></iframe><script type="module">
+import { ROSTER } from '/engine.mjs';
+import { STAGES } from '/assets/runtime/stages.mjs';
+const frame=document.getElementById('game'),report=document.getElementById('report'),button=document.getElementById('run');
+window.addEventListener('unhandledrejection',event=>{report.textContent='FAIL '+event.reason.message;});
+let sampling=null,frames=[],intervals=[],previous=0;
+window.recordFrame=(time,cost)=>{if(!sampling)return;if(previous)intervals.push(time-previous);previous=time;frames.push(cost);};
+const inject='<head><base href="/">'+'<script>window.addEventListener("blur",e=>e.stopImmediatePropagation(),true);const saved=new Map();Object.defineProperty(window,"localStorage",{value:{getItem:key=>saved.get(key)??null,setItem:(key,value)=>saved.set(key,String(value)),removeItem:key=>saved.delete(key)}});const raf=requestAnimationFrame.bind(window);window.requestAnimationFrame=callback=>raf(time=>{const begin=performance.now();callback(time);parent.recordFrame(time,performance.now()-begin);});<'+ '/script>';
+const wait=()=>new Promise(resolve=>requestAnimationFrame(resolve));
+const began=performance.now();frame.srcdoc=(await(await fetch('/')).text()).replace('<head>',inject);
+const deadline=performance.now()+30000;
+while(!frame.contentDocument?.getElementById('start-button')||frame.contentDocument.getElementById('start-button').disabled){if(performance.now()>deadline)throw Error('Artwork did not become ready');await wait();}
+if(!frame.contentDocument.getElementById('retry-art').hidden)throw Error('The performance pass needs all artwork loaded; a painting is unavailable.');
+const readyMs=performance.now()-began;
+button.disabled=false;report.textContent=`Game ready in ${readyMs.toFixed(1)} ms. Run the pass with this tab active.`;
+const summary=values=>{const sorted=[...values].sort((a,b)=>a-b);return{median:+sorted[Math.floor(sorted.length*.5)].toFixed(2),p95:+sorted[Math.floor(sorted.length*.95)].toFixed(2),max:+sorted.at(-1).toFixed(2)};};
+button.onclick=async()=>{button.disabled=true;const results=[];try{
+ const d=frame.contentDocument,key=(type,code)=>frame.contentWindow.dispatchEvent(new frame.contentWindow.KeyboardEvent(type,{code,bubbles:true}));
+ for(const stage of STAGES)for(const fighter of ROSTER){
+  report.textContent=`Measuring ${fighter.name} at ${stage.name} (${results.length+1}/24)…`;
+  d.querySelector('[data-mode="training"]').click();d.querySelector('[data-slot="0"]').click();d.querySelector(`[data-fighter="${fighter.id}"]`).click();d.querySelector(`[data-stage="${stage.id}"]`).click();d.getElementById('start-button').click();
+  for(let i=0;i<12;i++)await wait();frames=[];intervals=[];previous=0;sampling=true;
+  for(let i=0;i<60;i++){if(i===0)key('keydown','KeyD');if(i===15)key('keyup','KeyD');if(i%15===0){key('keydown',i%30?'KeyG':'KeyF');key('keyup',i%30?'KeyG':'KeyF');}await wait();}
+  sampling=false;results.push({stage:stage.id,fighter:fighter.id,samples:frames.length,callbackMs:summary(frames),intervalMs:summary(intervals),framesOver33ms:intervals.filter(ms=>ms>33.5).length});
+  d.getElementById('back-button').click();
+ }
+ report.textContent=JSON.stringify({userAgent:navigator.userAgent,viewport:[innerWidth,innerHeight],readyMs:+readyMs.toFixed(1),results},null,2);report.dataset.complete='true';
+ }catch(error){sampling=false;report.textContent='FAIL '+error.message;}finally{button.disabled=false;}};
+</script></html>

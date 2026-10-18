@@ -1,6 +1,7 @@
 import { ROSTER, createMatch, tick, cpuInput, trainingInput, resetTraining, moveFor, SPECIAL_COST } from './engine.mjs';
 import { drawFighter, drawScene } from './art.mjs';
-import { loadCels } from './cels.mjs';
+import { loadCel } from './cels.mjs';
+import { loadImage } from './assets/runtime/loading.mjs';
 import { ACTIONS, keyName, buttonName } from './assets/runtime/bindings.mjs';
 import { ControlPanel } from './assets/runtime/control-panel.mjs';
 import { startTutorial, retryLesson, nextLesson, endTutorial, tutorialInput, updateTutorial, lessonView, combatFeedback, combatState } from './assets/runtime/training.mjs';
@@ -18,15 +19,47 @@ let selectedStage = 'ink-harbor';
 try { arcade = restoreArcade(JSON.parse(localStorage.getItem(ARCADE_KEY))); } catch { /* A new run works without browser storage. */ }
 let preview = createMatch(...selection);
 const controllers = new Controllers(), audio = new GameAudio();
-let celsReady = false;
+let celsReady = false, assetsLoading = false;
+const loadedAssets = new Set(), failedAssets = new Map();
 const arena = $('arena'), arenaContext = arena.getContext('2d');
 const showcaseContext = $('showcase').getContext('2d');
 const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
-const backgrounds = new Map(STAGES.map(stage => { const image = new Image(); image.src = stage.image; return [stage.id, image]; }));
+const backgrounds = new Map();
 const held = new Set(), edges = new Set(), touches = new Map(), touchEdges = new Set();
 const controls = new ControlPanel(controllers, () => { clearInput(); refreshControlHints(); if ($('moves-dialog').open) renderMoves(); if (match?.training) updatePractice(); });
 let moveFighter = 'mickey', movePlayer = 0;
 const portraits = [];
+
+function assetStatus() {
+  const total = ROSTER.length + STAGES.length;
+  celsReady = ROSTER.every(f => loadedAssets.has(f.id));
+  for (const id of ['start-button', 'featured-button', 'arcade-resume']) $(id).disabled = assetsLoading || !celsReady;
+  $('asset-progress').max = total; $('asset-progress').value = loadedAssets.size;
+  $('asset-progress').hidden = !assetsLoading;
+  $('retry-art').hidden = !failedAssets.size; $('retry-art').disabled = assetsLoading;
+  $('art-status').textContent = assetsLoading ? `Loading artwork: ${loadedAssets.size} / ${total} ready…` : failedAssets.size ? `${loadedAssets.size} / ${total} ready. Could not load: ${[...failedAssets.values()].join(', ')}. ${celsReady ? 'You can play with drawn stage scenery, or retry.' : 'Retry missing artwork to play.'}` : 'Animation and stage artwork ready.';
+  const missingStage = match && failedAssets.has(match.stage);
+  $('arena-art-notice').hidden = !missingStage;
+  $('arena-art-retry').disabled = assetsLoading;
+}
+async function loadArtwork() {
+  if (assetsLoading) return;
+  assetsLoading = true; assetStatus();
+  const tasks = [...ROSTER.map(f => ({ id: f.id, label: `${f.short} animation`, load: () => loadCel(f.id) })), ...STAGES.map(stage => ({ id: stage.id, label: `${stage.name} painting`, load: async () => {
+    const image = await loadImage(stage.image); image.alt = ''; image.width = 160; image.height = 90;
+    document.querySelector(`[data-stage="${stage.id}"] img`).replaceWith(image);
+    backgrounds.set(stage.id, image);
+  } }))];
+  await Promise.allSettled(tasks.map(async task => {
+    if (loadedAssets.has(task.id)) return;
+    try { await task.load(); loadedAssets.add(task.id); failedAssets.delete(task.id); }
+    catch { failedAssets.set(task.id, task.label); }
+    assetStatus();
+  }));
+  assetsLoading = false; if (!match) clearInput(); assetStatus();
+}
+$('retry-art').addEventListener('click', loadArtwork);
+$('arena-art-retry').addEventListener('click', loadArtwork);
 
 function clearInput() {
   held.clear(); edges.clear(); touches.clear(); touchEdges.clear(); controllers.clear(); accumulator = 0;
@@ -67,6 +100,7 @@ function presentStage(id) {
   $('arena-tagline').textContent = stage.tagline;
   $('showcase').setAttribute('aria-label', `An animated preview of the selected fighters at ${stage.name}`);
   refreshControlHints();
+  assetStatus();
   audio.setStage(stage.id).then(audioStatus);
 }
 $('sound-button').addEventListener('click', () => {
@@ -138,7 +172,7 @@ document.querySelectorAll('[data-difficulty]').forEach(button => button.addEvent
 for (const stage of STAGES) {
   const button = document.createElement('button'); button.className = 'stage-card'; button.dataset.stage = stage.id;
   button.setAttribute('aria-label', `${stage.name}. ${stage.description}`); button.setAttribute('aria-pressed', String(stage.id === selectedStage));
-  const image = document.createElement('img'); image.src = stage.image; image.alt = ''; image.width = 160; image.height = 90;
+  const image = document.createElement('img'); image.alt = ''; image.width = 160; image.height = 90;
   const name = document.createElement('span'); name.textContent = stage.name;
   button.append(image, name); button.addEventListener('click', () => { selectedStage = stage.id; updateSelection(); audio.play({ type: 'select' }); });
   $('stage-choices').append(button);
@@ -189,7 +223,7 @@ function playArcade() {
   if (bout) { saveArcade(); startMatch(bout); }
 }
 function startSelected() {
-  if (!celsReady) return;
+  if (!celsReady || assetsLoading) return;
   if (mode === 'arcade') { arcade = createArcade(selection[0], difficulty); showArcade(); }
   else startMatch();
 }
@@ -537,13 +571,4 @@ function frame(timestamp) {
 }
 
 buildRoster(); updateSelection(); soundUI(); requestAnimationFrame(frame);
-loadCels().then(() => {
-  celsReady = true;
-  $('start-button').disabled = false;
-  $('featured-button').disabled = false;
-  $('arcade-resume').disabled = false;
-  $('art-status').hidden = true;
-}).catch(error => {
-  $('art-status').textContent = 'The animation artwork could not load. Refresh this page to try again.';
-  console.error('Cel artwork failed to load:', error);
-});
+loadArtwork();

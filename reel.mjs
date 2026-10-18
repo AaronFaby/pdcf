@@ -45,4 +45,12 @@ function frame(timestamp) {
   last = timestamp; requestAnimationFrame(frame);
 }
 updateControls(); requestAnimationFrame(frame);
-loadCels().then(() => { ready = true; $('reel-status').hidden = true; }).catch(error => { $('reel-status').textContent = 'The animation artwork could not load. Refresh to try again.'; console.error(error); });
+async function loadArtwork() {
+  $('reel-retry').hidden = true;
+  try {
+    await loadCels((done,total) => { $('reel-status').textContent = `Loading animation: ${done} / ${total} checked…`; });
+    ready = true; $('reel-status').hidden = true;
+  } catch { $('reel-status').textContent = 'Some animation artwork could not load. Retry the missing drawings.'; $('reel-retry').hidden = false; }
+}
+$('reel-retry').addEventListener('click', loadArtwork);
+loadArtwork();

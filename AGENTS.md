@@ -14,6 +14,7 @@ The current game has six fighters (Mickey, Minnie, Oswald, Felix, Betty, Popeye)
 | `app.mjs` | Screens, dialogs, input integration, saved Arcade runs, audio events, and the fixed 120 Hz simulation loop |
 | `art.mjs` | Canvas scene, fighters, effects, and animated stage |
 | `cels.mjs` | Atlas loading/measurement and pose selection synchronized to combat timing |
+| `assets/runtime/loading.mjs` | Bounded image decoding; character/stage retries must keep successful loads and reject late timed-out results |
 | `assets/runtime/arcade.mjs` | Ladder generation, bout progression, checkpoint validation, and six original endings |
 | `assets/runtime/stages.mjs` | Stage names/assets/music metadata, safe default, and the derived Arcade venue tour; keep it DOM-free |
 | `assets/runtime/controllers.mjs` | Standard gamepad input, per-player profiles, assignment/swap/reconnect, neutral arming, and pending input edges |
@@ -28,6 +29,8 @@ The current game has six fighters (Mickey, Minnie, Oswald, Felix, Betty, Popeye)
 | `tests/` | Node tests; `tests/fixtures/arcade-engine.mjs` scripts outcomes only for browser checks |
 | `animation-reel.html` / `reel.mjs` | Animation preview and pose scrubbing |
 | `server.mjs` | Localhost-only static development server on port 4173 |
+| `scripts/build.mjs` / `scripts/check-build.mjs` | Clean static build, production file boundaries, and local link/import/asset checks |
+| `tests/browser/` / `playwright.config.mjs` | Isolated browser release tests and the real-app performance pass; never copy into production |
 
 ## Commands
 
@@ -36,6 +39,10 @@ Node.js 22 or newer is required. No dependency installation is needed.
 ```sh
 npm start       # http://127.0.0.1:4173
 npm test        # Node's built-in test runner
+npm run check   # Node tests, clean dist build and local-reference checks
+npm ci          # Install browser-test development tools (not needed to play)
+npx playwright install chromium firefox webkit
+npm run test:browser -- --project=chromium --project=firefox --project=webkit
 npm run art     # Regenerate assets/cels/*.svg
 npm run audio   # Regenerate assets/audio/*.wav
 git diff --check
@@ -57,6 +64,7 @@ Keep the existing `.mjs` imports, relative asset URLs, and small function-based 
 - Guided Training must validate real outcomes, distinguish passed/skipped lessons, retry the current lesson on Reset, and restore free-practice settings when ended. Keep prompts tied to the live P1 profile, pause safely at lesson completion, and require neutral controller input before continuing. Feedback must not call blocked hits or travelling projectiles misses, or confuse unrelated projectile hits with melee cancels.
 - Training reset preserves cast/options while clearing combat/readout state. Health recovery, unlimited ink, dummy behavior, and normal match round rules must remain independent.
 - Audio needs a browser gesture, supports independent volume/mute, pauses/resumes, and can retry loading failures without interrupting combat. Preserve reduced-motion behavior, semantic buttons, focus handling, accessible labels, and live match announcements.
+- Artwork requests must settle or time out. Retry failed assets only, share concurrent atlas loads, and keep controller Start locked while artwork is pending. Missing paintings use visible fallback scenery with an in-bout retry that preserves combat state. Keep the reel's progress/retry working too.
 
 ## Assets and presentation
 
@@ -73,6 +81,8 @@ For behavior changes, add a focused regression using `node:test` in the relevant
 For input, menu, or progression changes, run the game and the local `controller-simulator.html` harness. **Run controller checks** currently covers 24 flows, including both players, stable menu layout, pause, reconnect, Training, stage selection, and the Arcade tour. It also covers saved remapping, conflicts, dead zones, swapping/reconnect, move lists, nested dialogs, 390px layout, storage failures, throw pause/resume and guided lessons with saved bindings. Keep its restoration of the previous saved run, audio settings and control profiles. Arcade timeout scripting belongs in `tests/fixtures/arcade-engine.mjs`; production must keep importing the real engine directly. Hidden controls that reserve layout space must remain excluded from controller navigation.
 
 For UI changes, check the affected mode, dialog focus, keyboard/controller navigation, desktop/mobile layout, reduced motion, and browser console. For combat changes, exercise hit/miss/block, recovery, round transitions, and affected modes/fighters. A screenshot alone does not verify animation or gameplay.
+
+The Playwright suite has eight scenarios per browser project. CI also includes branded Chrome/Edge; those channels need their own browser installations. It checks a built copy on port 4174 and development-only harnesses on port 4173. `PDCF_ROOT` and `PDCF_PORT` configure test servers without changing the default development command. Do not make game code depend on test fixtures. Reports, downloaded browsers, `dist/`, and `node_modules/` are ignored. Frame timing is measured evidence on the named environment, not a hard shared-CI FPS gate or a guarantee on other hardware; retain the distinction between callback CPU time and observed frame intervals.
 
 Report what actually ran. Separate Node tests, scripted browser outcomes, normal gameplay, physical controller tests, speaker listening, and deployed-site checks. Do not describe virtual controllers as hardware verification or scripted Arcade victories as balance testing.
 

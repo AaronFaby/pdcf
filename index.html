@@ -37,7 +37,7 @@
           <p class="intro">Six cartoon legends. Four ink-stained stages.<br>Pick your star and settle it the old-fashioned way.</p>
           <div class="play-row"><button class="primary-button" id="start-button" disabled>LET’S MAKE A SCENE <span aria-hidden="true">→</span></button><span class="play-note">FREE TO PLAY<br>HARD TO PUT DOWN</span></div>
           <button class="featured-bout" id="featured-button" disabled><span>THE HARBOR HEADLINERS</span> MICKEY vs. POPEYE <b aria-hidden="true">→</b></button>
-          <p id="art-status" class="art-status" role="status">Loading the animation cels…</p>
+          <div class="asset-loading"><p id="art-status" class="art-status" role="status">Loading animation and stage artwork…</p><progress id="asset-progress" max="10" value="0" aria-label="Artwork loading progress"></progress><button id="retry-art" class="text-button" hidden>RETRY MISSING ARTWORK ↻</button></div>
           <div class="mode-picker" role="group" aria-label="Game mode"><button class="mode active" data-mode="cpu" aria-pressed="true">1 PLAYER <span>VS. CPU</span></button><button class="mode" data-mode="local" aria-pressed="false">2 PLAYERS <span>LOCAL</span></button><button class="mode" data-mode="training" aria-pressed="false">TRAINING <span>PRACTICE</span></button><button class="mode" data-mode="arcade" aria-pressed="false">ARCADE <span>STORY LADDER</span></button></div>
           <div id="difficulty-picker" class="difficulty-picker" role="group" aria-label="CPU difficulty"><span>DIFFICULTY</span><button data-difficulty="easy" aria-pressed="false">EASY</button><button data-difficulty="normal" aria-pressed="true">NORMAL</button><button data-difficulty="hard" aria-pressed="false">HARD</button></div>
           <button id="arcade-resume" class="secondary-button" hidden disabled>RESUME ARCADE →</button>
@@ -70,6 +70,7 @@
 
     <section id="game" hidden aria-label="Fighting arena">
       <div class="arena-heading"><button class="text-button" id="back-button">← CASTING CALL</button><span><span id="arena-stage">INK HARBOR</span> <span class="divider">/</span> <span id="match-format">BEST OF THREE</span></span><button class="text-button" id="pause-button">PAUSE Ⅱ</button></div>
+      <div id="arena-art-notice" class="art-fallback" hidden><p role="status">The stage painting is unavailable. Drawn scenery is keeping the bout playable.</p><button id="arena-art-retry" class="text-button">RETRY STAGE ARTWORK ↻</button></div>
       <div class="training-playfield">
       <div class="arena-wrap">
         <canvas id="arena" width="1200" height="675" tabindex="0" aria-label="Fighting arena. Player one uses A D to move, W to jump, S to guard, and F G H to attack. Press Escape to pause."></canvas>

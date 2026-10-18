@@ -2,7 +2,8 @@ import { createServer } from 'node:http';
 import { readFile } from 'node:fs/promises';
 import { resolve, extname, sep } from 'node:path';
 
-const root = import.meta.dirname;
+const root = resolve(process.env.PDCF_ROOT || import.meta.dirname);
+const port = Number(process.env.PDCF_PORT || 4173);
 const types = { '.html': 'text/html', '.css': 'text/css', '.mjs': 'text/javascript', '.js': 'text/javascript', '.png': 'image/png', '.jpg': 'image/jpeg', '.webp': 'image/webp', '.svg': 'image/svg+xml', '.wav': 'audio/wav', '.gif': 'image/gif' };
 createServer(async (req, res) => {
   try {
@@ -17,4 +18,4 @@ createServer(async (req, res) => {
   } catch {
     res.writeHead(404).end('Not found');
   }
-}).listen(4173, '127.0.0.1', () => console.log('Public Domain Cartoon Fighters: http://127.0.0.1:4173'));
+}).listen(port, '127.0.0.1', () => console.log(`Public Domain Cartoon Fighters: http://127.0.0.1:${port}`));
