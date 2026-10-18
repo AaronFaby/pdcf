@@ -5,6 +5,8 @@ import { createMatch, tick, moveFor } from '../engine.mjs';
 import { celFor } from '../cels.mjs';
 import { Controllers, readPad } from '../assets/runtime/controllers.mjs';
 import { audioSettings } from '../assets/runtime/audio.mjs';
+import { combatFeedback } from '../assets/runtime/training.mjs';
+import { controlSettings } from '../assets/runtime/bindings.mjs';
 import { composeHarbor, effect, EFFECTS, MUSIC_SECONDS, RATE, wav } from '../scripts/build-audio.mjs';
 
 const frame = 1 / 120;
@@ -63,6 +65,35 @@ test('blocked or missed punches cannot cancel; held guard survives block stun', 
     tick(m, [{ kick: true }, { guard: blocked }], frame);
     assert.equal(m.fighters[0].attack.kind, 'punch');
     if (blocked) { assert.equal(m.fighters[1].reaction, 'block'); assert.equal(m.fighters[1].guard, true); }
+  }
+});
+
+test('counter and recovery-punish cues describe real impacts without changing damage', () => {
+  const profile = controlSettings().players[0];
+  for (const outcome of ['counter', 'punish', 'block', 'normal']) {
+    const m = createMatch('mickey', 'popeye', 'training');
+    if (outcome === 'punish') {
+      m.fighters[0].x = 250;
+      tick(m, [{}, { kick: true }], frame); step(m, 43);
+      m.fighters[0].x = m.fighters[1].x - 90;
+    }
+    tick(m, [{ punch: true }, { punch: outcome === 'counter', guard: outcome === 'block' }], frame);
+    let event;
+    for (let i = 0; i < 25 && !event; i++) {
+      tick(m, [{}, { guard: outcome === 'block' }], frame);
+      event = m.events.find(e => e.type === 'hit' || e.type === 'block');
+    }
+    assert.ok(event, outcome);
+    const tagged = ['counter', 'punish'].includes(outcome);
+    assert.equal(event.impact, tagged ? outcome : null);
+    assert.equal(event.damage, outcome === 'block' ? 1.2 : 8);
+    assert.equal(m.fighters[1].hp, outcome === 'block' ? 98.8 : 92);
+    const effect = m.effects.at(-1); assert.equal(effect.blocked, outcome === 'block');
+    assert.equal(effect.text, tagged ? outcome.toUpperCase() + '!' : outcome === 'block' ? 'CLINK!' : 'WHAM!');
+    if (tagged) {
+      const feedback = combatFeedback(m.training.feedback, profile);
+      assert.ok(feedback.title.startsWith(outcome.toUpperCase())); assert.ok(feedback.detail.includes('no bonus damage'));
+    }
   }
 });
 

@@ -268,8 +268,8 @@ async function runChecks() {
   await checkThrowPause(0);await advance(120);requireCheck(health(1)===100 && gameElement('practice-hit').textContent.includes('THROW'),'Throw did not finish/recover after resume');
   gameElement('back-button').click();frame.contentDocument.querySelector('[data-mode="local"]').click();gameElement('start-button').click();await advance(160);
   setButton(0,15,true);setButton(1,14,true);await advance(70);setButton(0,15,false);setButton(1,14,false);await advance(3);
-  await tap(1,5);await advance(18);requireCheck(health(0)===83,'P2 controller throw did not connect');
-  await checkThrowPause(1);await advance(100);requireCheck(health(0)===83,'P2 controller throw did not deal one Popeye throw');
+  await tap(1,5);await advance(18);requireCheck(health(0)===84,'P2 controller throw did not connect');
+  await checkThrowPause(1);await advance(100);requireCheck(health(0)===84,'P2 controller throw did not deal one Popeye throw');
   gameElement('back-button').click();await advance(3);
   passed('Both controllers throw opponents; a mid-throw pause freezes the scene and resumes cleanly');
 

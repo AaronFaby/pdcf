@@ -1,4 +1,4 @@
-import { ROSTER, createMatch, tick, cpuInput, trainingInput, resetTraining, moveFor, SPECIAL_COST } from './engine.mjs';
+import { ROSTER, CPU_TACTICS, createMatch, tick, cpuInput, trainingInput, resetTraining, moveFor, SPECIAL_COST } from './engine.mjs';
 import { drawFighter, drawScene } from './art.mjs';
 import { loadCel } from './cels.mjs';
 import { loadImage } from './assets/runtime/loading.mjs';
@@ -234,7 +234,10 @@ function updateSelection() {
 }
 document.querySelectorAll('.slot').forEach(button => button.addEventListener('click', () => { slot = Number(button.dataset.slot); updateSelection(); }));
 document.querySelectorAll('.mode').forEach(button => button.addEventListener('click', () => { mode = button.dataset.mode; if (mode === 'arcade') slot = 0; updateSelection(); }));
-document.querySelectorAll('[data-difficulty]').forEach(button => button.addEventListener('click', () => { difficulty = button.dataset.difficulty; updateSelection(); }));
+document.querySelectorAll('[data-difficulty]').forEach(button => {
+  button.title = { easy: 'Slower reactions, more openings and fewer combos.', normal: 'Balanced reactions, defense and combo pressure.', hard: 'Quicker reactions, stronger punishes and frequent hit confirms. Fighter stats stay the same.' }[button.dataset.difficulty];
+  button.addEventListener('click', () => { difficulty = button.dataset.difficulty; updateSelection(); });
+});
 for (const stage of STAGES) {
   const button = document.createElement('button'); button.className = 'stage-card'; button.dataset.stage = stage.id;
   button.setAttribute('aria-label', `${stage.name}. ${stage.description}`); button.setAttribute('aria-pressed', String(stage.id === selectedStage));
@@ -377,7 +380,7 @@ function guideAction(action) {
 document.querySelectorAll('[data-tutorial-action]').forEach(button => button.addEventListener('click', () => guideAction(button.dataset.tutorialAction)));
 function updatePractice() {
   const t = match.training, hit = t.lastHit;
-  $('practice-hit').textContent = hit ? `${hit.attacker ? 'DUMMY' : 'P1'} ${hit.blocked ? 'BLOCKED' : hit.kind.toUpperCase()} · ${Number(hit.damage.toFixed(1))}` : '—';
+  $('practice-hit').textContent = hit ? `${hit.attacker ? 'DUMMY' : 'P1'} ${hit.blocked ? 'BLOCKED' : hit.kind.toUpperCase()}${hit.impact ? ` · ${hit.impact.toUpperCase()}` : ''} · ${Number(hit.damage.toFixed(1))}` : '—';
   $('practice-combo').textContent = hit && !hit.blocked ? `${hit.hits} ${hit.hits === 1 ? 'HIT' : 'HITS'}` : '—';
   $('practice-damage').textContent = hit && !hit.blocked ? Number(hit.comboDamage.toFixed(1)) : '—';
   const labels = t.inputs.length ? t.inputs : ['Make your first move.'];
@@ -407,7 +410,7 @@ $('training-pause-options').addEventListener('click', openPracticeOptions);
 $('training-reset').addEventListener('click', resetPractice);
 $('dummy-mode').addEventListener('click', () => {
   match.training.dummy = dummyModes[(dummyModes.indexOf(match.training.dummy) + 1) % dummyModes.length];
-  match.ai = { clock: 0, action: {} }; practiceSettings();
+  match.ai = [{ clock: 0, action: {} }, { clock: 0, action: {} }]; practiceSettings();
 });
 for (const [id, key] of [['infinite-health', 'infiniteHealth'], ['infinite-ink', 'infiniteInk']]) $(id).addEventListener('click', () => { match.training[key] = !match.training[key]; practiceSettings(); });
 function startMatch(bout) {
@@ -517,7 +520,7 @@ function renderMoves() {
     const damage = document.createElement('td'); damage.textContent = move.damage;
     const timing = document.createElement('td'); timing.textContent = `${move.startup}f / ${move.recovery}f`; row.append(name, damage, timing); return row;
   }));
-  $('move-basics').textContent = ['jump', 'guard', 'dash'].map(action => `${ACTIONS[action]}: ${keyName(profile.keyboard[action])} / ${buttonName(profile.buttons[action])}`).join(' · ') + '. Stick / D-pad Up also jumps; Down also guards. Dash follows your direction and does not make you invincible.';
+  $('move-basics').textContent = ['jump', 'guard', 'dash'].map(action => `${ACTIONS[action]}: ${keyName(profile.keyboard[action])} / ${buttonName(profile.buttons[action])}`).join(' · ') + `. Stick / D-pad Up also jumps; Down also guards. Dash follows your direction and does not make you invincible. CPU tactic — ${CPU_TACTICS[fighter.id].name}: ${CPU_TACTICS[fighter.id].description}`;
 }
 function openMoves() {
   movePlayer = match ? 0 : slot; moveFighter = match ? match.fighters[movePlayer].id : selection[movePlayer];

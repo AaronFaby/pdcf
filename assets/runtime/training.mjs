@@ -114,7 +114,7 @@ export function lessonView(match, profile) {
 
 export function combatFeedback(feedback, profile) {
   if (!feedback) return { title: 'Your next move', detail: 'Watch hits, blocks and misses here. The status line shows when you can act.' };
-  const { type, kind, index, damage, hits, reason } = feedback;
+  const { type, kind, index, damage, hits, reason, impact } = feedback;
   if (type === 'whiff') return { title: 'WHIFF — no contact', detail: kind === 'throw' ? 'Move closer. Throws need a grounded opponent who is not stunned or already being thrown.' : 'Check distance and timing. Missed attacks cannot hit-confirm into a combo; watch the status line for recovery.' };
   if (type === 'power') return { title: 'SPINACH POWER', detail: 'Restores up to 8 health and boosts melee damage by 50% for six seconds. Spinach does not hit the dummy.' };
   if (type === 'cancel') return { title: 'COMBO CANCEL', detail: `Your connected punch cancelled into ${kind}. It still needs to reach the opponent.` };
@@ -133,6 +133,7 @@ export function combatFeedback(feedback, profile) {
   }
   if (type === 'block') return index === 0 ? { title: 'BLOCKED — the dummy guarded', detail: `Chip damage: ${Number(damage.toFixed(1))}. Try ${bindingHint(profile, 'throw')} at close range to beat ground guard.` } : { title: 'GUARD HELD', detail: `You took ${Number(damage.toFixed(1))} chip damage. Guard reduced the strike’s damage by 85%.` };
   if (index === 1 && kind === 'throw') return { title: 'GRABBED BY THE DUMMY', detail: 'Throws beat Guard. Jump or step out of range before the grab connects.' };
+  if (impact) return { title: `${impact.toUpperCase()} — ${index ? 'DUMMY HIT YOU' : kind.toUpperCase()}`, detail: `${Number(damage.toFixed(1))} damage. ${impact === 'counter' ? 'The strike interrupted attack startup.' : 'The strike caught attack recovery.'} The cue adds no bonus damage. ${index ? 'Leave an opening to defend before committing again.' : 'Use the opening, then watch your own recovery.'}` };
   if (index === 1) return { title: 'HIT BY THE DUMMY', detail: `Guard before the strike connects. ${bindingHint(profile, 'guard')}.` };
   return { title: hits >= 2 ? `${hits}-HIT COMBO` : `HIT — ${kind.toUpperCase()}`, detail: `${Number(damage.toFixed(1))} damage.${kind === 'throw' ? ' Grab connected; the toss adds no extra damage.' : kind === 'punch' ? ' Press Kick or Special as the punch connects to cancel into a combo.' : ' Connected. Wait for recovery before the next move.'}` };
 }

@@ -246,9 +246,12 @@ export function drawScene(c, match, image, time, { showcase = false, reducedMoti
   for (const e of match.effects) {
     c.save(); c.translate(e.x, e.y); c.scale(1 + (e.max - e.life) * .7, 1 + (e.max - e.life) * .7);
     c.globalAlpha = Math.min(1, e.life * 6); c.lineWidth = 3; c.strokeStyle = INK;
-    if (e.text !== 'SPINACH!') {
+    if (e.blocked) {
+      c.fillStyle = PAPER; c.beginPath(); c.ellipse(0, 0, 48, 34, -.15, 0, Math.PI * 2); c.fill(); c.stroke();
+      for (const side of [-1, 1]) { c.beginPath(); c.moveTo(side * 57, -12); c.lineTo(side * 72, -22); c.moveTo(side * 59, 10); c.lineTo(side * 75, 19); c.stroke(); }
+    } else if (e.text !== 'SPINACH!') {
       const pts = Array.from({ length: 18 }, (_, i) => { const a = i / 18 * Math.PI * 2, r = i % 2 ? 32 : 52; return [Math.cos(a) * r, Math.sin(a) * r * .65]; });
-      path(c, pts, e.blocked ? PAPER : '#e6bd58');
+      path(c, pts, e.impact ? PAPER : '#e6bd58');
       if (e.heavy) {
         c.strokeStyle = INK; c.lineWidth = 4;
         for (let i = 0; i < 7; i++) {
@@ -258,7 +261,8 @@ export function drawScene(c, match, image, time, { showcase = false, reducedMoti
         }
       }
     }
-    c.fillStyle = INK; c.textAlign = 'center'; c.font = 'italic bold 22px Georgia'; c.fillText(e.text, 0, 7); c.restore();
+    c.fillStyle = INK; c.textAlign = 'center'; c.font = 'italic bold 22px Georgia';
+    c.strokeStyle = PAPER; c.lineWidth = 5; c.strokeText(e.text, 0, 7); c.fillText(e.text, 0, 7); c.restore();
   }
   c.restore();
   if (!showcase && match.phase !== 'fight') {

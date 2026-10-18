@@ -44,6 +44,45 @@ test('an unavailable audio asset fails quietly and can be retried without interr
   } finally { globalThis.window = previousWindow; globalThis.fetch = previousFetch; }
 });
 
+test('impact and round cues can replace swing clutter while keeping the voice cap and mute', async () => {
+  const previousWindow = globalThis.window, previousFetch = globalThis.fetch;
+  try {
+    globalThis.window = { AudioContext: AudioContextFixture };
+    globalThis.fetch = async () => ({ ok: true, arrayBuffer: async () => new ArrayBuffer(4) });
+    const audio = new GameAudio(); await audio.unlock();
+    for (let i = 0; i < 16; i++) { audio.context.currentTime += .04; audio.play({ type: 'swing' }); }
+    assert.equal(audio.voices.size, 16); const swing = [...audio.voices][0];
+    audio.context.currentTime += .04; audio.play({ type: 'hit', impact: 'counter' });
+    assert.equal(audio.voices.size, 16); assert.equal(swing.stopped, true);
+    assert.equal([...audio.voices].at(-1).buffer, audio.buffers.get('heavy'));
+    audio.play({ type: 'ko' }); assert.equal([...audio.voices].at(-1).buffer, audio.buffers.get('ko'));
+    audio.context.currentTime += .04; audio.play({ type: 'swing' });
+    assert.equal(audio.voices.size, 16, 'a low-priority sound cannot evict another cue');
+    audio.configure({ enabled: false }); assert.equal(audio.voices.size, 0);
+    audio.play({ type: 'ko' }); assert.equal(audio.voices.size, 0);
+  } finally { globalThis.window = previousWindow; globalThis.fetch = previousFetch; }
+});
+
+test('voice stealing selects the lowest priority first and the oldest voice when priorities tie', async () => {
+  const previousWindow = globalThis.window, previousFetch = globalThis.fetch;
+  try {
+    globalThis.window = { AudioContext: AudioContextFixture };
+    globalThis.fetch = async () => ({ ok: true, arrayBuffer: async () => new ArrayBuffer(4) });
+    const audio = new GameAudio(); await audio.unlock();
+    for (let i = 0; i < 16; i++) { audio.context.currentTime += .04; audio.play({ type: [1, 4].includes(i) ? 'swing' : 'jump' }); }
+    const voices = [...audio.voices]; assert.equal(voices.length, 16);
+    audio.play({ type: 'hit' });
+    assert.equal(voices[1].stopped, true, 'the oldest minimum-priority voice is replaced');
+    assert.notEqual(voices[0].stopped, true, 'an older but higher-priority voice survives');
+    assert.notEqual(voices[4].stopped, true, 'a newer minimum-priority voice survives the first replacement');
+    audio.play({ type: 'ko' }); assert.equal(voices[4].stopped, true);
+    audio.play({ type: 'bell' }); assert.equal(voices[0].stopped, true, 'ties retain insertion order');
+    const remaining = [...audio.voices]; audio.context.currentTime += .04; audio.play({ type: 'jump' });
+    assert.deepEqual([...audio.voices], remaining, 'equal/higher priority voices cannot be stolen');
+    assert.equal(audio.voices.size, 16);
+  } finally { globalThis.window = previousWindow; globalThis.fetch = previousFetch; }
+});
+
 test('a stalled audio output times out, retries, and ignores a late resume', async t => {
   const previousWindow = globalThis.window, previousFetch = globalThis.fetch;
   t.mock.timers.enable({ apis: ['setTimeout'] });

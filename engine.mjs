@@ -6,7 +6,7 @@ export const ROSTER = [
   { id: 'oswald', name: 'Oswald', short: 'Oswald', year: '1927', title: 'The lucky one', style: 'REACH', speed: 288, power: .96, reach: 147, special: 'Lucky uppercut', quote: 'Long ears. Longer winning streak.' },
   { id: 'felix', name: 'Felix the Cat', short: 'Felix', year: '1919', title: 'The wild card', style: 'TRICKSTER', speed: 292, power: .93, reach: 120, special: 'Ink blot', quote: 'Every trick in the inkwell.' },
   { id: 'betty', name: 'Betty Boop', short: 'Betty', year: '1930', title: 'The knockout', style: 'RANGED', speed: 285, power: .95, reach: 110, special: 'Boop blast', quote: 'Her next number is a knockout.' },
-  { id: 'popeye', name: 'Popeye', short: 'Popeye', year: '1929', title: 'The heavyweight', style: 'POWER', speed: 244, power: 1.22, reach: 126, special: 'Spinach power', quote: 'Strong to the finish.' }
+  { id: 'popeye', name: 'Popeye', short: 'Popeye', year: '1929', title: 'The heavyweight', style: 'POWER', speed: 244, power: 1.15, reach: 126, special: 'Spinach power', quote: 'Strong to the finish.' }
 ];
 
 export const WIDTH = 1200;
@@ -14,9 +14,17 @@ export const FLOOR = 545;
 export const SPECIAL_COST = 35;
 export const THROW_HOLD = .18;
 export const CPU_DIFFICULTIES = {
-  easy: { reaction: .3, variation: .2, guard: .25, jump: .06, evade: .25, punch: .35, kick: .28, special: .16, throw: .2, dash: .08, combo: .2 },
-  normal: { reaction: .15, variation: .17, guard: .64, jump: .12, evade: .65, punch: .55, kick: .48, special: .38, throw: .55, dash: .2, combo: .5 },
-  hard: { reaction: .09, variation: .08, guard: .8, jump: .18, evade: .85, punch: .7, kick: .64, special: .48, throw: .75, dash: .32, combo: .85 }
+  easy: { reaction: .28, variation: .16, attack: .5, guard: .28, evade: .3, special: .35, throw: .4, dash: .4, combo: .25, confirm: .14, punish: .3 },
+  normal: { reaction: .15, variation: .1, attack: .8, guard: .65, evade: .65, special: .7, throw: .75, dash: .75, combo: .7, confirm: .065, punish: .7 },
+  hard: { reaction: .09, variation: .06, attack: .96, guard: .85, evade: .9, special: .9, throw: 1, dash: 1, combo: .95, confirm: .04, punish: .95 }
+};
+export const CPU_TACTICS = {
+  mickey: { name: 'Balanced headliner', description: 'Mixes mid-range punches, kicks and steam shots; confirms punches into kicks.', range: .85, retreat: .15, kick: .45, projectile: .55, throw: .35, dash: .3, combo: .9 },
+  minnie: { name: 'Rushdown dancer', description: 'Closes quickly, pressures with fast punches and chains into kicks or her rushing special.', range: .7, retreat: .05, kick: .25, projectile: 0, throw: .4, dash: .85, combo: 1 },
+  oswald: { name: 'Long-range counterpuncher', description: 'Keeps opponents at the end of his reach and punishes missed moves with kicks and uppercuts.', range: .98, retreat: .65, kick: .8, projectile: 0, throw: .2, dash: .15, combo: .65 },
+  felix: { name: 'Ink-and-feint trickster', description: 'Alternates ink shots with close attacks, retreats and sudden dashes.', range: .85, retreat: .5, kick: .45, projectile: .8, throw: .55, dash: .65, combo: .8 },
+  betty: { name: 'Projectile bandleader', description: 'Uses sound waves and retreats while ink is available; fights with kicks when it runs low.', range: 1, retreat: .85, kick: .85, projectile: 1, throw: .2, dash: .2, combo: .65 },
+  popeye: { name: 'Spinach bruiser', description: 'Powers up at a safe distance, then closes for heavy punches and guard-beating throws.', range: .72, retreat: .05, kick: .3, projectile: 0, throw: .95, dash: .55, combo: .75 }
 };
 export const MOVES = {
   punch: { duration: .32, active: .09, until: .18, damage: 8, reach: 0, height: 85, push: 26 },
@@ -32,6 +40,7 @@ export function moveFor(f, kind) {
   if (f.id === 'minnie' && kind === 'punch') return { ...move, duration: .28, active: .07, until: .15, push: 22 };
   if (f.id === 'minnie' && kind === 'kick') return { ...move, duration: .43, active: .14, until: .25, push: 40 };
   if (f.id === 'oswald' && kind === 'punch') return { ...move, duration: .38, active: .12, until: .21 };
+  if (f.id === 'oswald' && kind === 'kick') return { ...move, duration: .54, active: .2, until: .3 };
   if (f.id === 'felix' && kind === 'punch') return { ...move, duration: .3, active: .08, until: .17 };
   if (f.id === 'betty' && kind === 'kick') return { ...move, duration: .44, active: .15, until: .27 };
   return move;
@@ -44,7 +53,7 @@ function fighter(id, index) {
 }
 
 export function createMatch(a = 'mickey', b = 'popeye', mode = 'cpu', difficulty = 'normal', stage = 'ink-harbor') {
-  const match = { fighters: [fighter(a, 0), fighter(b, 1)], mode, difficulty: Object.hasOwn(CPU_DIFFICULTIES, difficulty) ? difficulty : 'normal', stage: stageFor(stage).id, phase: 'countdown', phaseTime: 2.4, time: 60, round: 1, projectiles: [], effects: [], events: [], winner: null, roundWinner: null, roundEndReason: null, elapsed: 0, hitstop: 0, shake: 0, ai: { clock: 0, action: {} } };
+  const match = { fighters: [fighter(a, 0), fighter(b, 1)], mode, difficulty: Object.hasOwn(CPU_DIFFICULTIES, difficulty) ? difficulty : 'normal', stage: stageFor(stage).id, phase: 'countdown', phaseTime: 2.4, time: 60, round: 1, projectiles: [], effects: [], events: [], winner: null, roundWinner: null, roundEndReason: null, elapsed: 0, hitstop: 0, shake: 0, ai: [{ clock: 0, action: {} }, { clock: 0, action: {} }] };
   if (mode === 'training') {
     match.training = { dummy: 'stand', infiniteHealth: true, infiniteInk: true, lastHit: null, feedback: null, inputs: [], previousInput: {} };
     resetTraining(match);
@@ -63,34 +72,60 @@ export function resetTraining(match) {
 export function trainingInput(match, dt, random = Math.random) {
   if (match.training?.dummy === 'guard') return { guard: true };
   if (match.training?.dummy === 'jump') return { jump: true };
-  if (match.training?.dummy === 'cpu') return cpuInput(match, dt, random);
+  if (match.training?.dummy === 'cpu') return cpuInput(match, dt, random, 1, 'normal');
   return {};
 }
 
-export function cpuInput(match, dt, random = Math.random) {
-  const ai = match.ai;
-  const settings = CPU_DIFFICULTIES[match.difficulty] || CPU_DIFFICULTIES.normal;
-  ai.clock -= dt;
-  if (ai.clock > 0) return { ...ai.action, punch: false, kick: false, special: false, jump: false, throw: false, dash: false };
-  ai.clock = (settings.reaction + random() * settings.variation) * (1 - Math.min(5, match.arcadeStage || 0) * .025);
-  const [enemy, self] = match.fighters;
-  const distance = Math.abs(enemy.x - self.x);
-  const close = distance < self.reach + 22;
-  ai.action = {
-    left: self.x > enemy.x && !close,
-    right: self.x < enemy.x && !close,
-    guard: enemy.attack !== null && distance < enemy.reach + 55 && random() < settings.guard,
-    jump: (distance > 220 && random() < settings.jump) || (match.projectiles.some(p => p.owner === 0 && Math.abs(p.x - self.x) < 210) && random() < settings.evade),
-    punch: close && random() < settings.punch,
-    kick: close && random() < settings.kick,
-    special: self.meter >= SPECIAL_COST && distance < 460 && random() < settings.special,
-    throw: distance < 90 && enemy.guard && random() < settings.throw,
-    dash: distance > 370 && random() < settings.dash
-  };
-  if (self.attack?.kind === 'punch' && self.attack.connected && random() < settings.combo) {
-    ai.action.kick = true; ai.action.punch = false; ai.action.special = false;
+export function cpuInput(match, dt, random = Math.random, index = 1, difficulty = match.difficulty) {
+  if (match.phase !== 'fight' || match.hitstop > 0) return {};
+  const ai = match.ai[index];
+  const settings = CPU_DIFFICULTIES[difficulty] || CPU_DIFFICULTIES.normal;
+  const self = match.fighters[index], foe = match.fighters[1 - index], tactic = CPU_TACTICS[self.id];
+  // Confirming our own punch is quicker than reacting to an opponent's next move.
+  if (self.attack?.kind === 'punch' && self.attack.connected) {
+    if (ai.confirmed !== self.attack) { ai.confirmed = self.attack; ai.confirmClock = settings.confirm; ai.combo = random() < settings.combo * tactic.combo; }
+    ai.confirmClock -= dt;
+    if (ai.combo && ai.confirmClock <= 0) {
+      ai.combo = false; ai.action = {};
+      return { [self.id === 'minnie' && self.meter >= SPECIAL_COST && random() < .35 ? 'special' : 'kick']: true };
+    }
   }
-  return ai.action;
+  ai.clock -= dt;
+  if (self.hurt > 0 && self.reaction === 'block') return ai.action = { guard: true };
+  if (ai.clock > 0) return { ...ai.action, punch: false, kick: false, special: false, jump: false, throw: false, dash: false };
+  ai.clock = (settings.reaction + random() * settings.variation) * (1 - Math.min(5, match.arcadeStage || 0) * .02);
+  const enemy = ai.observed;
+  // Only public, delayed state: never read the player's commands or input buffer.
+  const incoming = match.projectiles.find(p => p.owner !== index && (self.x - p.x) * p.direction > 0 && Math.abs(p.y - (self.y - 95)) < 70);
+  ai.observed = { x: foe.x, y: foe.y, guard: foe.guard, hurt: foe.hurt, cooldown: foe.cooldown, attack: foe.attack && { kind: foe.attack.kind, time: foe.attack.time }, projectile: incoming && { x: incoming.x, y: incoming.y } };
+  if (!enemy || self.hp <= 0 || self.thrown || self.hurt > 0) return ai.action = {};
+  const distance = Math.abs(enemy.x - self.x);
+  const toward = self.x < enemy.x ? 'right' : 'left', away = toward === 'right' ? 'left' : 'right';
+  const punchRange = self.reach - 8, kickRange = self.reach + moveFor(self, 'kick').reach - 8;
+  const hasInk = self.meter >= SPECIAL_COST;
+  const target = self.id === 'betty' && hasInk ? 270 : self.reach * tactic.range;
+  const retreat = distance < target - 20 && self.x > 90 && self.x < 1110 && random() < tactic.retreat;
+  const action = {};
+  if (distance > target + 12) action[toward] = true;
+  else if (retreat) action[away] = true;
+  const projectile = enemy.projectile && Math.abs(enemy.projectile.x - self.x) < 240;
+  const danger = enemy.attack && distance < foe.reach + 60;
+  if (self.y === 0 && (projectile || danger)) {
+    if (projectile && random() < settings.evade) return ai.action = { jump: true, [toward]: true };
+    if (random() < settings.guard) return ai.action = { guard: true };
+  }
+  const recovering = enemy.cooldown > 0 || (enemy.attack && enemy.attack.time > moveFor(foe, enemy.attack.kind).until);
+  if (self.attack || self.cooldown > 0 || Math.abs(enemy.y - self.y) > 95) return ai.action = action;
+  if (self.id === 'felix' && retreat && distance < 100 && self.y === 0 && self.dashCooldown <= 0 && random() < settings.dash * .45) return ai.action = { [away]: true, dash: true };
+  if (random() < (recovering ? settings.punish : settings.attack)) {
+    if (hasInk && self.id === 'popeye' && self.buff <= 0 && distance > 175) action.special = true;
+    else if (hasInk && tactic.projectile && distance > 190 && distance < 600 && random() < settings.special * tactic.projectile && !match.projectiles.some(p => p.owner === index)) action.special = true;
+    else if (distance < self.reach + moveFor(self, 'throw').reach - 6 && enemy.y === 0 && enemy.hurt <= 0 && (enemy.guard || self.id === 'popeye') && random() < settings.throw * tactic.throw) action.throw = true;
+    else if (hasInk && ['minnie', 'oswald'].includes(self.id) && distance < self.reach + moveFor(self, 'special').reach - 12 && (distance > punchRange || (self.id === 'oswald' && enemy.y < -25)) && random() < settings.special) action.special = true;
+    else if (distance < kickRange) action[distance < punchRange && random() > tactic.kick ? 'punch' : 'kick'] = true;
+  }
+  if (!action.special && !action.throw && !action.punch && !action.kick && distance > target + 100 && self.y === 0 && self.dashCooldown <= 0 && random() < settings.dash * tactic.dash) action.dash = true;
+  return ai.action = action;
 }
 
 function beginAttack(match, f, kind, index) {
@@ -124,6 +159,10 @@ function hit(match, defender, attacker, damage, push, direction, kind = 'punch',
   if (defender.hp <= 0 || defender.thrown) return false;
   if (kind === 'throw' && (defender.y < 0 || defender.hurt > 0)) return false;
   const blocked = kind !== 'throw' && defender.guard && defender.y === 0 && defender.face === -direction;
+  const defendingMove = defender.attack && moveFor(defender, defender.attack.kind);
+  const released = defender.attack?.kind === 'special' && ['mickey', 'felix', 'betty', 'popeye'].includes(defender.id);
+  const recovering = defender.cooldown > 0 || (defendingMove && defender.attack.time > (released ? defendingMove.active : defendingMove.until));
+  const impact = blocked || kind === 'throw' ? null : defendingMove && defender.attack.time < defendingMove.active ? 'counter' : recovering ? 'punish' : null;
   const amount = blocked ? damage * .15 : damage;
   const combo = !blocked && defender.hurt > 0 && defender.reaction === 'hurt' && attacker.comboTime > 0;
   defender.hp = Math.max(match.training?.infiniteHealth ? 1 : 0, defender.hp - amount);
@@ -136,7 +175,7 @@ function hit(match, defender, attacker, damage, push, direction, kind = 'punch',
   } else defender.x = Math.min(1140, Math.max(60, defender.x + direction * (blocked ? push * .3 : push)));
   defender.meter = Math.min(100, defender.meter + (blocked ? 5 : 9));
   attacker.meter = Math.min(100, attacker.meter + (blocked ? 3 : 7));
-  match.effects.push({ x: defender.x - direction * 25, y: FLOOR + defender.y - 105, life: .28, max: .28, blocked, heavy: kind !== 'throw' && damage >= 14, direction, text: blocked ? 'CLINK!' : kind === 'throw' ? 'GOTCHA!' : damage >= 14 ? 'POW!' : 'WHAM!' });
+  match.effects.push({ x: defender.x - direction * 25, y: FLOOR + defender.y - 105, life: .28, max: .28, blocked, heavy: kind !== 'throw' && damage >= 14, impact, direction, text: blocked ? 'CLINK!' : kind === 'throw' ? 'GOTCHA!' : impact === 'counter' ? 'COUNTER!' : impact === 'punish' ? 'PUNISH!' : damage >= 14 ? 'POW!' : 'WHAM!' });
   if (attack) attack.outcome = blocked ? 'blocked' : 'hit';
   if (!blocked) {
     attacker.combo = combo ? attacker.combo + 1 : 1;
@@ -146,12 +185,12 @@ function hit(match, defender, attacker, damage, push, direction, kind = 'punch',
   } else { attacker.combo = 0; attacker.comboDamage = 0; attacker.comboTime = 0; }
   if (match.training) {
     defender.healthRecovery = true;
-    match.training.lastHit = { attacker: match.fighters.indexOf(attacker), kind, damage: amount, blocked, hits: attacker.combo, comboDamage: attacker.comboDamage };
-    trainingFeedback(match, { type: blocked ? 'block' : 'hit', index: match.fighters.indexOf(attacker), kind, damage: amount, hits: attacker.combo });
+    match.training.lastHit = { attacker: match.fighters.indexOf(attacker), kind, damage: amount, blocked, impact, hits: attacker.combo, comboDamage: attacker.comboDamage };
+    trainingFeedback(match, { type: blocked ? 'block' : 'hit', index: match.fighters.indexOf(attacker), kind, damage: amount, hits: attacker.combo, impact });
   }
-  match.hitstop = Math.max(match.hitstop, blocked ? .025 : kind === 'throw' || damage >= 14 ? .065 : .045);
+  match.hitstop = Math.max(match.hitstop, (blocked ? .025 : kind === 'throw' || damage >= 14 ? .065 : .045) + (impact ? .01 : 0));
   match.shake = blocked ? 2 : damage >= 14 ? 7 : 4;
-  match.events.push({ type: blocked ? 'block' : 'hit', heavy: kind !== 'throw' && damage >= 14, index: match.fighters.indexOf(attacker), kind, damage: amount, hits: attacker.combo });
+  match.events.push({ type: blocked ? 'block' : 'hit', heavy: kind !== 'throw' && damage >= 14, index: match.fighters.indexOf(attacker), kind, damage: amount, hits: attacker.combo, impact });
   return true;
 }
 
@@ -186,7 +225,7 @@ function resetRound(match) {
   match.effects = [];
   match.hitstop = 0;
   match.shake = 0;
-  match.ai = { clock: .4, action: {} };
+  match.ai = [{ clock: 0, action: {} }, { clock: 0, action: {} }];
   match.phase = 'countdown';
   match.phaseTime = 2.4;
   match.time = 60;

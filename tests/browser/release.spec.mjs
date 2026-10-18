@@ -1,6 +1,7 @@
 import { test, expect } from '@playwright/test';
 import { readFile, writeFile } from 'node:fs/promises';
 import { execFileSync } from 'node:child_process';
+import { ROSTER, CPU_TACTICS } from '../../engine.mjs';
 
 test('packaged game starts all stages, plays Training, pauses and keeps legal pages separate', async ({ page }) => {
   const errors=[];page.on('pageerror',error=>errors.push(error.message));
@@ -254,4 +255,49 @@ test('a stalled score fetch reports loading, expires without blocking combat, an
   await expect(page.locator('#audio-status')).toContainText('could not start',{timeout:20000});
   await page.evaluate(()=>{window.stallScore=false;});await page.locator('#enable-audio').click();await expect(page.locator('#audio-status')).toContainText('Original 32-bar');
   await page.getByRole('button',{name:'Close options',exact:true}).click();await page.keyboard.press('Backspace');await page.keyboard.press('KeyF');await expect(page.locator('#practice-hit')).toContainText('PUNCH');
+});
+
+test('all six CPU personalities fight in the real app and their tactics and revised moves remain readable', async ({page}) => {
+  test.setTimeout(150000);
+  const errors=[];page.on('pageerror',error=>errors.push(error.message));
+  await page.goto('/');await expect(page.locator('#start-button')).toBeEnabled();await page.locator('#moves-button').click();
+  await page.setViewportSize({width:390,height:844});
+  for(const fighter of ROSTER) {
+    await page.locator(`[data-move-fighter="${fighter.id}"]`).click();
+    await expect(page.locator('#move-basics')).toContainText(CPU_TACTICS[fighter.id].description);
+    if(fighter.id==='popeye')await expect(page.locator('#move-rows tr').first()).toContainText('11.5');
+    if(fighter.id==='oswald')await expect(page.locator('#move-rows tr').nth(1)).toContainText('12f / 20f');
+    expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+  }
+  await page.getByRole('button',{name:'Close move lists',exact:true}).click();await page.setViewportSize({width:1280,height:720});
+  for(const [i,fighter] of ROSTER.entries()) {
+    await page.locator('[data-slot="1"]').click();await page.locator(`[data-fighter="${fighter.id}"]`).click();
+    const difficulty=['easy','normal','hard'][i%3];await page.locator(`[data-difficulty="${difficulty}"]`).click();
+    await expect(page.locator(`[data-difficulty="${difficulty}"]`)).toHaveAttribute('title',/reactions/i);
+    await page.locator('#start-button').click();await expect(page.locator('#name-two')).toHaveText(fighter.name,{ignoreCase:true});
+    await expect(page.locator('#health-one')).not.toHaveAttribute('aria-valuenow','100',{timeout:20000});
+    await page.locator('#back-button').click();
+  }
+  expect(errors).toEqual([]);
+});
+
+test('counter, punish, guard and whiff feedback agree with real impacts under reduced motion', async ({page},testInfo) => {
+  const errors=[];page.on('pageerror',error=>errors.push(error.message));
+  await page.addInitScript(()=>localStorage.setItem('pdcf-visuals-v1',JSON.stringify({motion:'reduced',shake:false,film:false,backgrounds:false})));
+  await page.route('**/app.mjs',async route=>{const response=await route.fetch();await route.fulfill({response,body:(await response.text())+'\nwindow.combatSnapshot=()=>match;'});});
+  await page.goto('/');await page.locator('[data-mode="training"]').click();await page.locator('#start-button').click();
+  await page.evaluate(()=>{window.combatSnapshot().fighters[1].attack={kind:'kick',time:0,face:-1,hit:false,emitted:false,connected:false,air:false};});
+  await page.keyboard.press('KeyF');await expect(page.locator('#feedback-title')).toContainText('COUNTER');await expect(page.locator('#practice-hit')).toContainText('PUNCH · COUNTER · 8');
+  await page.locator('#pause-button').click();
+  const png=await page.locator('#arena').evaluate(canvas=>canvas.toDataURL('image/png'));
+  await writeFile(testInfo.outputPath('counter.png'),Buffer.from(png.split(',')[1],'base64'));
+  await page.locator('#resume-button').click();await page.keyboard.press('Backspace');
+  await page.evaluate(()=>{window.combatSnapshot().fighters[1].cooldown=.3;});
+  await page.keyboard.press('KeyF');await expect(page.locator('#feedback-title')).toContainText('PUNISH');await expect(page.locator('#practice-hit')).toContainText('PUNCH · PUNISH · 8');
+  await page.keyboard.press('Backspace');await page.locator('#training-options').click();await page.locator('#dummy-mode').click();
+  await page.getByRole('button',{name:'BACK TO PRACTICE →',exact:true}).click();await expect(page.locator('#arena')).toBeFocused();await page.keyboard.press('KeyF');
+  await expect(page.locator('#feedback-title')).toContainText('BLOCKED');await expect(page.locator('#practice-hit')).toContainText('BLOCKED · 1.2');
+  await page.keyboard.press('Backspace');await page.evaluate(()=>{window.combatSnapshot().fighters[0].x=200;});
+  await page.keyboard.press('KeyF');await expect(page.locator('#feedback-title')).toContainText('WHIFF');
+  await expect(page.locator('html')).toHaveAttribute('data-motion','reduced');expect(errors).toEqual([]);
 });

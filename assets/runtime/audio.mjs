@@ -105,11 +105,20 @@ export class GameAudio {
   }
   play(event) {
     if (!this.context || this.context.state !== 'running' || !this.settings.enabled || this.scene === 'paused') return;
-    const name = event.type === 'hit' && event.heavy ? 'heavy' : event.type;
+    const name = event.type === 'hit' && (event.heavy || event.impact) ? 'heavy' : event.type;
     const buffer = this.buffers.get(name), now = this.context.currentTime;
-    if (!buffer || this.voices.size >= 16 || now - (this.lastCue.get(name) ?? -1) < .035) return;
+    if (!buffer || now - (this.lastCue.get(name) ?? -1) < .035) return;
+    const priority = ['bell', 'ko'].includes(name) ? 3 : ['hit', 'heavy', 'block', 'throw'].includes(name) ? 2 : name === 'swing' ? 0 : 1;
+    if (this.voices.size >= 16) {
+      let replaced;
+      // Set order keeps the oldest voice when the lowest priorities tie.
+      for (const voice of this.voices) if (voice.priority < priority && (!replaced || voice.priority < replaced.priority)) replaced = voice;
+      if (!replaced) return;
+      replaced.stop(); this.voices.delete(replaced);
+    }
     this.lastCue.set(name, now);
     const voice = this.context.createBufferSource(); voice.buffer = buffer;
+    voice.priority = priority;
     voice.playbackRate.value = name === 'hit' || name === 'swing' ? 1 + ((event.index || 0) ? -.045 : .035) : 1;
     voice.connect(this.fxGain); this.voices.add(voice);
     voice.onended = () => { voice.disconnect(); this.voices.delete(voice); };

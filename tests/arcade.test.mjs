@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { ROSTER, CPU_DIFFICULTIES, createMatch, cpuInput, tick } from '../engine.mjs';
 import { ENDINGS, createArcade, arcadeMatch, finishArcade, restoreArcade } from '../assets/runtime/arcade.mjs';
+import { seededRandom } from '../scripts/simulate-matchups.mjs';
 
 function finish(match, winner = 0) {
   // Resolve two actual timeout rounds without relying on random combat outcomes.
@@ -77,24 +78,29 @@ test('difficulty changes CPU reactions and decisions without changing health or 
   const easy = createMatch('mickey', 'popeye', 'cpu', 'easy');
   const hard = createMatch('mickey', 'popeye', 'cpu', 'hard');
   for (const m of [easy, hard]) {
-    m.fighters[0].x = 500; m.fighters[1].x = 580; m.fighters[0].attack = { kind: 'punch' };
+    m.phase = 'fight'; m.fighters[0].x = 500; m.fighters[1].x = 580; m.fighters[0].attack = { kind: 'punch', time: 0 };
   }
   const soft = cpuInput(easy, 1 / 120, () => .5), tough = cpuInput(hard, 1 / 120, () => .5);
-  assert.ok(hard.ai.clock < easy.ai.clock); assert.equal(soft.guard, false); assert.equal(tough.guard, true);
-  assert.equal(soft.punch, false); assert.equal(tough.punch, true);
+  assert.ok(hard.ai[1].clock < easy.ai[1].clock); assert.deepEqual(soft, {}); assert.deepEqual(tough, {}, 'both levels must observe before reacting');
+  let softGuard = false, hardGuard = false;
+  for (let i = 0; i < 60; i++) { softGuard ||= !!cpuInput(easy, 1 / 120, () => .5).guard; hardGuard ||= !!cpuInput(hard, 1 / 120, () => .5).guard; }
+  assert.equal(softGuard, false); assert.equal(hardGuard, true);
   assert.deepEqual(easy.fighters.map(f => [f.hp, f.power, f.speed]), hard.fighters.map(f => [f.hp, f.power, f.speed]));
   assert.equal(createMatch('mickey', 'popeye', 'cpu', 'invalid').difficulty, 'normal');
-  const finale = createMatch('mickey', 'popeye', 'arcade', 'hard'); finale.arcadeStage = 5;
-  cpuInput(finale, 1 / 120, () => .5); assert.ok(finale.ai.clock < hard.ai.clock);
+  const finale = createMatch('mickey', 'popeye', 'arcade', 'hard'); finale.arcadeStage = 5; finale.phase = 'fight';
+  hard.ai[1].clock = 0;
+  cpuInput(hard, 1 / 120, () => .5);
+  cpuInput(finale, 1 / 120, () => .5); assert.ok(finale.ai[1].clock < hard.ai[1].clock);
 });
 
 test('real combat can complete CPU matches at each difficulty without invalid state', () => {
   for (const difficulty of Object.keys(CPU_DIFFICULTIES)) {
     const match = createMatch('mickey', 'popeye', 'cpu', difficulty);
+    const random = seededRandom(1930);
     let cpuDamage = false;
     for (let frame = 0; frame < 120 * 205 && match.phase !== 'matchover'; frame++) {
       const player = { right: match.fighters[0].x < match.fighters[1].x - 90, left: match.fighters[0].x > match.fighters[1].x + 90, punch: frame % 53 === 0, kick: frame % 79 === 0, special: frame % 241 === 0 };
-      tick(match, [player, cpuInput(match, 1 / 120, () => .3)], 1 / 120);
+      tick(match, [player, cpuInput(match, 1 / 120, random)], 1 / 120);
       cpuDamage ||= match.fighters[0].hp < 100;
       assert.ok(match.fighters.every(f => Number.isFinite(f.x) && Number.isFinite(f.hp) && f.hp >= 0 && f.meter >= 0 && f.meter <= 100));
     }

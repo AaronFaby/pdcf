@@ -26,6 +26,20 @@ jobs:
           name: static-game
           path: dist/
           retention-days: 7
+  balance:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+      - run: npm run balance -- --seeds 2 --json work/matchups.json
+      - uses: actions/upload-artifact@v4
+        if: ${{ !cancelled() }}
+        with:
+          name: combat-simulations
+          path: work/matchups.json
+          retention-days: 7
   browsers:
     needs: build
     runs-on: ubuntu-latest

@@ -5,6 +5,7 @@ The release scope is desktop browser play: CPU, local multiplayer, Arcade, and T
 ## Repeatable checks
 
 1. Run `npm run check` for the Node regressions, clean production copy, and local references.
+   For combat changes, also run `npm run balance -- --seeds 12 --seed 1930 --json work/balance.json` and review the diagnostic report.
 2. Install the development tools with `npm ci` and test engines with `npx playwright install chromium firefox webkit`.
 3. Run `npm run test:browser -- --project=chromium --project=firefox --project=webkit`.
 4. For installed branded browsers, use `npm run test:browser -- --project=chrome --project=msedge`. CI installs these channels in its own ephemeral runners; local installation of system browsers is not automatic.
@@ -33,6 +34,8 @@ The GitHub Actions workflow runs on pushes and pull requests to `main`, with rea
 | Keyboard focus/reset | Utility-button clicks return control to both keyboard players; Enter/Space do not repeat the button; Training reset is a P1-only one-shot |
 | Result audio | Completed CPU result menus restore native audio source/scene state after focus and visibility return; outcomes use the browser-only fixture |
 | Stalled score | Loading status remains honest; Training works while the asset fetch stalls; the deadline reports failure and a new gesture retries |
+| CPU personalities | Each of the six CPU fighters lands damage in the real app; all three difficulty choices are exercised; tactic descriptions and revised damage/timings remain readable at 390px |
+| Impact feedback | Real startup counters, recovery punishes, guards and whiffs produce accurate Training feedback under reduced motion; a paused counter frame is captured for inspection |
 
 Arcade victory scripting verifies progression, not human difficulty or balance. Virtual controllers verify the input code, not hardware pairing, latency, or physical button layouts. Browser WebKit is not the Safari application or an exhaustive Safari version/device matrix.
 
@@ -44,7 +47,21 @@ The ready-time measurement starts before fetching the game HTML and ends when St
 
 The baseline on October 18, 2026 used the in-app Chromium browser (reported Chrome 155, macOS/ARM host), a 1280 × 720 outer viewport and the 1200px game iframe. All 24 pairings had a median observed interval of 16.7 ms; the largest per-pair p95 callback time was 2.7 ms, and none of the sampled intervals exceeded 33.5 ms. Initial game-ready time was 320 ms with unspecified browser-cache state. This pass showed enough frame headroom to avoid a speculative renderer rewrite; the focused change is bounded, cached asset recovery.
 
-## Issue #1 review repairs — October 18, 2026
+## Combat review follow-up — October 18, 2026
+
+The block-recoil guard drop and mixed-priority sound eviction were each reproduced with a failing regression before repair. CPU guard now persists through block recoil on both sides even when a decision expires, then returns to normal tactical choices. Sound eviction chooses the lowest lower priority and the oldest voice within that priority; equal/higher priorities remain protected. The `balance` workflow job runs independently of `build`; browsers depend only on the static build. Local YAML parsing and dependency assertions verified that structure. A failed simulation still fails its own check.
+
+All **9 targeted browser reruns** passed against the repaired build: the 28-flow controller matrix, real combat for all six CPU fighters, and reduced-motion impact feedback in each of Chromium, Firefox and WebKit. The full 57-scenario result below belongs to the initial milestone before this review; it was not rerun in full for these focused repairs.
+
+`npm run check` passed **97 Node tests** and the **48-file/105-reference** production build. Seeds 1930–1941 again completed **1,296 ordinary matches and 432 difficulty probes** without invalid states or incomplete matches. The [balance table](combat-balance.md) was refreshed after the guard fix. Source syntax and diff checks passed. The workflow change still requires a hosted run after publication; no deployment or physical-controller/speaker validation is claimed.
+
+## Historical initial combat milestone — October 18, 2026
+
+Local validation on this macOS ARM host passed **95 Node tests**, the **48-file/105-reference** production build check, and **57 browser release tests**: nineteen scenarios each in Chromium, Firefox and WebKit. Each engine passed all **28 controller flows**. The native CPU scenario exercised all six fighters and all three difficulty choices, checked tactic descriptions at 390px, and verified revised move-list values. The new reduced-motion scenario resolved actual startup counters, recovery punishes, guards and whiffs, with accurate Training feedback and no captured page errors. The captured counter frame was inspected for readable impact text. Syntax checks passed for all twelve changed JavaScript modules; `git diff --check` passed.
+
+The [combat balance report](combat-balance.md) records seeds 1930–1941: **1,296 ordinary matches and 432 difficulty probes** completed without invalid states or incomplete matches. Results expose side bias, fighter/level differences and the limits of bot-based measurements. The workflow now retains a separate two-seed `combat-simulations` JSON artifact. Neither the simulation tool nor reports enter production assets. These are local results; the changed workflow has not yet run in hosted CI, and no deployment is claimed. Human balance testing, physical controllers, speaker listening and native Safari remain separate work.
+
+## Historical issue #1 review repairs — October 18, 2026
 
 The [finding-by-finding report](issue-1-review.md) records the reproduced defects, fixes and regression coverage. Local validation passed **83 Node tests**, the **48-file/105-reference** production build check and **51 browser release tests**: seventeen scenarios each in Chromium, Firefox and WebKit on this macOS ARM host. Each engine passed all **28 controller flows**. Syntax checks passed for all seventeen changed JavaScript modules, and `git diff --check` passed.
 

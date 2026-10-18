@@ -28,10 +28,13 @@ test('dummy behaviors stand, guard, jump and spar through the real simulation', 
   m.training.dummy = 'guard'; strike(m);
   assert.equal(m.training.lastHit.blocked, true); assert.equal(m.training.lastHit.damage, 1.2);
   m.training.dummy = 'jump'; step(m, 10); assert.ok(m.fighters[1].y < 0);
-  m.training.dummy = 'cpu'; m.ai.clock = 0;
-  const commands = trainingInput(m, dt, () => .1);
-  assert.equal(typeof commands.punch, 'boolean');
-  assert.ok(Object.values(commands).some(Boolean));
+  m.training.dummy = 'cpu'; m.ai[1].clock = 0;
+  let acted = false;
+  for (let i = 0; i < 120; i++) {
+    const commands = trainingInput(m, dt, () => .1);
+    acted ||= Object.values(commands).some(Boolean); tick(m, [{}, commands], dt);
+  }
+  assert.ok(acted, 'sparring dummy acts after its reaction delay');
 });
 
 test('unlimited health prevents KO and recovers between strings; ink and damage options are independent', () => {
