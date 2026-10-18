@@ -94,7 +94,7 @@ Open **Fighter moves** under the roster or **Fighter move lists** while paused. 
 
 Win two rounds to take a match. Each round lasts 60 seconds; the fighter with more health wins a timeout, and tied rounds award no wins. Each round begins with 35 ink. Hits and blocks build ink; specials cost 35 ink.
 
-Combat includes buffered attacks, punch-to-kick/special cancels on hit, brief impact freezes, aerial punches/kicks, vulnerable directional dashes, and close-range throws that beat guard. Combo counts restart when the opponent recovers or blocks. Fighter-specific startup, recovery, reach, and damage give each character a different feel; balance remains provisional.
+Combat includes buffered attacks, punch-to-kick/special cancels on hit, brief impact freezes, aerial punches/kicks, vulnerable directional dashes, and close-range throws that beat guard. A connected throw lifts and tosses the opponent through an arc, then knocks them down with a ground impact. The victim cannot act or take follow-up hits until recovery. Damage is applied once on the grab; the slam adds no extra damage. Killing throws finish their landing before the round ends. Combo counts restart when the opponent recovers or blocks. Fighter-specific startup, recovery, reach, and damage give each character a different feel; balance remains provisional.
 
 | Fighter | Role | Signature move |
 | --- | --- | --- |
@@ -148,9 +148,9 @@ npm test
 git diff --check
 ```
 
-The current suite has **55 Node tests** covering combat, CPU matches, round transitions, controllers, Training, Arcade progression/checkpoint validation, cel generation/timing, and audio generation/lifecycle. Stage regressions cover equal combat rules, Training/round resets, the Arcade venue tour and old checkpoints, distinct paintings, deterministic score generation, loop headroom, lazy loading, rapid music switches, and failure recovery. Tests use Node's built-in runner.
+The current suite has **61 Node tests** covering combat, CPU matches, round transitions, controllers, Training, Arcade progression/checkpoint validation, cel generation/timing, and audio generation/lifecycle. Stage regressions cover equal combat rules, Training/round resets, the Arcade venue tour and old checkpoints, distinct paintings, deterministic score generation, loop headroom, lazy loading, rapid music switches, and failure recovery. Tests use Node's built-in runner.
 
-With the server running, open [the controller simulator](http://127.0.0.1:4173/controller-simulator.html). Connect P1/P2 for manual checks, or click **Run controller checks** for **21 repeatable browser checks** covering menu navigation, stable mode/stage layout, both players, pause/resume, disconnect/reconnect, Training controls, all four stage choices, Arcade progression/venues/endings, saved remapping for both players, key conflicts, dead zones, controller swapping, nested pause menus, storage failures, and 390px dialog layout. Buttons toggle held state; use **Release** after screen changes. The simulator suppresses iframe focus-loss pausing so its outer controls remain usable.
+With the server running, open [the controller simulator](http://127.0.0.1:4173/controller-simulator.html). Connect P1/P2 for manual checks, or click **Run controller checks** for **22 repeatable browser checks** covering menu navigation, stable mode/stage layout, both players, pause/resume, disconnect/reconnect, Training controls, all four stage choices, Arcade progression/venues/endings, saved remapping for both players, key conflicts, dead zones, controller swapping, nested pause menus, storage failures, 390px dialog layout, and throws from both controllers with mid-throw pause/resume. Buttons toggle held state; use **Release** after screen changes. The simulator suppresses iframe focus-loss pausing so its outer controls remain usable.
 
 Arcade flow checks use `tests/fixtures/arcade-engine.mjs` to script timeout outcomes through the real round-resolution code. They verify progression and recovery, not human-played wins or difficulty balance. The harness restores the previous Arcade checkpoint, audio preferences, and control profiles afterward.
 

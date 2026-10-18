@@ -1,4 +1,4 @@
-import { ROSTER, moveFor } from './engine.mjs';
+import { ROSTER, moveFor, THROW_HOLD } from './engine.mjs';
 
 export const CEL_STATES = {
   idle: [0, 1, 2, 3, 4, 5], walk: [6, 7, 8, 9, 10, 11],
@@ -17,11 +17,13 @@ export function celFor(f, { time = 0, animation, progress = 0, defeatTime, victo
     if (!frames) throw new Error('Unknown animation: ' + animation);
     return frames[Math.min(frames.length - 1, Math.max(0, Math.floor(progress * frames.length)))];
   }
+  if (f.thrown && victoryTime === undefined) return f.thrown.phase === 'down' ? 32 : f.thrown.phase === 'held' ? 28 : 28 + Math.floor(f.thrown.time * 12) % 2;
   if (defeatTime !== undefined) return defeatTime < .22 ? 30 : defeatTime < .48 ? 31 : 32;
   if (victoryTime !== undefined) return victoryTime < .24 ? 33 : victoryTime < .6 ? 34 : 35;
   if (f.hurt > 0) return f.reaction === 'block' ? 17 : f.hurt > .12 ? 28 : 29;
   if (f.attack) {
     const { kind, time: elapsed } = f.attack, move = moveFor(f, kind);
+    if (kind === 'throw' && f.attack.connected && elapsed < move.active + THROW_HOLD) return 40;
     if (kind === 'special') return elapsed < move.active * .55 ? 24 : elapsed < move.active ? 25 : elapsed <= move.until ? 26 : 27;
     const state = f.attack.air && ['punch', 'kick'].includes(kind) ? 'air' + kind : kind;
     const frames = CEL_STATES[state];
@@ -89,7 +91,13 @@ export function drawCel(context, f, { x, y, scale = 1, ...animation } = {}) {
   const index = celFor(f, animation), frame = atlas.frames[index];
   const factor = atlas.scale * scale;
   const pivot = index >= 30 && index <= 32 ? frame.x + frame.width / 2 : frame.pivotX;
-  context.save(); context.translate(x, y); context.scale(f.attack?.face || f.face || 1, 1);
+  context.save(); context.translate(x, y);
+  if (f.thrown && f.thrown.phase !== 'down') {
+    const held = f.thrown.phase === 'held';
+    const angle = animation.reducedMotion ? Math.PI / 4 : held ? Math.PI / 3 * Math.min(1, f.thrown.time / THROW_HOLD) : Math.PI / 3 + Math.floor(f.thrown.time * 12) / 12 * Math.PI * 2;
+    context.translate(0, -105 * scale); context.rotate(f.thrown.direction * angle); context.translate(0, 105 * scale);
+  }
+  context.scale(f.attack?.face || f.face || 1, 1);
   context.drawImage(atlas.image, frame.x, frame.y, frame.width, frame.height,
     (frame.x - pivot) * factor, (frame.y - frame.baseline) * factor, frame.width * factor, frame.height * factor);
   context.restore();

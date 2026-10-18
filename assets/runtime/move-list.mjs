@@ -21,7 +21,7 @@ export function fighterMoves(id, profile) {
       kind, name: kind === 'special' ? fighter.special : kind[0].toUpperCase() + kind.slice(1),
       keyboard: keyName(profile.keyboard[kind]), controller: buttonName(profile.buttons[kind]),
       damage: Number(damage.toFixed(2)), startup: Math.ceil(move.active * 60), recovery: Math.ceil((move.duration - recoveryStart + .08) * 60),
-      note: kind === 'special' ? `${SPECIAL_COST} ink. ${SPECIALS[id]}` : kind === 'throw' ? 'Close range. Beats guard; misses airborne or stunned opponents.' : kind === 'punch' ? 'Ground or air. A connected punch can cancel into kick or special.' : 'Ground or air. Reaches farther than a punch.'
+      note: kind === 'special' ? `${SPECIAL_COST} ink. ${SPECIALS[id]}` : kind === 'throw' ? 'Close-range grab, lift and toss into a knockdown. Beats guard; misses airborne or stunned opponents.' : kind === 'punch' ? 'Ground or air. A connected punch can cancel into kick or special.' : 'Ground or air. Reaches farther than a punch.'
     };
   });
 }
