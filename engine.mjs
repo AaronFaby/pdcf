@@ -6,7 +6,7 @@ export const ROSTER = [
   { id: 'oswald', name: 'Oswald', short: 'Oswald', year: '1927', title: 'The lucky one', style: 'REACH', speed: 288, power: .96, reach: 147, special: 'Lucky uppercut', quote: 'Long ears. Longer winning streak.' },
   { id: 'felix', name: 'Felix the Cat', short: 'Felix', year: '1919', title: 'The wild card', style: 'TRICKSTER', speed: 292, power: .93, reach: 120, special: 'Ink blot', quote: 'Every trick in the inkwell.' },
   { id: 'betty', name: 'Betty Boop', short: 'Betty', year: '1930', title: 'The knockout', style: 'RANGED', speed: 285, power: .95, reach: 110, special: 'Boop blast', quote: 'Her next number is a knockout.' },
-  { id: 'popeye', name: 'Popeye', short: 'Popeye', year: '1929', title: 'The heavyweight', style: 'POWER', speed: 244, power: 1.15, reach: 126, special: 'Spinach power', quote: 'Strong to the finish.' }
+  { id: 'popeye', name: 'Popeye', short: 'Popeye', year: '1929', title: 'The heavyweight', style: 'POWER', speed: 244, power: 1.15, reach: 126, special: 'Spinach power', quote: 'A sailor’s punch. A sailor’s patience.' }
 ];
 
 export const WIDTH = 1200;

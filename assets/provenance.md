@@ -1,6 +1,43 @@
 # Asset provenance
 
-This inventory covers the art, animation, music, Foley and ending stories used by desktop Beta 1 (`v0.1.0-beta.1`). The beta notice and documentation introduce no new character artwork, recordings or generated backgrounds. Existing sources and prompts below are retained. Provenance documents authorship and inputs; character-version and branding clearance remain separate work described in [the legal notices](legal.html). See [beta limitations](beta.html) for current release coverage.
+This inventory covers desktop Beta 2 (`v0.1.0-beta.2`). The follow-up revises character drawings and adds locally hosted fonts; original music, backgrounds and combat remain as previously authored. Source documentation is not a character, trademark, international or privacy clearance certificate. See [legal notices](legal.html) and [beta limitations](beta.html).
+
+## Character reference follow-up — October 18, 2026
+
+The following original-work features were compared with the generated drawings. These are independently drawn game adaptations with shared poses and a limited palette, not exact model-sheet replicas. Film copies and reference stills were examined for provenance only; no historic film pixels, restored frames, film audio, modern character images or the supplied annotated stills are shipped.
+
+| Fighter | Original publication and examined visual source | Features and decisions |
+| --- | --- | --- |
+| Mickey Mouse | [Steamboat Willie](https://archive.org/details/01-steamboat-willie_202403), November 18, 1928; examined copy `01 - Steamboat Willie.mp4`, 00:30 and 07:00 | Round ears, bare black hands, light shorts with two buttons, tail and sailor cap. The wheel/whistle sequence is a costume reference only; the game does not recreate that studio-logo pose. Attacks, effects and ending are independently authored. |
+| Minnie Mouse | Same 1928 film and copy, 03:28 | Flowered hat, early skirt silhouette, tail and heels. The game now uses a simplified plain skirt, without claiming an exact costume reproduction or dating a later polka-dot branding design to 1928. |
+| Oswald | [Trolley Troubles](https://archive.org/details/oswald-the-lucky-rabbit-in-trolley-troubles), September 5, 1927; copy `Oswald the Lucky Rabbit in Trolley Troubles.mp4`, 05:10 | Long rabbit ears, protruding muzzle, black limbs, light shorts and rabbit silhouette. The game already includes a rabbit tail; shared drawing helpers and stylized proportions do not imply a later game/model reference. |
+| Felix the Cat | [Felix in Hollywood](https://archive.org/details/silent-felix-in-hollywood), July 15, 1923; copy `Felix in Hollywood.mp4`, 03:30 | Rounded black-cat silhouette, pointed ears, expressive tail and light facial features. `Feline Follies` (1919), where the cat was called Master Tom, is the origin date, not a claim that this game's rounded stylization exactly reproduces the 1919 drawing. No magic bag or later television/Van Beuren depiction is a reference. |
+| Betty Boop | [Dizzy Dishes](https://archive.org/details/dizzy-dishes-1930), August 9, 1930; copy `Dizzy Dishes (1930).mp4`, 02:55 and 03:23 | Canine hanging ears, broad muzzle, black button nose, curled dark hair, flapper dress and heels. All 48 drawings now share those head features. Hoop earrings and the prior decorative garter are removed. Some early film frames show legwear bands; the game omits that detail rather than claiming all garters are later protected expression. |
+| Popeye | [Duke's reproduced 1929 strips and June 1931 spinach strip](https://cspd.law.duke.edu/publicdomainday/2025) | The original sailor already had enlarged forearms, an anchor tattoo, cap and pipe. The game's leaf bunch and power-up poses are new drawings; no can-squeezing gag or theme music is copied. Spinach power retains the separately qualified non-renewal basis in the legal notice. |
+
+The [Duke 2024](https://cspd.law.duke.edu/publicdomainday/2024), [2025](https://cspd.law.duke.edu/publicdomainday/2025) and [2026](https://cspd.law.duke.edu/publicdomainday/2026) studies support the early-work/version distinctions. Publication dates above concern the underlying works, not upload dates. Timestamps refer only to the named copies and can differ in other transfers; restored-copy review is not a license over new restoration additions. No independent renewal or ownership-chain search is represented here.
+
+The four examined MP4 copies have these SHA-256 hashes, making the timestamp record reproducible without packaging reference media:
+
+- `Dizzy Dishes (1930).mp4`: `176be3ee3d3191964beb685d215637c746248e0da0370fdfc527dc17893106c4`
+- `01 - Steamboat Willie.mp4`: `a6801baa50ad7a06df7ff17a027110f4e270188f283aed20bcc83f8e7b73d319`
+- `Felix in Hollywood.mp4`: `dcfe068cf3e620610031d3ee155f35f74b957f6a1a98fdada61dd161247282c0`
+- `Oswald the Lucky Rabbit in Trolley Troubles.mp4`: `2465d409ca9059730e83363af3cf3719b31490addf3ccb469f810a6a5d62d41a`
+
+## Local font distribution — October 18, 2026
+
+Six unmodified Latin WOFF2 distribution files were obtained from Google Fonts for local hosting: Barlow Condensed weights 500–900 and a DM Sans variable file for weights 400–700. The browser loads these from this site's `assets/fonts/` directory, not Google. Their [Barlow](fonts/barlow-condensed-OFL.txt) and [DM Sans](fonts/dm-sans-OFL.txt) SIL Open Font License notices are included in the production copy. No blanket public-domain license is claimed over these files. Required copyright and license notices must accompany redistribution; inspect the actual OFL terms before modifying a font.
+
+| Bundled file | Retrieved source | SHA-256 |
+| --- | --- | --- |
+| `barlow-condensed-500-latin.woff2` | [Distribution source](https://fonts.gstatic.com/s/barlowcondensed/v13/HTxwL3I-JCGChYJ8VI-L6OO_au7B4-Lwz3bWuYMBYro.woff2) | `31ff5e6e96a096fde4d78bc838719e69b093db2d0b062b96e423c065a6d1b2b1` |
+| `barlow-condensed-600-latin.woff2` | [Distribution source](https://fonts.gstatic.com/s/barlowcondensed/v13/HTxwL3I-JCGChYJ8VI-L6OO_au7B4873z3bWuYMBYro.woff2) | `5bc49d41f32810a114765314392332ce2acae2276635eee265a50319a12c1b49` |
+| `barlow-condensed-700-latin.woff2` | [Distribution source](https://fonts.gstatic.com/s/barlowcondensed/v13/HTxwL3I-JCGChYJ8VI-L6OO_au7B46r2z3bWuYMBYro.woff2) | `e3e520cb7468f2efd60bc2ce96694567c3312f4ef414fffbe605e3ad146b24e6` |
+| `barlow-condensed-800-latin.woff2` | [Distribution source](https://fonts.gstatic.com/s/barlowcondensed/v13/HTxwL3I-JCGChYJ8VI-L6OO_au7B47b1z3bWuYMBYro.woff2) | `89eec21b1a1d6fd579d3e3c518901c5a6e3579e0e7a4f8b2f17b1473117bc30d` |
+| `barlow-condensed-900-latin.woff2` | [Distribution source](https://fonts.gstatic.com/s/barlowcondensed/v13/HTxwL3I-JCGChYJ8VI-L6OO_au7B45L0z3bWuYMBYro.woff2) | `2036f7f4aacc7759dcf8c6be2bd5bbde873c25a860f24dca0530ad14d4937723` |
+| `dm-sans-400-700-latin.woff2` | [Distribution source](https://fonts.gstatic.com/s/dmsans/v17/rP2Yp2ywxg089UriI5-g4vlH9VoD8Cmcqbu0-K6z9mXg.woff2) | `468d56b6b25b05b70190b6c233d773f6f1770e8579827ce022a57f03fa8002fb` |
+| `barlow-condensed-OFL.txt` | [Distribution source](https://raw.githubusercontent.com/google/fonts/main/ofl/barlowcondensed/OFL.txt) | `186d750eb496a4c17a76385f82be6aea2ac1cf2de074a811d63786cf374ea73f` |
+| `dm-sans-OFL.txt` | [Distribution source](https://raw.githubusercontent.com/google/fonts/main/ofl/dmsans/OFL.txt) | `9af36190332437f5ecd09974de43c1f7c77a310a996cdd8ceb25628b458840e1` |
 
 ## Ink Harbor background
 

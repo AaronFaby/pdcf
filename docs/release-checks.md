@@ -2,7 +2,17 @@
 
 The release scope is desktop browser play: CPU, local multiplayer, Arcade, and Training. Simulation remains fixed at 120 Hz. Saved visual-comfort settings and native fullscreen affect presentation only; combat balance is unchanged.
 
-## Beta 1 publication
+## Beta 2 follow-up
+
+The current candidate is `v0.1.0-beta.2`. It follows the [character and privacy review](legal-review.md), preserving combat rules and save schemas while changing three character atlases, Popeye's copy and font delivery. The production manifest has 57 files: eight added font/license files. Public notices link both font licenses, and the local-reference check covers those links plus all six CSS font URLs.
+
+The existing nineteen browser scenarios per project now also load every required local font weight, reject Google Fonts requests, verify playable fallback after real font-load failure, and raster-check transparent margins for all 48 Betty, Popeye and Minnie drawings. A first fallback assertion based on `FontFaceSet.check` differed in WebKit; the test now checks the actual `FontFaceSet.load` failure, then continues into combat and audio recovery. All three focused fallback reruns passed; the earlier focused suite's other eight cases passed. No game behavior or timeout was weakened.
+
+Local verification passed 97 Node tests, the 57-file/131-reference build, and all 57 browser scenarios across Chromium, Firefox and WebKit (three workers, 2.7 minutes). The latter includes all six CPU fighters and the 28-flow controller matrix in each engine. All 144 revised drawings were visually inspected through the reel in both directions. This is separate from physical-controller, listening, native Safari and human playtest coverage; older endurance results below are not new Beta 2 runs.
+
+The final candidate still requires the complete hosted build, balance and five-project browser gate, followed by main verification and a separate live check. Keep the published Beta 1 tag unchanged. Cloudflare metrics configuration is external: attempted narrow exclusions were rejected with HTTP 403, so the existing beacon disclosure remains in place until a successful change is independently observed.
+
+## Historical Beta 1 publication
 
 Version `v0.1.0-beta.1` is a desktop prerelease. Player-facing scope, limitations and manual feedback guidance live in [assets/beta.html](../assets/beta.html); [beta release notes](beta-release.md) summarize the shipped modes and remaining reviews. The visible beta version is separate from the footer's exact Git build identifier.
 

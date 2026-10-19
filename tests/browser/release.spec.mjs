@@ -5,9 +5,16 @@ import { ROSTER, CPU_TACTICS } from '../../engine.mjs';
 
 test('packaged game starts all stages, plays Training, pauses and keeps legal pages separate', async ({ page }) => {
   const errors=[];page.on('pageerror',error=>errors.push(error.message));
+  const googleRequests=[],fontRequests=new Set();page.on('request',request=>{const url=new URL(request.url());if(['fonts.googleapis.com','fonts.gstatic.com'].includes(url.hostname))googleRequests.push(url.href);if(url.pathname.startsWith('/assets/fonts/')&&url.pathname.endsWith('.woff2'))fontRequests.add(url.pathname);});
   await page.goto('/');await expect(page.locator('#start-button')).toBeEnabled();
+  const fonts=await page.evaluate(async()=>{
+    const results=[];
+    for(const [family,weights]of [['Barlow Condensed',[500,600,700,800,900]],['DM Sans',[400,700]]])for(const weight of weights){const faces=await document.fonts.load(`${weight} 20px "${family}"`,'Cartoon Fighters');results.push(faces.length>0&&faces.every(face=>face.status==='loaded'));}
+    return results;
+  });
+  expect(fonts).toEqual(Array(7).fill(true));expect(fontRequests.size).toBe(6);
   const version=JSON.parse(await readFile(new URL('../../package.json',import.meta.url),'utf8')).version;
-  await expect(page.locator('#beta-version')).toHaveText(`Beta 1 · v${version}`);await expect(page.locator('#beta-badge')).toBeVisible();
+  await expect(page.locator('#beta-version')).toHaveText(`Beta 2 · v${version}`);await expect(page.locator('#beta-badge')).toBeVisible();
   await expect(page.locator('#beta-feedback')).toHaveAttribute('href','https://github.com/AaronFaby/pdcf/issues');await expect(page.locator('#beta-feedback')).toHaveAttribute('target','_blank');
   const commit=process.env.WORKERS_CI_COMMIT_SHA||execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim();
   const buildLink=page.locator('#build-info a');
@@ -18,7 +25,7 @@ test('packaged game starts all stages, plays Training, pauses and keeps legal pa
   expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
   await page.setViewportSize({width:1280,height:720});
   const betaPopup=page.waitForEvent('popup');await page.locator('#beta-limitations').click();
-  const beta=await betaPopup;await expect(beta).toHaveTitle('Beta 1 & Known Limitations — Public Domain Cartoon Fighters');
+  const beta=await betaPopup;await expect(beta).toHaveTitle('Beta 2 & Known Limitations — Public Domain Cartoon Fighters');
   await expect(beta.locator('.notice-heading')).toContainText(`v${version}`);await expect(beta.locator('#limitations li')).toHaveCount(9);await expect(beta.locator('#feedback')).toContainText('Issues are public');await expect(beta.locator('script')).toHaveCount(0);
   await expect(beta.locator('#privacy')).toContainText('Cloudflare browser analytics/performance beacon');
   await beta.setViewportSize({width:390,height:844});expect(await beta.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);await beta.close();
@@ -36,7 +43,7 @@ test('packaged game starts all stages, plays Training, pauses and keeps legal pa
   }
   await page.goto('/assets/legal.html');await page.getByRole('link',{name:'Character references',exact:true}).click();await expect(page).toHaveURL(/#characters$/);
   await expect(page.locator('#characters table tbody tr')).toHaveCount(6);
-  expect(errors).toEqual([]);
+  expect(googleRequests).toEqual([]);expect(errors).toEqual([]);
 });
 
 test('loading progress prevents early starts, and a failed cel retries only missing artwork', async ({ page }) => {
@@ -76,9 +83,10 @@ test('a delayed image reports progress and keeps controller/keyboard start locke
 
 test('blocked fonts and failed audio leave play available; audio can recover', async ({ page }) => {
   let broken=true;
-  await page.route('https://fonts.googleapis.com/**',route=>route.abort());await page.route('https://fonts.gstatic.com/**',route=>route.abort());
+  await page.route('**/assets/fonts/*.woff2',route=>route.abort());
   await page.route('**/assets/audio/*.wav',route=>broken?route.abort():route.continue());
   await page.goto('/');await expect(page.locator('#start-button')).toBeEnabled();await page.locator('#settings-button').click();await page.locator('#enable-audio').click();await expect(page.locator('#audio-status')).toContainText('could not start');
+  expect(await page.evaluate(()=>document.fonts.load('700 20px "Barlow Condensed"').then(faces=>faces.length===0,()=>true))).toBe(true);
   broken=false;await page.locator('#enable-audio').click();await expect(page.locator('#audio-status')).toContainText('Original 32-bar');
   await page.getByRole('button',{name:'Close options',exact:true}).click();await page.locator('[data-mode="training"]').click();await page.locator('#start-button').click();await expect(page.locator('#game')).toBeVisible();
 });
@@ -86,6 +94,18 @@ test('blocked fonts and failed audio leave play available; audio can recover', a
 test('animation reel has progress and can retry a failed fighter', async ({ page }) => {
   let broken=true;await page.route('**/assets/cels/felix.svg',route=>broken?route.abort():route.continue());
   await page.goto('/animation-reel.html');await expect(page.locator('#reel-retry')).toBeVisible();broken=false;await page.locator('#reel-retry').click();await expect(page.locator('#reel-status')).toBeHidden();await expect(page.locator('#reel-cast canvas')).toHaveCount(6);
+  const margins=await page.evaluate(async()=>{
+    const {measureAtlas}=await import('/cels.mjs'),results=[];
+    for(const id of ['betty','popeye','minnie']){
+      const image=new Image();image.src=`/assets/cels/${id}.svg`;await image.decode();
+      const canvas=document.createElement('canvas');canvas.width=image.naturalWidth;canvas.height=image.naturalHeight;
+      const context=canvas.getContext('2d');context.drawImage(image,0,0);
+      const size=canvas.width/6,frames=measureAtlas(context.getImageData(0,0,canvas.width,canvas.height).data,canvas.width,canvas.height);
+      results.push({id,count:frames.length,clear:frames.every((f,i)=>f.x>=i%6*size+2&&f.y>=Math.floor(i/6)*size+2&&f.x+f.width<=(i%6+1)*size-2&&f.y+f.height<=(Math.floor(i/6)+1)*size-2)});
+    }
+    return results;
+  });
+  for(const result of margins){expect(result.count,result.id).toBe(48);expect(result.clear,`${result.id}: transparent cel borders`).toBe(true);}
 });
 
 test('a stalled audio output reports failure, keeps combat usable and retries from a new gesture', async ({ page }) => {

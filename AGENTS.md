@@ -6,7 +6,7 @@ This is a static browser game using native JavaScript ES modules, Canvas 2D, Web
 
 The current game has six fighters (Mickey, Minnie, Oswald, Felix, Betty, Popeye), four stages (Ink Harbor, Silverscreen Theater, Moonlight Midway, Midnight Junction), Arcade, Training, CPU play, and local two-player. Preserve working modes and controls when extending a milestone. Read `README.md` for player-facing behavior and `assets/provenance.md` for asset sources.
 
-The first desktop beta is `v0.1.0-beta.1`. Keep the visible beta version, package/lockfile version, public limitations and release notes consistent. Keyboard desktop play is the baseline; standard controllers are included for beta testing, with physical hardware, native Safari, listening, human balance and other coverage gaps explicitly identified. Preserve the independent-project notice and exact build footer. Beta feedback goes to public GitHub Issues; add no telemetry, private contact claims or storage keys for feedback.
+The current desktop beta is `v0.1.0-beta.2`; preserve the published `v0.1.0-beta.1` tag. Keep the visible beta version, package/lockfile version, public limitations and release notes consistent. Keyboard desktop play is the baseline; standard controllers are included for beta testing, with physical hardware, native Safari, listening, human balance and other coverage gaps explicitly identified. Preserve the independent-project notice and exact build footer. Beta feedback goes to public GitHub Issues; add no telemetry, private contact claims or storage keys for feedback.
 
 Live checks observed a hosting-injected Cloudflare Web Analytics/RUM beacon. Preserve its disclosure in the privacy policy and distinguish hosted browser metrics from game telemetry. Information-page sources contain no scripts; do not assert that the deployed DOM has none or claim that hosting analytics are disabled. The full hosting configuration remains outside the verified repository scope.
 
@@ -108,6 +108,8 @@ Use `npm run test:soak` for sustained-session checks. It drives virtual controll
 For CPU or balance changes, run `npm run balance -- --seeds 12 --seed 1930 --json work/balance.json` as well as focused regressions. Record seeds, source revision/modified state, side bias, incomplete/timeout counts, attack mix and difficulty probes in `docs/combat-balance.md`. An independent CI balance job runs two seeds and retains `combat-simulations`; those reports and the simulator script must stay out of production assets. Keep browser jobs dependent only on the static build so broad simulation failures do not suppress their diagnostics. Update real-damage expectations in the controller harness and verify move lists/cel timing after changing stats or moves.
 
 Report what actually ran. Separate Node tests, scripted browser outcomes, normal gameplay, physical controller tests, speaker listening, and deployed-site checks. Do not describe virtual controllers as hardware verification or scripted Arcade victories as balance testing.
+
+Barlow Condensed and DM Sans are self-hosted Latin WOFF2 files in `assets/fonts/`, with both required OFL notices in the production manifest. Do not reintroduce a Google Fonts import, preconnect or runtime request. Keep the actual font-load failure test and all required weight checks; FontFaceSet.check alone is not a portable failure assertion.
 
 ## Static packaging and delivery
 

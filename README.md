@@ -4,25 +4,27 @@ A browser-based, side-view 2D fighter with six cartoon stars, rubber-hose animat
 
 **[Play the game](https://pdcf.aaronfaby.com)** · [Contributor guidance](AGENTS.md) · [Asset provenance](assets/provenance.md)
 
-## First desktop beta
+## Desktop beta
 
-**Beta 1 · `v0.1.0-beta.1`** targets desktop browser play with a keyboard, Arcade, Training, single CPU matches, and local multiplayer. Standard controller support is included for beta testing. The game displays its beta version separately from the exact build commit in the footer.
+**Beta 2 · `v0.1.0-beta.2`** targets desktop browser play with a keyboard, Arcade, Training, single CPU matches, and local multiplayer. Standard controller support is included for beta testing. The game displays its beta version separately from the exact build commit in the footer.
 
 Read the [known limitations and feedback guide](assets/beta.html), [beta release notes](docs/beta-release.md), and [verification record](docs/release-checks.md). Release tags and GitHub prereleases are published only after the candidate passes the build, balance and all five hosted browser jobs. The website follows `main`; its build number identifies the version currently served even after a later beta update.
 
 [Report a bug or share beta feedback on GitHub Issues](https://github.com/AaronFaby/pdcf/issues). Include the build number, browser/OS, keyboard or controller, mode/difficulty, matchup/stage, steps, and expected/actual behavior. Issues are public and posting requires a GitHub account; do not include private information. No automatic feedback uploads or new player storage are added for the beta.
 
-The deployed site was observed loading a hosting-provided Cloudflare Web Analytics/RUM beacon. This browser page/performance processing is separate from local game state and manual feedback, and is disclosed in the privacy policy. Information pages are authored without scripts; hosting may inject this beacon. The beta changes do not alter Cloudflare settings.
+The deployed site was observed loading a hosting-provided Cloudflare Web Analytics/RUM beacon. This browser page/performance processing is separate from local game state and manual feedback, and is disclosed in the privacy policy. Information pages are authored without scripts; hosting may inject this beacon. The attempted hostname-specific metrics exclusions were denied by the configured credentials; the beacon remains disclosed unless a separate hosting change is verified.
 
 Balance, physical controller behavior, speaker/headphone output, native Safari, lower-end/high-refresh hardware and sustained human play remain under review. Touch controls are incomplete, online multiplayer is unavailable, and saves are local to one browser/device. Artwork/branding clearance and hosting privacy configuration remain separate reviews. The limitations page distinguishes these gaps from verified automated coverage.
 
+Beta 2 revises Betty toward the documented 1930 canine reference, simplifies Minnie’s skirt, replaces Popeye’s canned prop and familiar tagline, and serves all fonts from this site. Combat mechanics and saved data are compatible with [Beta 1](https://github.com/AaronFaby/pdcf/releases/tag/v0.1.0-beta.1).
+
 ## Privacy and legal notices
 
-The approved [character and privacy review follow-up](docs/legal-review.md) targets Beta 2: source-backed character cleanup, local font hosting and optional browser-metrics reduction. It records the distinction between engineering changes and unresolved legal judgments; these changes are not a clearance certificate.
+The [character and privacy review follow-up](docs/legal-review.md) documents Beta 2: source-backed character cleanup, local font hosting and the status of optional browser-metrics reduction. It records the distinction between engineering changes and unresolved legal judgments; these changes are not a clearance certificate.
 
 The casting screen carries a prominent independent-project/non-endorsement notice. A site-wide footer links to the [privacy policy](assets/privacy.html) and [legal and character notices](assets/legal.html), opening in a new tab to preserve an ongoing game. Both pages work without JavaScript and match the game’s paper-and-ink presentation.
 
-The privacy policy documents the four local-storage entries, temporary inputs/Training state, Cloudflare hosting/security requests, Google Fonts, external links, retention, deletion choices, applicable privacy rights, and children/family considerations. Contact uses public GitHub Issues; no email address is published. Do not post sensitive information there. The legal notice identifies intended early character versions, U.S./international limits, ongoing trademark rights, Popeye’s separate spinach-source limitation, asset provenance/reuse, and qualified game-use/warranty notices. It does not certify rights clearance.
+The privacy policy documents the four local-storage entries, temporary inputs/Training state, Cloudflare hosting/security requests, locally hosted fonts, external links, retention, deletion choices, applicable privacy rights, and children/family considerations. Contact uses public GitHub Issues; no email address is published. Do not post sensitive information there. The legal notice identifies intended early character versions, U.S./international limits, ongoing trademark rights, Popeye’s separate spinach-source limitation, asset provenance/reuse, and qualified game-use/warranty notices. It does not certify rights clearance.
 
 The pages live under `assets/` and are included in the explicit production manifest. Keep the policy accurate when adding network services, telemetry, storage keys, accounts, or purchases. Hosting-level analytics, security cookies and log retention depend on Cloudflare configuration and must be checked separately before treating the policy as a full operational/compliance review. No legal review of the notices or finished art is implied.
 
@@ -171,7 +173,7 @@ The scores use synthesized piano-, reed-, muted-brass-, bass-, banjo-, and calli
 
 ## Development
 
-The game uses native ES modules, Canvas 2D, Web Audio, and the Gamepad API. There are no installed runtime dependencies, accounts, or server-side game state. Google Fonts has a system-font fallback.
+The game uses native ES modules, Canvas 2D, Web Audio, and the Gamepad API. There are no installed runtime dependencies, accounts, or server-side game state. Locally hosted Barlow Condensed and DM Sans have system-font fallbacks; both font licenses ship in the production manifest.
 
 | Path | Responsibility |
 | --- | --- |

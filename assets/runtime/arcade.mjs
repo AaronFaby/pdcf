@@ -49,7 +49,7 @@ export const ENDINGS = {
       'Popeye could buy a shiny new boat with the prize money. Instead, he buys lumber for the broken pier, a stove for the dockside kitchen, and enough spinach to feed a very hungry neighborhood.',
       'By supper, the pier is standing and every chair is taken. His old rivals raise their bowls to the harbor champion. Popeye grins around his pipe: a good right hook is useful, but a helping hand lasts longer.'
     ],
-    closing: 'Strong to the finish. Plenty to go around.'
+    closing: 'Plenty to go around. Pull up a chair.'
   }
 };
 

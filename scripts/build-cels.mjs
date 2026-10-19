@@ -141,7 +141,7 @@ export function exposure(id, index) {
     if (id === 'oswald') { pose.front = [[-21, -169], [18, -191], [107, -346], [73, -220]][n]; pose.hand = n === 2 ? 1.3 : 1; pose.body[1] = [26, 30, -13, 3][n]; pose.ear = [30, 38, -38, -15][n]; }
     if (id === 'felix') { pose.front = [[-5, -134], [48, -176], [128, -189], [62, -175]][n]; pose.back = [[-65, -135], [-12, -160], [54, -177], [-47, -160]][n]; pose.tail = [32, 57, -29, -10][n]; }
     if (id === 'betty') { pose.front = [[21, -206], [32, -225], [81, -224], [43, -187]][n]; pose.back = [-35, -155]; pose.head = [-4, -7, -14, -3][n]; pose.mouth = n === 1 || n === 2 ? 'kiss' : 'grin'; }
-    if (id === 'popeye') { pose.front = [[62, -195], [41, -263], [37, -279], [98, -234]][n]; pose.back = n === 3 ? [-96, -236] : [-65, -182]; pose.accent = n < 3 ? 'can' : 'power'; pose.eyes = n === 2 ? 'blink' : 'focus'; }
+    if (id === 'popeye') { pose.front = [[62, -195], [41, -263], [37, -279], [98, -234]][n]; pose.back = n === 3 ? [-96, -236] : [-65, -182]; pose.accent = n < 3 ? 'spinach' : 'power'; pose.eyes = n === 2 ? 'blink' : 'focus'; }
   } else if (index < 30) {
     const n = index - 28;
     pose.body = [n ? -6 : -18, n ? 15 : 1]; pose.lean = n ? -9 : -19; pose.head = n ? -12 : -25;
@@ -246,14 +246,15 @@ function head(id, pose) {
     }
   } else if (id === 'betty') {
     drawing += path('M-52-2 C-70-55-36-78 0-74 C37-78 67-48 53-1 L42 30 L-42 30Z', INK);
-    drawing += path('M-46-24 C-72-35-76 7-60 32 C-54 43-42 39-38 26Z', INK) + path('M43-24 C63-40 76-6 63 24 C57 42 45 43 40 22Z', INK);
-    drawing += path('M-40-24 C-32-57 27-58 42-26 L44 5 C47 36 20 56-2 51 C-33 48-51 17-40-24Z', PAPER, 4);
+    // Dizzy Dishes (1930), 03:23: hanging canine ears and a broad muzzle.
+    drawing += path('M-43-23 C-68-29-83 10-74 43 Q-68 65-53 53 Q-39 38-39 9Z', PAPER, 4) + path('M43-23 C65-29 80 7 73 40 Q66 60 52 49 Q40 34 39 9Z', PAPER, 4);
+    drawing += path('M-40-24 C-32-57 27-58 42-26 L44 5 C59 25 40 53 5 55 C-32 58-58 32-44 7Z', PAPER, 4);
     drawing += path('M-47-26 Q-44-60-18-63 Q-7-73 5-62 Q30-66 46-33 L35-19 Q23-38 15-25 Q5-42-4-27 Q-15-42-25-25 Q-34-36-40-19Z', INK, 3);
     drawing += group('translate(0 -2)', eyes(id, pose));
-    drawing += path('M3 10Q15 3 19 12Q13 18 6 16', PAPER, 2.5);
-    drawing += group('translate(-2 7) scale(.82)', mouth(id, pose));
-    drawing += ellipse(-51, 32, 7, 9, PAPER, 8, 2.8) + ellipse(54, 31, 7, 9, PAPER, -8, 2.8);
-    drawing += line('M-30 13Q-24 17-18 13 M27 16Q34 19 39 14', 2, SHADE);
+    drawing += path('M-31 11 Q-16 3-4 15 Q9 19 19 10 C39-1 64 12 55 29 Q47 45 26 43 Q7 57-15 42 Q-40 36-31 11Z', PAPER, 3.5);
+    drawing += ellipse(25, 9, 10, 7, INK, -8, 2.5);
+    drawing += group('translate(-2 11) scale(.82)', mouth(id, pose));
+    drawing += line('M-29 17Q-22 23-15 18', 2, SHADE);
   } else {
     drawing += path('M-30-54 C-42-34-41-4-29 13 L-22 30 Q-25 52 0 55 L31 51 Q55 44 48 28 Q42 17 24 20 L28-34Q16-60-30-54Z', PAPER, 5);
     drawing += ellipse(-32, 0, 10, 16, PAPER, 0, 3) + line('M-36-3Q-23-11-28 9', 2.3);
@@ -279,7 +280,6 @@ function torso(id, pose) {
   if (id === 'minnie') {
     drawing += path(`M-32-139Q0-126 31-139 C${39 + s}-115 ${51 + s}-105 ${63 + s}-86 Q9-64 ${-51 - s * .45}-86 Q-39-104-32-139Z`, INK, 4);
     drawing += line(`M${-44 - s * .3}-87Q5-69 ${55 + s * .6}-87`, 3, PAPER);
-    for (const [x, y] of [[-22, -115], [4, -101], [27, -119], [39, -91], [-29, -87]]) drawing += ellipse(x + s * .15, y, 5, 5, PAPER, 0, 1);
   } else if (id === 'mickey' || id === 'oswald') {
     drawing += path('M-36-139Q0-129 35-139L40-91L9-85L0-101L-8-86L-38-91Z', PAPER, 4);
     drawing += ellipse(-17, -116, 6, 10, INK, -5, 2) + ellipse(19, -117, 6, 10, INK, 5, 2);
@@ -304,7 +304,7 @@ function accents(id, pose) {
     drawing += ellipse(205, -207, 4, 6, INK, 20, 1) + ellipse(204, -176, 3, 4, INK, -20, 1);
   }
   if (pose.accent === 'betty') drawing += group('translate(140 -249)', line('M0 0V-35L25-41V-10 M0-27L25-33', 4) + ellipse(-7, 0, 9, 6, INK, -20, 2) + ellipse(18, -10, 9, 6, INK, -20, 2)) + line('M173-286Q201-263 181-240', 3);
-  if (pose.accent === 'can') drawing += group(`translate(${pose.front[0] + 5} ${pose.front[1] - 17}) rotate(-12)`, path('M-15-22H15V18Q0 27-15 18Z', PAPER, 3) + ellipse(0, -22, 15, 5, SHADE, 0, 2) + path('M-7 10Q-17-8-2-9Q11-19 8-2Q3 8-7 10Z', '#888a70', 2) + line('M-7 12L5-8', 1.5));
+  if (pose.accent === 'spinach') drawing += group(`translate(${pose.front[0] + 5} ${pose.front[1] - 12}) rotate(-12)`, path('M-2 9Q-29 1-24-20Q-11-34-2-8Q-6-37 12-39Q31-23 7-5Q31-24 35-6Q29 11 4 13Z', '#888a70', 3) + line('M0 19L3-19 M2 8L-15-13 M4 8L24-5', 2));
   if (pose.accent === 'power') for (const side of [-1, 1]) drawing += group(`scale(${side} 1)`, line('M102-255L118-271 M111-234L133-237 M105-216L126-207', 3.5));
   if (pose.accent === 'block') drawing += line('M69-258L89-272 M79-238L103-240 M77-219L97-207', 4);
   if (pose.accent === 'smoke') drawing += line('M100-255C123-265 90-285 117-298', 3, SHADE);
@@ -329,7 +329,6 @@ function cel(id, pose) {
   body += group(`translate(0 ${neckY}) rotate(${pose.head})`, head(id, pose));
   const frontElbow = [pose.front[0] * .46 - 12, pose.front[1] + 49];
   body += arm([popeye ? 34 : 23, -192], frontElbow, pose.front, skin, popeye ? 20 : 14, (popeye ? 1.1 : .83) * pose.hand, ((pose.frame >= 28 && pose.frame < 36) || (pose.frame >= 39 && pose.frame < 42)) && !popeye, popeye);
-  if (id === 'betty') body += line('M24-48Q32-54 40-47', 4) + ellipse(37, -50, 5, 5, INK, 0, 1);
   body = group(`translate(${bodyX} ${bodyY}) rotate(${pose.lean} 0 -115) translate(0 -135) scale(${1 / Math.sqrt(pose.stretch)} ${pose.stretch}) translate(0 135)`, body);
   return group(`translate(${pose.shift} ${pose.drop || 0}) rotate(${pose.rotate} 0 -35)`, back + body + accents(id, pose));
 }

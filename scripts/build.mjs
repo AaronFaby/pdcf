@@ -9,6 +9,8 @@ import { CUES } from '../assets/runtime/audio.mjs';
 export const ROOT_FILES = ['index.html', 'animation-reel.html', 'style.css', 'app.mjs', 'art.mjs', 'cels.mjs', 'engine.mjs', 'reel.mjs'];
 export const ASSET_FILES = [
   'assets/privacy.html', 'assets/legal.html', 'assets/beta.html', 'assets/provenance.md',
+  ...[500, 600, 700, 800, 900].map(weight => `assets/fonts/barlow-condensed-${weight}-latin.woff2`),
+  'assets/fonts/dm-sans-400-700-latin.woff2', 'assets/fonts/barlow-condensed-OFL.txt', 'assets/fonts/dm-sans-OFL.txt',
   ...ROSTER.map(f => `assets/cels/${f.id}.svg`), ...STAGES.map(stage => stage.image),
   ...[...STAGES.map(stage => stage.id), ...CUES].map(name => `assets/audio/${name}.wav`),
   ...['arcade', 'audio', 'bindings', 'control-panel', 'controllers', 'loading', 'move-list', 'stages', 'training', 'visuals'].map(name => `assets/runtime/${name}.mjs`)
