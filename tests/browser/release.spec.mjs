@@ -98,10 +98,30 @@ test('a stalled audio output reports failure, keeps combat usable and retries fr
 
 test('complete virtual-controller and Arcade regression matrix', async ({ page }) => {
   test.setTimeout(150000);
+  await page.addInitScript(() => {
+    window.closeProbe = { queued: 0, delivered: 0 };
+    window.installCloseFixture = target => {
+      let pending; const suppressed = new WeakSet(), close = target.HTMLDialogElement.prototype.close;
+      target.flushTestClose = () => { const dialog = pending; pending = null; if (dialog) { window.closeProbe.delivered++; dialog.dispatchEvent(new target.Event('close')); } };
+      target.addEventListener('close', event => { if (event.isTrusted && suppressed.delete(event.target)) event.stopImmediatePropagation(); }, true);
+      target.HTMLDialogElement.prototype.close = function (...args) {
+        const nested = this.open && this.id === 'settings-dialog' && target.document.getElementById('pause-dialog')?.open;
+        if (nested) suppressed.add(this);
+        close.apply(this, args);
+        if (nested) { window.closeProbe.queued++; pending = this; setTimeout(target.flushTestClose, 100); }
+      };
+    };
+  });
+  // Deliver a queued native close at the next Start poll, or while an explicit close wait yields.
+  await page.route('**/controller-simulator.html', async route => {
+    const response = await route.fetch();
+    await route.fulfill({ response, body: (await response.text()).replaceAll('window.addEventListener("blur"', 'parent.installCloseFixture(window);window.addEventListener("blur"').replace('value:()=>pads', 'value:()=>window.readTestPads()').replace('window.readTestPads=()=>pads;', 'window.readTestPads=()=>{if(pads.some(p=>p?.buttons[9]?.pressed))frame.contentWindow.flushTestClose?.();return pads;};') });
+  });
   await page.goto('http://127.0.0.1:4173/controller-simulator.html');await page.getByRole('button',{name:'Run controller checks',exact:true}).click();
   const output=page.locator('#checks');
   await expect(output).toContainText(/ALL CONTROLLER CHECKS PASSED|FAIL /,{timeout:120000});
   const result=await output.textContent();expect(result).not.toContain('FAIL ');
+  const closes=await page.evaluate(()=>window.closeProbe);expect(closes.queued).toBeGreaterThan(0);expect(closes.delivered).toBe(closes.queued);
   expect(result.split('\n').filter(line=>line.startsWith('PASS '))).toHaveLength(28);
 });
 

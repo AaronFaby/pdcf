@@ -33,6 +33,7 @@ The current game has six fighters (Mickey, Minnie, Oswald, Felix, Betty, Popeye)
 | `scripts/build.mjs` / `scripts/check-build.mjs` | Clean static build, production file boundaries, and local link/import/asset checks |
 | `scripts/simulate-matchups.mjs` / `tests/cpu.test.mjs` | Seeded CPU matches, all ordered pairings, difficulty probes, and deterministic diagnostics; excluded from production |
 | `tests/browser/` / `playwright.config.mjs` | Isolated browser release tests and the real-app performance pass; never copy into production |
+| `tests/browser/soak.spec.mjs` / `playwright.soak.config.mjs` | Opt-in real-time sustained sessions, virtual-pad bots, audio cleanup and runtime/frame reports; excluded from routine release tests |
 
 ## Commands
 
@@ -46,6 +47,7 @@ npm run balance # Seeded CPU matchup matrix and difficulty probes
 npm ci          # Install browser-test development tools (not needed to play)
 npx playwright install chromium firefox webkit
 npm run test:browser -- --project=chromium --project=firefox --project=webkit
+npm run test:soak -- --project=chromium # Longer real-time Arcade/rematch/Training/local session
 npm run art     # Regenerate assets/cels/*.svg
 npm run audio   # Regenerate assets/audio/*.wav
 git diff --check
@@ -89,6 +91,10 @@ For input, menu, or progression changes, run the game and the local `controller-
 For UI changes, check the affected mode, dialog focus, keyboard/controller navigation, desktop/mobile layout, reduced motion, and browser console. For combat changes, exercise hit/miss/block, recovery, round transitions, and affected modes/fighters. A screenshot alone does not verify animation or gameplay.
 
 The Playwright suite has nineteen scenarios per browser project, including real CPU combat for every fighter and reduced-motion counter/punish/guard/whiff feedback. CI also includes branded Chrome/Edge; those channels need their own browser installations. Linux Firefox uses a PulseAudio null sink for native Web Audio; keep the stalled-output regression as well as the normal failure/retry scenario. It checks a built copy on port 4174 and development-only harnesses on port 4173. `PDCF_ROOT` and `PDCF_PORT` configure test servers without changing the default development command. Do not make game code depend on test fixtures. Reports, downloaded browsers, `dist/`, and `node_modules/` are ignored. Frame timing is measured evidence on the named environment, not a hard shared-CI FPS gate or a guarantee on other hardware; retain the distinction between callback CPU time and observed frame intervals.
+
+The controller harness must await nested dialog close events and poll neutral frames before sending another simulated menu action. Native `close` tasks can arrive after the harness's synchronous frame steps; the release scenario deliberately exercises that ordering. Check that Resume actually closes Pause, and test menu attack leakage with a clean hit readout before pausing, without a reset after resuming.
+
+Use `npm run test:soak` for sustained-session checks. It drives virtual controllers through the unchanged app/engine, completes a real-time six-bout Arcade ladder, reloads the ending, plays three CPU and three local matches with rematches, then spars in Training for two minutes with pauses, nested move lists and an index-changing reconnect. Outcome fixtures and accelerated clocks must not substitute for that test. Inspect its `soak.json` attachment for audio source/gain cleanup, bounded caches/effects/input history, DOM counts, and early/late frame measurements. Parallel browsers contend for the same host; report that load and do not describe those numbers as isolated performance benchmarks or physical-controller/human playtests. Long tests are opt-in, outside the normal release matrix.
 
 For CPU or balance changes, run `npm run balance -- --seeds 12 --seed 1930 --json work/balance.json` as well as focused regressions. Record seeds, source revision/modified state, side bias, incomplete/timeout counts, attack mix and difficulty probes in `docs/combat-balance.md`. An independent CI balance job runs two seeds and retains `combat-simulations`; those reports and the simulator script must stay out of production assets. Keep browser jobs dependent only on the static build so broad simulation failures do not suppress their diagnostics. Update real-damage expectations in the controller harness and verify move lists/cel timing after changing stats or moves.
 

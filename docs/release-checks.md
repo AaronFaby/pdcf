@@ -39,6 +39,20 @@ The GitHub Actions workflow runs on pushes and pull requests to `main`, with rea
 
 Arcade victory scripting verifies progression, not human difficulty or balance. Virtual controllers verify the input code, not hardware pairing, latency, or physical button layouts. Browser WebKit is not the Safari application or an exhaustive Safari version/device matrix.
 
+## Sustained sessions
+
+After `npm run check`, run:
+
+```sh
+npm run test:soak -- --project=chromium --project=firefox --project=webkit
+```
+
+The optional suite uses the same built game and real input/engine/audio paths, with bots supplying virtual-pad actions based on public CPU observations. It runs at native browser time: no scripted outcome fixture, shortened clock, health edit, or skipped round. Each session completes a six-bout Arcade ladder and reloads its saved ending, plays three CPU matches and three local matches with rematches, then spars continuously in Training for two minutes with six pause/resume cycles, nested move lists and an index-changing P1 reconnect. Arcade losses use the real Continue flow and have a bounded attempt count. A match that does not finish fails instead of silently skipping onward.
+
+Each browser attaches `soak.json` with sampled fighter state, simulation time, effects/projectiles, input-history/cache/DOM counts, music/voice state, connected native audio source/gain counts, and frame callback/interval summaries. Paused audio must finish stopping and disconnect its sources/fade gains; the permanent two mixer gains remain. One audio context per page and the sixteen-voice cap must hold. Muting at the end must leave no playing sources or pending loads. The test fails on page errors, invalid numeric fighter state, unbounded tracked state, or broken progression. Audio instrumentation observes native nodes; it does not replace playback or establish listening quality. These checks do not measure every browser heap allocation or certify the absence of all memory leaks.
+
+Long sessions are outside the nineteen routine release scenarios and CI's normal matrix. They default to one worker; `--workers=3` runs three browsers concurrently for functional endurance, with shared machine load. Inspect early/late Training frame samples for potential deterioration. Frame timing remains measured evidence, not a brittle shared-host FPS gate or a guarantee for lower-end hardware.
+
 ## Performance method
 
 Open `/tests/browser/performance.html` on the development server and click **Run performance pass** with the tab active. The harness runs the real app in a 1200px-wide iframe, isolates its preferences, warms each pairing for 12 frames, then samples 60 frames while moving and attacking. Each fighter visits each venue. It measures time inside the app's complete animation callback (simulation, DOM updates, and Canvas command submission) and intervals between callbacks. It does not force a GPU readback, measure end-to-end input latency, or replace a DevTools/Lighthouse trace. Other machine load and browser scheduling can affect results.
@@ -46,6 +60,26 @@ Open `/tests/browser/performance.html` on the development server and click **Run
 The ready-time measurement starts before fetching the game HTML and ends when Start becomes enabled. Cache state is not forced cold, and no network/CPU throttling is applied. Before/after startup numbers must therefore not be advertised as cold-network improvements. Frame budgets are observations and targets; shared CI runners collect reports without a brittle 60-FPS pass/fail threshold.
 
 The baseline on October 18, 2026 used the in-app Chromium browser (reported Chrome 155, macOS/ARM host), a 1280 × 720 outer viewport and the 1200px game iframe. All 24 pairings had a median observed interval of 16.7 ms; the largest per-pair p95 callback time was 2.7 ms, and none of the sampled intervals exceeded 33.5 ms. Initial game-ready time was 320 ms with unspecified browser-cache state. This pass showed enough frame headroom to avoid a speculative renderer rewrite; the focused change is bounded, cached asset recovery.
+
+## Release-candidate harness repair — October 18, 2026
+
+Hosted run `39172511099` passed the static build, balance and four browser jobs, but Firefox reported “Move-list inputs leaked after resume.” Three unmodified local Firefox runs passed. A controlled queued-close case then demonstrated the actual failure: the simulator could send Start before a nested dialog's native `close` task cleared input. That clear disarmed the controller, so Start was discarded and the following Training reset was ignored while Pause remained open. The hit readout still contained the punch from before the menu; it was not evidence of a new attack.
+
+The harness now awaits native close events for nested Moves, Controls and Options, polls neutral frames, and verifies that Start actually closes Pause. It clears the hit readout before pausing and checks for leaked attacks after resuming without a reset that could conceal them. The release scenario controls close-task delivery and verifies that the delayed events actually ran. Removing the Options wait in a temporary negative-control copy reproduces the discarded Start; the repaired case passes. Combat rules and production input handling were not changed for this harness repair.
+
+The first endurance pass completed its real Arcade and rematch sequences in all three browsers, then stopped on the new DOM-growth assertion: the first move-list opening legitimately creates 28 table elements. The final test primes that lazy content before establishing the baseline, retaining the same growth allowance for repeated openings. Native audio cleanup and runtime bounds held through the initial pass.
+
+All three complete endurance reruns passed on this macOS ARM host, based on `0dcfed5` with these QA changes. Each browser completed six real Arcade wins, reloaded the saved ending, finished three CPU and three local matches, and ran the two-minute Training segment with all pause/menu/reconnect checks. Across the three browsers that is 36 completed matches and six minutes of active Training. There were no page errors or failed state/audio bounds. The browsers ran concurrently with `--workers=3`; these measurements include shared host load.
+
+| Engine | Session wall time | Training callback p95, first → last window | Training interval p95, first → last window |
+| --- | ---: | ---: | ---: |
+| Chromium | 7.59 min | 0.7 → 0.8 ms | 16.8 → 16.7 ms |
+| Firefox | 7.38 min | 5 → 5 ms | 17.60 → 17.56 ms |
+| WebKit | 8.16 min | 1 → 3 ms | 18 → 18 ms |
+
+Training DOM counts stayed at 638 in all six measured windows for every engine. The sampled effect-voice maximum was four, active native sources five, connected gains four during fades, decoded buffers seventeen and input history eight. All eighteen measured pause cycles reached zero active/connected sources and only the two permanent mixer gains. Final mute left zero active/connected sources and pending loads in every browser. After the ending reload, the sessions played 1,003 / 1,028 / 1,103 native sources in Firefox / Chromium / WebKit respectively. WebKit's late callback p95 increased, while its median remained 1 ms and observed frame cadence stayed unchanged; this is not evidence of an isolated hardware benchmark or a universal no-slowdown guarantee. Raw JSON copies from this run are retained locally under ignored `work/soak-validation/`.
+
+The final Node/build check passed 97 tests and the 48-file/105-reference production copy. All 57 routine browser checks passed: nineteen each in Chromium, Firefox and WebKit, including all 28 controller flows per engine with the controlled close task. That run used three workers and completed in 2.9 minutes. Syntax and diff checks passed. Branded Chrome/Edge are not installed locally; the five-project hosted workflow must still be verified after publication. No new Cloudflare deployment, physical-controller test, native Safari run or speaker/headphone listening is claimed.
 
 ## Combat review follow-up — October 18, 2026
 

@@ -2,6 +2,7 @@ import { defineConfig, devices } from '@playwright/test';
 
 export default defineConfig({
   testDir: './tests/browser',
+  testIgnore: '**/soak.spec.mjs',
   timeout: 90000,
   globalTimeout: 15 * 60 * 1000,
   workers: 1,
