@@ -210,7 +210,10 @@ test('fullscreen enters from Options, preserves focus/aspect and pauses safely o
   await page.locator('#fullscreen-button').press('Enter');await expect.poll(()=>page.evaluate(()=>!!document.fullscreenElement)).toBe(true);
   await expect(page.locator('#settings-dialog')).toBeVisible();await expect(page.locator('#fullscreen-button')).toBeFocused();
   await expect(page.locator('#fullscreen-button')).toHaveText('EXIT FULLSCREEN');
-  await page.getByRole('button',{name:'Close options',exact:true}).click();await page.locator('[data-mode="training"]').click();await page.locator('#start-button').click();
+  // Firefox's temporary browser exit banner can cover the top-right close button.
+  await page.getByRole('button',{name:'Close options',exact:true}).press('Enter');await expect(page.locator('#settings-dialog')).toBeHidden();
+  expect(await page.evaluate(()=>!!document.fullscreenElement)).toBe(true);
+  await page.locator('[data-mode="training"]').click();await page.locator('#start-button').click();
   const viewport=await page.evaluate(()=>({width:innerWidth,height:innerHeight}));
   const canvas=await page.locator('#arena').boundingBox();expect(canvas.width/canvas.height).toBeCloseTo(16/9,2);
   const wrap=await page.locator('.arena-wrap').boundingBox();expect(wrap.y).toBeGreaterThanOrEqual(0);expect(wrap.y+wrap.height).toBeLessThanOrEqual(viewport.height);
@@ -218,9 +221,11 @@ test('fullscreen enters from Options, preserves focus/aspect and pauses safely o
   await page.keyboard.down('KeyD');await page.evaluate(()=>document.exitFullscreen());await page.keyboard.up('KeyD');
   await expect(page.locator('#pause-dialog')).toBeVisible();await expect(page.locator('#pause-message')).toContainText('Fullscreen ended');
   await page.locator('#display-pause').click();await page.locator('#fullscreen-button').click();await expect.poll(()=>page.evaluate(()=>!!document.fullscreenElement)).toBe(true);
-  await page.getByRole('button',{name:'Close options',exact:true}).click();await expect(page.locator('#pause-dialog')).toBeVisible();await page.locator('#display-pause').click();
+  await page.getByRole('button',{name:'Close options',exact:true}).press('Enter');await expect(page.locator('#settings-dialog')).toBeHidden();
+  expect(await page.evaluate(()=>!!document.fullscreenElement)).toBe(true);
+  await expect(page.locator('#pause-dialog')).toBeVisible();await page.locator('#display-pause').click();
   await page.locator('#fullscreen-button').click();await expect.poll(()=>page.evaluate(()=>!!document.fullscreenElement)).toBe(false);
-  await page.getByRole('button',{name:'Close options',exact:true}).click();await expect(page.locator('#pause-dialog')).toBeVisible();
+  await page.getByRole('button',{name:'Close options',exact:true}).press('Enter');await expect(page.locator('#settings-dialog')).toBeHidden();await expect(page.locator('#pause-dialog')).toBeVisible();
   await page.locator('#resume-button').click();await expect(page.locator('#arena')).toBeFocused();
   await page.keyboard.press('KeyF');await expect(page.locator('#practice-hit')).toContainText('PUNCH');
 });

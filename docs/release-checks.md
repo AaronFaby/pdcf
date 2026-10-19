@@ -16,6 +16,10 @@ Initial beta presentation validation passed 97 Node tests and the 49-file/123-re
 
 Live validation of `c3d73e5` confirmed the beta presentation and also observed a hosting-injected `static.cloudflareinsights.com` beacon. The privacy policy and beta guide now explicitly distinguish Cloudflare browser page/performance metrics from local game data and manual feedback, using Cloudflare's provider documentation. Zero-script assertions apply to the repository/build sources, not to the hosting-modified DOM. Hosting settings and full privacy configuration were not changed or audited. The final release includes this disclosure follow-up and must pass checks at its own commit before tagging.
 
+The initial presentation PR passed all seven jobs in [run 39180732222](https://github.com/AaronFaby/pdcf/actions/runs/39180732222), but its resulting [main run 39181251246](https://github.com/AaronFaby/pdcf/actions/runs/39181251246) stopped publication on Firefox's fullscreen scenario. The trace shows a click at the top-right close button immediately exiting native fullscreen while Options remained open, consistent with Firefox's temporary browser exit notice intercepting the pointer. The scenario now uses keyboard activation for that close and explicitly requires both a closed dialog and continued fullscreen before gameplay. Native requests, browser warnings, external-exit pause checks and pointer/controller menu coverage remain intact; no game behavior or timeout was changed to pass the check.
+
+The focused repair passed nine native fullscreen runs locally: three repetitions each in Chromium, Firefox and WebKit. The Node/build checks still passed all 97 tests and the 49-file/123-reference copy. These local checks do not supersede the final hosted gate or establish physical-device coverage.
+
 ## Repeatable checks
 
 1. Run `npm run check` for the Node regressions, clean production copy, and local references.
