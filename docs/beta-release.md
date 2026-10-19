@@ -1,48 +1,27 @@
-# Beta 2 — v0.1.0-beta.2
+# Beta 3 — v0.1.0-beta.3
 
-[Play Public Domain Cartoon Fighters](https://pdcf.aaronfaby.com/) · [Known limitations](https://pdcf.aaronfaby.com/assets/beta.html) · [Feedback and bugs](https://github.com/AaronFaby/pdcf/issues)
+[Play Public Domain Cartoon Fighters](https://pdcf.aaronfaby.com/) · [Known limitations](https://pdcf.aaronfaby.com/assets/beta.html) · [Feedback](https://github.com/AaronFaby/pdcf/issues)
 
-This desktop beta follows [Beta 1](https://github.com/AaronFaby/pdcf/releases/tag/v0.1.0-beta.1). Choose among six fighters and four animated stages with original period-inspired music, then play Arcade, single CPU matches, local two-player, or Training. Existing saves, controls and combat rules remain compatible.
+This desktop prerelease follows [Beta 2](https://github.com/AaronFaby/pdcf/releases/tag/v0.1.0-beta.2) with the approved Betty artwork and the decision to retain disclosed Cloudflare browser metrics. Combat rules, controls and saved data remain compatible.
 
-## Changed in Beta 2
+## Changes
 
-- Betty's 48 drawings were updated toward the documented 1930 hanging ears and black button nose, with no earrings or decorative garter. Portraits and endings share the updated atlas.
-- Minnie uses a simplified plain skirt. Popeye's power-up uses loose leaves, and his quote and ending replace the familiar “Strong to the finish” wording.
-- The provenance record identifies examined original publications, film-copy timestamps and hashes for the six character references. These are new adaptations, not extracted frames or legal clearance.
-- Barlow Condensed and DM Sans are served from this site, with their required SIL Open Font License notices. No Google Fonts import, preconnect or automatic font-provider request remains; system fonts work when downloads fail.
-- Browser checks verify every required font weight, absence of Google font requests, real fallback after blocked font loads, and transparent borders for all 144 revised cels.
+- Betty's 48 cels use the approved rounded cheeks, smaller dark nose, large eyes, curled bob, slender hanging ears and distinct lip/eye expressions. The shared atlas updates portraits, combat and endings. The other five fighters are unchanged.
+- Cloudflare Web Analytics/RUM remains intentionally enabled for browser page/performance measurements. The privacy policy, beta guide and contributor/review docs record that choice. Disabling metrics is no longer pending; no hosting change or extra game telemetry is introduced.
+- The visible beta label, page titles, public guide and package version identify Beta 3. The footer separately identifies the exact build commit.
 
-See the [review follow-up](legal-review.md) for source distinctions and the professional review still needed. No new private contact channel or blanket repository license is introduced.
-
-## Visual follow-up after Beta 2
-
-The approved Betty refinement replaces the initial redraw's exaggerated dog muzzle and oversized ears with rounded cheeks, a smaller dark nose, large eyes, curled hair, slender hanging ears and distinct lips across all 48 drawings. It updates the shared atlas used by portraits, combat and endings. Combat rules and saves are unchanged. The published `v0.1.0-beta.2` tag at `12ec60e` retains its original artwork; the new drawings are a development follow-up.
-
-## Included
-
-- Six-bout Arcade ladders, three CPU difficulties, continues, saved checkpoints and character endings.
-- Distinct CPU tactics, buffered attacks, combos, throws, dashes, specials and counter/punish feedback.
-- Training with dummy options, combat readouts and eight guided lessons using saved bindings.
-- Custom keyboard/controller bindings, stick dead zones, explicit P1/P2 assignments, pause and reconnect recovery.
-- Saved audio/visual preferences, reduced motion, readable HUD and fullscreen support.
-- Bounded asset/audio recovery, build identification, public privacy/legal notices, and a visible beta notice with feedback links.
-
-## Known limitations
-
-Balance and difficulty are provisional. Physical controllers, speaker/headphone output, native Safari, lower-end/high-refresh machines and sustained human play need further verification. Automated WebKit and virtual-pad checks do not establish those results. Touch controls omit throw and dash; this beta targets desktop. Local multiplayer requires a shared device; online play is unavailable. Saves and preferences stay in one browser/device, with no account or cloud sync. The Canvas game is not fully screen-reader playable or accessibility-certified.
-
-Independent artwork/branding clearance and hosting privacy-configuration reviews remain open. The beta designation does not change the existing character-version, independence or asset notices. See the [legal notices](https://pdcf.aaronfaby.com/assets/legal.html), [privacy policy](https://pdcf.aaronfaby.com/assets/privacy.html) and [asset provenance](../assets/provenance.md).
+Six fighters, four stages, Arcade, Training, CPU play, local multiplayer, saved bindings and display/audio options carry forward. Fonts and their OFL notices remain locally hosted. See the [review follow-up](legal-review.md) and [asset provenance](../assets/provenance.md) for sources and boundaries.
 
 ## Verification and publication
 
-Publication requires the candidate's static build, balance job and all five hosted browser projects to pass. The verified commit is tagged without changing its contents; GitHub marks this release as a prerelease. The live website follows `main`, so compare its build footer with the tag when identifying a particular beta build.
+The artwork/metrics baseline `38ac9a5` passed 97 Node tests and all seven jobs in [run 39193345765](https://github.com/AaronFaby/pdcf/actions/runs/39193345765), including 95 browser checks. Its approved drawings were inspected in both directions, and the live atlas hash, notices, retained metrics, fonts and Training were checked separately. These baseline results do not replace checks of the Beta 3 label commit.
 
-The Beta 2 candidate passed 97 local Node tests, the 57-file/131-reference production build and all 57 local browser checks across Chromium/Firefox/WebKit. All 144 revised cels were inspected in both directions. Both [candidate](https://github.com/AaronFaby/pdcf/actions/runs/39188517156) and [main](https://github.com/AaronFaby/pdcf/actions/runs/39189275172) passed all seven jobs, including 95 browser checks per run, and the live `12ec60e` build was verified separately. These results apply to the published tag. Earlier sustained sessions covered 36 complete matches plus two minutes of Training per browser on the pre-Beta 1 source; these are not new Beta 2 runs or human playtests. See the [verification record](release-checks.md) for source revisions, current packaging and measurement limits.
+Publish only after the candidate and main each pass build, balance and all five browser projects. Verify the live label/build and approved artwork, then create the annotated tag and GitHub prerelease at that verified commit. Keep earlier tags unchanged. Final commit, run links and live outcome are recorded in the GitHub prerelease. The website follows main; compare its footer with the tag when identifying a release. See the [verification record](release-checks.md) for scope and historical evidence.
 
-## Feedback
+## Known limitations and feedback
 
-Please report the build number, browser and OS, keyboard/controller, mode and difficulty, fighters and stage, steps to reproduce, and expected/actual behavior. Screenshots or short recordings are useful when available. For playtest impressions, focus on tutorial clarity, combat readability, difficulty progression, counterplay and whether matches stay enjoyable.
+Balance is provisional. Physical controllers, speaker/headphone listening, native Safari, lower-end/high-refresh hardware and sustained human play need further verification. Automated WebKit and virtual pads do not establish those results. No new endurance run is claimed for Beta 3. Touch controls omit throw and dash; this beta targets desktop. Multiplayer is local, saves are browser/device-specific, and the Canvas game is not fully screen-reader playable or accessibility-certified.
 
-GitHub Issues are public and require an account. Do not post private information. The beta's game code adds no automatic feedback uploads, gameplay analytics or new player storage.
+Independent artwork/branding and privacy/compliance reviews remain open. This release is not legal clearance. Existing [legal](https://pdcf.aaronfaby.com/assets/legal.html) and [privacy](https://pdcf.aaronfaby.com/assets/privacy.html) notices continue to apply.
 
-Cloudflare Web Analytics/RUM remains enabled by maintainer decision on October 18, 2026 for browser page/performance measurements. This hosting behavior is separate from game code and manual feedback and remains disclosed in the privacy policy. Optional disabling is no longer a pending release task, and no dashboard or API permission change is required for this decision. The broader independent privacy/compliance review remains open.
+Report the build, browser/OS, keyboard/controller, mode/difficulty, matchup/stage, reproduction steps and expected/actual behavior through [GitHub Issues](https://github.com/AaronFaby/pdcf/issues). Issues are public and require an account; do not post private information. The game adds no automatic feedback uploads or new player storage.

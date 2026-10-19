@@ -6,7 +6,7 @@ A browser-based, side-view 2D fighter with six cartoon stars, rubber-hose animat
 
 ## Desktop beta
 
-**Beta 2 · `v0.1.0-beta.2`** targets desktop browser play with a keyboard, Arcade, Training, single CPU matches, and local multiplayer. Standard controller support is included for beta testing. The game displays its beta version separately from the exact build commit in the footer.
+**Beta 3 · `v0.1.0-beta.3`** targets desktop browser play with a keyboard, Arcade, Training, single CPU matches, and local multiplayer. Standard controller support is included for beta testing. The game displays its beta version separately from the exact build commit in the footer.
 
 Read the [known limitations and feedback guide](assets/beta.html), [beta release notes](docs/beta-release.md), and [verification record](docs/release-checks.md). Release tags and GitHub prereleases are published only after the candidate passes the build, balance and all five hosted browser jobs. The website follows `main`; its build number identifies the version currently served even after a later beta update.
 
@@ -18,11 +18,11 @@ Balance, physical controller behavior, speaker/headphone output, native Safari, 
 
 Beta 2 revises Betty toward the documented 1930 canine reference, simplifies Minnie’s skirt, replaces Popeye’s canned prop and familiar tagline, and serves all fonts from this site. Combat mechanics and saved data are compatible with [Beta 1](https://github.com/AaronFaby/pdcf/releases/tag/v0.1.0-beta.1).
 
-The approved development follow-up refines Betty's face across all 48 drawings: rounded cheeks, a smaller dark nose, large eyes, a curled bob, slender hanging ears and character-specific lip shapes. It replaces the initial redraw's exaggerated dog muzzle. This is a post-release change; the published Beta 2 tag retains its original artwork.
+Beta 3 includes the approved Betty refinement across all 48 drawings: rounded cheeks, a smaller dark nose, large eyes, a curled bob, slender hanging ears and character-specific lip shapes. It also records the choice to retain disclosed Cloudflare browser metrics. Combat, controls and saved data remain compatible with [Beta 2](https://github.com/AaronFaby/pdcf/releases/tag/v0.1.0-beta.2); the earlier release tags retain their original artwork.
 
 ## Privacy and legal notices
 
-The [character and privacy review follow-up](docs/legal-review.md) documents Beta 2: source-backed character cleanup, local font hosting and the decision to retain disclosed Cloudflare browser metrics. It records the distinction between engineering changes and unresolved legal judgments; these changes are not a clearance certificate.
+The [character and privacy review follow-up](docs/legal-review.md) documents the Beta 2 source cleanup and Beta 3 refinement, local font hosting and the decision to retain disclosed Cloudflare browser metrics. It records the distinction between engineering changes and unresolved legal judgments; these changes are not a clearance certificate.
 
 The casting screen carries a prominent independent-project/non-endorsement notice. A site-wide footer links to the [privacy policy](assets/privacy.html) and [legal and character notices](assets/legal.html), opening in a new tab to preserve an ongoing game. Both pages work without JavaScript and match the game’s paper-and-ink presentation.
 

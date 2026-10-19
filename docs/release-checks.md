@@ -2,7 +2,13 @@
 
 The release scope is desktop browser play: CPU, local multiplayer, Arcade, and Training. Simulation remains fixed at 120 Hz. Saved visual-comfort settings and native fullscreen affect presentation only; combat balance is unchanged.
 
-## Beta 2 follow-up
+## Beta 3 publication
+
+Beta 3 (`v0.1.0-beta.3`) gives the approved Betty drawings and retained-metrics documentation a named release. Its artwork/metrics baseline, `38ac9a5`, passed all seven jobs in [run 39193345765](https://github.com/AaronFaby/pdcf/actions/runs/39193345765), including 95 browser scenarios. Separate live checks verified its build footer, exact Betty atlas hash, updated public notices, retained Cloudflare metrics, local fonts and Betty/Popeye Training without page errors. Those are baseline results, not checks of the later version-label commit.
+
+The release candidate updates package/lockfile versions, the main title/header/footer, public beta guide and browser assertions to Beta 3. Require build, balance and all five browser jobs on that candidate and again on main, then verify the live version/build and unchanged approved atlas before creating an annotated tag and GitHub prerelease. Final commit and CI links belong in the prerelease; these instructions do not claim unfinished checks passed. Preserve the published Beta 1 and Beta 2 tags. No new endurance, physical-controller, listening or native Safari run is represented by this release-label work.
+
+## Historical Beta 2 follow-up
 
 The published release is `v0.1.0-beta.2`, commit `12ec60e`. It follows the [character and privacy review](legal-review.md), preserving combat rules and save schemas while changing three character atlases, Popeye's copy and font delivery. The production manifest has 57 files: eight added font/license files. Public notices link both font licenses, and the local-reference check covers those links plus all six CSS font URLs.
 
