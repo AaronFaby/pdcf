@@ -14,7 +14,9 @@ test('packaged game starts all stages, plays Training, pauses and keeps legal pa
   });
   expect(fonts).toEqual(Array(7).fill(true));expect(fontRequests.size).toBe(6);
   const version=JSON.parse(await readFile(new URL('../../package.json',import.meta.url),'utf8')).version;
-  await expect(page.locator('#beta-version')).toHaveText(`Beta 2 · v${version}`);await expect(page.locator('#beta-badge')).toBeVisible();
+  await expect(page).toHaveTitle('Public Domain Cartoon Fighters — Beta 3');
+  await expect(page.locator('#beta-version')).toHaveText(`Beta 3 · v${version}`);await expect(page.locator('#beta-badge')).toHaveText('BETA 3');await expect(page.locator('#beta-badge')).toBeVisible();
+  await expect(page.locator('#site-footer')).toContainText(`Beta 3 · v${version}`);
   await expect(page.locator('#beta-feedback')).toHaveAttribute('href','https://github.com/AaronFaby/pdcf/issues');await expect(page.locator('#beta-feedback')).toHaveAttribute('target','_blank');
   const commit=process.env.WORKERS_CI_COMMIT_SHA||execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim();
   const buildLink=page.locator('#build-info a');
@@ -25,7 +27,7 @@ test('packaged game starts all stages, plays Training, pauses and keeps legal pa
   expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
   await page.setViewportSize({width:1280,height:720});
   const betaPopup=page.waitForEvent('popup');await page.locator('#beta-limitations').click();
-  const beta=await betaPopup;await expect(beta).toHaveTitle('Beta 2 & Known Limitations — Public Domain Cartoon Fighters');
+  const beta=await betaPopup;await expect(beta).toHaveTitle('Beta 3 & Known Limitations — Public Domain Cartoon Fighters');
   await expect(beta.locator('.notice-heading')).toContainText(`v${version}`);await expect(beta.locator('#limitations li')).toHaveCount(9);await expect(beta.locator('#feedback')).toContainText('Issues are public');await expect(beta.locator('script')).toHaveCount(0);
   await expect(beta.locator('#privacy')).toContainText('Cloudflare browser analytics/performance beacon');
   await beta.setViewportSize({width:390,height:844});expect(await beta.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);await beta.close();
