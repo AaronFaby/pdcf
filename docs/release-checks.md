@@ -14,6 +14,8 @@ The pre-beta baseline `71c930f22d571b45538bf61aa6c447b6d4cd6783` passed all seve
 
 Initial beta presentation validation passed 97 Node tests and the 49-file/123-reference build check, plus the extended packaged-game scenario in Chromium, Firefox and WebKit. That scenario checks the package/beta version, header badge during Training, public feedback destination, script-free limitations page, nine stated limitations, separate-tab behavior and 390px layouts. Final hosted run links and publication identity belong to the GitHub prerelease; preserve the dated baseline evidence below.
 
+Live validation of `c3d73e5` confirmed the beta presentation and also observed a hosting-injected `static.cloudflareinsights.com` beacon. The privacy policy and beta guide now explicitly distinguish Cloudflare browser page/performance metrics from local game data and manual feedback, using Cloudflare's provider documentation. Zero-script assertions apply to the repository/build sources, not to the hosting-modified DOM. Hosting settings and full privacy configuration were not changed or audited. The final release includes this disclosure follow-up and must pass checks at its own commit before tagging.
+
 ## Repeatable checks
 
 1. Run `npm run check` for the Node regressions, clean production copy, and local references.

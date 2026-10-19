@@ -20,6 +20,7 @@ test('packaged game starts all stages, plays Training, pauses and keeps legal pa
   const betaPopup=page.waitForEvent('popup');await page.locator('#beta-limitations').click();
   const beta=await betaPopup;await expect(beta).toHaveTitle('Beta 1 & Known Limitations — Public Domain Cartoon Fighters');
   await expect(beta.locator('.notice-heading')).toContainText(`v${version}`);await expect(beta.locator('#limitations li')).toHaveCount(9);await expect(beta.locator('#feedback')).toContainText('Issues are public');await expect(beta.locator('script')).toHaveCount(0);
+  await expect(beta.locator('#privacy')).toContainText('Cloudflare browser analytics/performance beacon');
   await beta.setViewportSize({width:390,height:844});expect(await beta.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);await beta.close();
   for(const stage of ['ink-harbor','silverscreen-theater','moonlight-midway','midnight-junction']) {
     await page.locator('[data-mode="training"]').click();await page.locator(`[data-stage="${stage}"]`).click();await page.locator('#start-button').click();

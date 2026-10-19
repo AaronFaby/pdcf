@@ -29,4 +29,6 @@ The baseline local verification passed 97 Node tests, 57 browser checks across C
 
 Please report the build number, browser and OS, keyboard/controller, mode and difficulty, fighters and stage, steps to reproduce, and expected/actual behavior. Screenshots or short recordings are useful when available. For playtest impressions, focus on tutorial clarity, combat readability, difficulty progression, counterplay and whether matches stay enjoyable.
 
-GitHub Issues are public and require an account. Do not post private information. The beta adds no automatic feedback uploads, analytics or new player storage.
+GitHub Issues are public and require an account. Do not post private information. The beta's game code adds no automatic feedback uploads, gameplay analytics or new player storage.
+
+The live host was observed injecting a Cloudflare Web Analytics/RUM beacon for browser page/performance measurements. This hosting behavior is separate from game code and manual feedback and is disclosed in the privacy policy. Hosting settings were not changed by the beta release.

@@ -12,6 +12,8 @@ Read the [known limitations and feedback guide](assets/beta.html), [beta release
 
 [Report a bug or share beta feedback on GitHub Issues](https://github.com/AaronFaby/pdcf/issues). Include the build number, browser/OS, keyboard or controller, mode/difficulty, matchup/stage, steps, and expected/actual behavior. Issues are public and posting requires a GitHub account; do not include private information. No automatic feedback uploads or new player storage are added for the beta.
 
+The deployed site was observed loading a hosting-provided Cloudflare Web Analytics/RUM beacon. This browser page/performance processing is separate from local game state and manual feedback, and is disclosed in the privacy policy. Information pages are authored without scripts; hosting may inject this beacon. The beta changes do not alter Cloudflare settings.
+
 Balance, physical controller behavior, speaker/headphone output, native Safari, lower-end/high-refresh hardware and sustained human play remain under review. Touch controls are incomplete, online multiplayer is unavailable, and saves are local to one browser/device. Artwork/branding clearance and hosting privacy configuration remain separate reviews. The limitations page distinguishes these gaps from verified automated coverage.
 
 ## Privacy and legal notices

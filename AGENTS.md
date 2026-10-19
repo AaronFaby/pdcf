@@ -8,6 +8,8 @@ The current game has six fighters (Mickey, Minnie, Oswald, Felix, Betty, Popeye)
 
 The first desktop beta is `v0.1.0-beta.1`. Keep the visible beta version, package/lockfile version, public limitations and release notes consistent. Keyboard desktop play is the baseline; standard controllers are included for beta testing, with physical hardware, native Safari, listening, human balance and other coverage gaps explicitly identified. Preserve the independent-project notice and exact build footer. Beta feedback goes to public GitHub Issues; add no telemetry, private contact claims or storage keys for feedback.
 
+Live checks observed a hosting-injected Cloudflare Web Analytics/RUM beacon. Preserve its disclosure in the privacy policy and distinguish hosted browser metrics from game telemetry. Information-page sources contain no scripts; do not assert that the deployed DOM has none or claim that hosting analytics are disabled. The full hosting configuration remains outside the verified repository scope.
+
 ## Code map
 
 | Path | Owns |
