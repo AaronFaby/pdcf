@@ -6,13 +6,17 @@ This desktop beta follows [Beta 1](https://github.com/AaronFaby/pdcf/releases/ta
 
 ## Changed in Beta 2
 
-- Betty's 48 drawings now use the documented 1930 canine ears, muzzle and black button nose, with no earrings or decorative garter. Portraits and endings share the updated atlas.
+- Betty's 48 drawings were updated toward the documented 1930 hanging ears and black button nose, with no earrings or decorative garter. Portraits and endings share the updated atlas.
 - Minnie uses a simplified plain skirt. Popeye's power-up uses loose leaves, and his quote and ending replace the familiar “Strong to the finish” wording.
 - The provenance record identifies examined original publications, film-copy timestamps and hashes for the six character references. These are new adaptations, not extracted frames or legal clearance.
 - Barlow Condensed and DM Sans are served from this site, with their required SIL Open Font License notices. No Google Fonts import, preconnect or automatic font-provider request remains; system fonts work when downloads fail.
 - Browser checks verify every required font weight, absence of Google font requests, real fallback after blocked font loads, and transparent borders for all 144 revised cels.
 
 See the [review follow-up](legal-review.md) for source distinctions and the professional review still needed. No new private contact channel or blanket repository license is introduced.
+
+## Visual follow-up after Beta 2
+
+The approved Betty refinement replaces the initial redraw's exaggerated dog muzzle and oversized ears with rounded cheeks, a smaller dark nose, large eyes, curled hair, slender hanging ears and distinct lips across all 48 drawings. It updates the shared atlas used by portraits, combat and endings. Combat rules and saves are unchanged. The published `v0.1.0-beta.2` tag at `12ec60e` retains its original artwork; the new drawings are a development follow-up.
 
 ## Included
 
@@ -33,7 +37,7 @@ Independent artwork/branding clearance and hosting privacy-configuration reviews
 
 Publication requires the candidate's static build, balance job and all five hosted browser projects to pass. The verified commit is tagged without changing its contents; GitHub marks this release as a prerelease. The live website follows `main`, so compare its build footer with the tag when identifying a particular beta build.
 
-The Beta 2 candidate passed 97 local Node tests, the 57-file/131-reference production build and all 57 local browser checks across Chromium/Firefox/WebKit. All 144 revised cels were inspected in both directions. The candidate still requires its hosted build/browser gate. Earlier sustained sessions covered 36 complete matches plus two minutes of Training per browser on the pre-Beta 1 source; these are not new Beta 2 runs or human playtests. See the [verification record](release-checks.md) for source revisions, current packaging and measurement limits.
+The Beta 2 candidate passed 97 local Node tests, the 57-file/131-reference production build and all 57 local browser checks across Chromium/Firefox/WebKit. All 144 revised cels were inspected in both directions. Both [candidate](https://github.com/AaronFaby/pdcf/actions/runs/39188517156) and [main](https://github.com/AaronFaby/pdcf/actions/runs/39189275172) passed all seven jobs, including 95 browser checks per run, and the live `12ec60e` build was verified separately. These results apply to the published tag. Earlier sustained sessions covered 36 complete matches plus two minutes of Training per browser on the pre-Beta 1 source; these are not new Beta 2 runs or human playtests. See the [verification record](release-checks.md) for source revisions, current packaging and measurement limits.
 
 ## Feedback
 
@@ -41,4 +45,4 @@ Please report the build number, browser and OS, keyboard/controller, mode and di
 
 GitHub Issues are public and require an account. Do not post private information. The beta's game code adds no automatic feedback uploads, gameplay analytics or new player storage.
 
-The live host was observed injecting a Cloudflare Web Analytics/RUM beacon for browser page/performance measurements. This hosting behavior is separate from game code and manual feedback and remains disclosed in the privacy policy. Attempts to apply hostname-specific exclusions were rejected by the configured API credentials; no hosting change or disabled metrics is claimed without separate verification.
+Cloudflare Web Analytics/RUM remains enabled by maintainer decision on October 18, 2026 for browser page/performance measurements. This hosting behavior is separate from game code and manual feedback and remains disclosed in the privacy policy. Optional disabling is no longer a pending release task, and no dashboard or API permission change is required for this decision. The broader independent privacy/compliance review remains open.

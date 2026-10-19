@@ -202,6 +202,16 @@ function leg(hip, knee, foot, color, width, female, popeye) {
   return line(d, width + 7) + line(d, width, color) + group(`translate(${foot}) rotate(${rotation})`, shoe);
 }
 function eyes(id, pose) {
+  if (id === 'betty') {
+    if (pose.eyes === 'blink') return line('M-35-10Q-22-1-7-11 M1-13Q16-4 32-15', 3);
+    if (pose.eyes === 'dizzy') return line('M-30-21L-12-3 M-12-21L-30-3 M5-24L24-5 M24-24L5-5', 3);
+    const height = pose.eyes === 'wide' ? 24 : 21;
+    let drawing = ellipse(-21, -10, 15, height, PAPER, -12, 3) + ellipse(13, -13, 16, height + 1, PAPER, 8, 3);
+    drawing += ellipse(-16, -9, 6.5, 13, INK, -12, 1.5) + ellipse(18, -12, 7, 14, INK, 8, 1.5);
+    drawing += line('M-35-20L-43-25 M-30-28L-35-36 M-20-32L-21-40 M13-36L16-44 M26-30L33-37 M30-22L39-26', 2.3);
+    drawing += pose.eyes === 'focus' ? line('M-36-33L-7-26 M0-30L30-35', 3) : line('M-35-35Q-25-44-14-38 M3-40Q18-49 31-38', 2.5);
+    return drawing;
+  }
   if (pose.eyes === 'blink') return line('M-16-2 Q-7 6 1-2 M13-4 Q23 4 32-6', 4);
   if (pose.eyes === 'dizzy') return line('M-15-14L-1 1 M-1-14L-15 1 M14-15L29-1 M29-16L14-1', 4);
   if (id === 'popeye') return line('M5-10 Q17-17 28-11 M8-6 Q19-2 28-7', 3.4) + ellipse(-7, -6, 3, 5, INK, 0, 2);
@@ -214,6 +224,13 @@ function eyes(id, pose) {
   return drawing;
 }
 function mouth(id, pose) {
+  if (id === 'betty') {
+    if (pose.mouth === 'o' || pose.mouth === 'puff') return ellipse(8, 32, pose.mouth === 'puff' ? 10 : 7, pose.mouth === 'puff' ? 7 : 11, INK, -8, 2) + line('M3 41Q8 44 13 40', 1.5, SHADE);
+    if (pose.mouth === 'kiss') return path('M1 28Q8 22 13 28Q20 24 23 31Q17 39 8 37Z', INK, 2) + line('M8 30L19 31', 1.5, PAPER);
+    if (pose.mouth === 'tight') return line('M-7 33Q4 28 17 33 M0 37Q7 39 12 36', 2.3);
+    if (pose.mouth === 'teeth' || pose.mouth === 'laugh') return path('M-10 28Q4 35 21 25Q20 47 4 45Q-7 44-10 28Z', INK, 2.5) + (pose.mouth === 'teeth' ? path('M-7 30Q7 36 18 29L16 36Q3 41-4 35Z', PAPER, 1.5) : path('M-1 41Q7 34 14 41Q8 46 2 43Z', SHADE, 1));
+    return path('M-9 31Q-3 24 4 28Q11 23 18 29Q15 44 4 42Q-5 41-9 31Z', INK, 2) + line('M-4 32Q5 36 13 30', 1.5, PAPER);
+  }
   if (pose.mouth === 'o' || pose.mouth === 'puff') return ellipse(25, 28, pose.mouth === 'puff' ? 12 : 8, pose.mouth === 'puff' ? 8 : 12, INK, -9, 3) + ellipse(26, 34, 5, 3, SHADE, 0, 1);
   if (pose.mouth === 'kiss') return path('M11 25 Q21 16 25 22 Q33 17 35 26 Q27 34 17 32Z', INK, 2) + line('M18 26H31', 1.5, PAPER);
   if (pose.mouth === 'tight') return line('M2 25 Q18 20 35 25 M6 30Q18 26 30 29', 2.4);
@@ -245,16 +262,16 @@ function head(id, pose) {
       drawing += ellipse(31, -126, 5, 5, INK, 0, 2);
     }
   } else if (id === 'betty') {
-    drawing += path('M-52-2 C-70-55-36-78 0-74 C37-78 67-48 53-1 L42 30 L-42 30Z', INK);
-    // Dizzy Dishes (1930), 03:23: hanging canine ears and a broad muzzle.
-    drawing += path('M-43-23 C-68-29-83 10-74 43 Q-68 65-53 53 Q-39 38-39 9Z', PAPER, 4) + path('M43-23 C65-29 80 7 73 40 Q66 60 52 49 Q40 34 39 9Z', PAPER, 4);
-    drawing += path('M-40-24 C-32-57 27-58 42-26 L44 5 C59 25 40 53 5 55 C-32 58-58 32-44 7Z', PAPER, 4);
-    drawing += path('M-47-26 Q-44-60-18-63 Q-7-73 5-62 Q30-66 46-33 L35-19 Q23-38 15-25 Q5-42-4-27 Q-15-42-25-25 Q-34-36-40-19Z', INK, 3);
-    drawing += group('translate(0 -2)', eyes(id, pose));
-    drawing += path('M-31 11 Q-16 3-4 15 Q9 19 19 10 C39-1 64 12 55 29 Q47 45 26 43 Q7 57-15 42 Q-40 36-31 11Z', PAPER, 3.5);
-    drawing += ellipse(25, 9, 10, 7, INK, -8, 2.5);
-    drawing += group('translate(-2 11) scale(.82)', mouth(id, pose));
-    drawing += line('M-29 17Q-22 23-15 18', 2, SHADE);
+    drawing += path('M-51 10C-72-18-64-57-37-69Q-30-88-14-81Q-1-93 17-80Q45-85 55-54C69-37 64-8 49 13L32 32L-33 33Z', INK);
+    drawing += line('M-44-60Q-57-69-47-77Q-42-80-43-73 M-18-76Q-26-89-14-92Q-7-92-10-86 M39-67Q53-76 43-82Q37-85 38-78', 3.5);
+    // Dizzy Dishes: rounded cheeks and small nose, without a projecting dog muzzle.
+    drawing += path('M-46-9C-58 8-59 29-57 50Q-55 64-48 55C-42 45-43 23-37 6Z', PAPER, 3.5) + path('M43-10C54-4 57 13 57 33Q56 53 48 49C41 46 42 25 35 8Z', PAPER, 3.5);
+    drawing += path('M-42-26C-41-55-25-68-7-58Q7-72 29-57Q48-42 45-12C59 6 56 23 40 31Q43 49 23 54Q9 56 2 47Q-13 61-34 48Q-54 34-44 15C-58 2-55-17-42-26Z', PAPER, 3.5);
+    drawing += path('M-53-21C-59-44-45-62-31-65Q-16-77-2-63Q13-78 33-64Q54-61 58-35L49-17Q43-34 36-39Q46-42 38-48Q27-52 26-43Q17-48 12-48Q22-54 13-58Q1-64 1-53Q-10-58-18-51Q-10-52-13-59Q-23-65-30-53Q-34-45-42-42Q-34-38-40-33Q-47-28-48-15Z', INK, 3);
+    drawing += line('M10-79Q18-69 17-59', 1.5, SHADE);
+    drawing += eyes(id, pose);
+    drawing += ellipse(5, 10, 6.5, 4.5, INK, -10, 1.5);
+    drawing += mouth(id, pose);
   } else {
     drawing += path('M-30-54 C-42-34-41-4-29 13 L-22 30 Q-25 52 0 55 L31 51 Q55 44 48 28 Q42 17 24 20 L28-34Q16-60-30-54Z', PAPER, 5);
     drawing += ellipse(-32, 0, 10, 16, PAPER, 0, 3) + line('M-36-3Q-23-11-28 9', 2.3);

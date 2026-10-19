@@ -4,13 +4,19 @@ The release scope is desktop browser play: CPU, local multiplayer, Arcade, and T
 
 ## Beta 2 follow-up
 
-The current candidate is `v0.1.0-beta.2`. It follows the [character and privacy review](legal-review.md), preserving combat rules and save schemas while changing three character atlases, Popeye's copy and font delivery. The production manifest has 57 files: eight added font/license files. Public notices link both font licenses, and the local-reference check covers those links plus all six CSS font URLs.
+The published release is `v0.1.0-beta.2`, commit `12ec60e`. It follows the [character and privacy review](legal-review.md), preserving combat rules and save schemas while changing three character atlases, Popeye's copy and font delivery. The production manifest has 57 files: eight added font/license files. Public notices link both font licenses, and the local-reference check covers those links plus all six CSS font URLs.
 
 The existing nineteen browser scenarios per project now also load every required local font weight, reject Google Fonts requests, verify playable fallback after real font-load failure, and raster-check transparent margins for all 48 Betty, Popeye and Minnie drawings. A first fallback assertion based on `FontFaceSet.check` differed in WebKit; the test now checks the actual `FontFaceSet.load` failure, then continues into combat and audio recovery. All three focused fallback reruns passed; the earlier focused suite's other eight cases passed. No game behavior or timeout was weakened.
 
 Local verification passed 97 Node tests, the 57-file/131-reference build, and all 57 browser scenarios across Chromium, Firefox and WebKit (three workers, 2.7 minutes). The latter includes all six CPU fighters and the 28-flow controller matrix in each engine. All 144 revised drawings were visually inspected through the reel in both directions. This is separate from physical-controller, listening, native Safari and human playtest coverage; older endurance results below are not new Beta 2 runs.
 
-The final candidate still requires the complete hosted build, balance and five-project browser gate, followed by main verification and a separate live check. Keep the published Beta 1 tag unchanged. Cloudflare metrics configuration is external: attempted narrow exclusions were rejected with HTTP 403, so the existing beacon disclosure remains in place until a successful change is independently observed.
+Both [candidate run 39188517156](https://github.com/AaronFaby/pdcf/actions/runs/39188517156) and [main run 39189275172](https://github.com/AaronFaby/pdcf/actions/runs/39189275172) passed build, balance and all five browser jobs (95 browser scenarios per run). The annotated Beta 2 tag points to `12ec60e`; Beta 1 is unchanged. Separate live verification confirmed the footer, revised asset hashes, six local font files and both licenses, Betty/Popeye Training and pause/resume, narrow layout and public pages with no page errors. Cloudflare Web Analytics/RUM was observed and is now intentionally retained by maintainer decision. Disabling it is no longer pending; the independent hosting privacy/compliance review remains open.
+
+## Approved Betty refinement after Beta 2
+
+The maintainer-approved preview is applied to all 48 Betty drawings in the working tree based on `12ec60e` (modified). The generator reproduces the approved draft atlas exactly; the other five atlases are unchanged. The shared atlas supplies casting portraits, gameplay and endings, with no combat or save changes.
+
+Local verification passed 97 Node tests, the 57-file/131-reference build, syntax/diff checks and nine focused browser scenarios: packaged gameplay/notices, reel loading and transparent cel borders, and real combat for all six CPU fighters in each of Chromium, Firefox and WebKit (three workers, 41.6 seconds). All 48 Betty poses were visually inspected through the actual reel in both directions; reel playback and reduced-motion Training punch/special, pause/resume and 390px layout also passed without page errors. The full routine suite, hosted CI, hardware/listening and sustained sessions were not rerun in that local pass. These local results do not establish hosted CI or deployment; the published beta tags remain unchanged.
 
 ## Historical Beta 1 publication
 

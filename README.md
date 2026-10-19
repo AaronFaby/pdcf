@@ -12,15 +12,17 @@ Read the [known limitations and feedback guide](assets/beta.html), [beta release
 
 [Report a bug or share beta feedback on GitHub Issues](https://github.com/AaronFaby/pdcf/issues). Include the build number, browser/OS, keyboard or controller, mode/difficulty, matchup/stage, steps, and expected/actual behavior. Issues are public and posting requires a GitHub account; do not include private information. No automatic feedback uploads or new player storage are added for the beta.
 
-The deployed site was observed loading a hosting-provided Cloudflare Web Analytics/RUM beacon. This browser page/performance processing is separate from local game state and manual feedback, and is disclosed in the privacy policy. Information pages are authored without scripts; hosting may inject this beacon. The attempted hostname-specific metrics exclusions were denied by the configured credentials; the beacon remains disclosed unless a separate hosting change is verified.
+Cloudflare Web Analytics/RUM remains enabled by the maintainer's choice for browser page/performance measurements. This processing is separate from local game state and manual feedback, and is disclosed in the privacy policy. Information pages are authored without scripts; hosting injects the beacon. Disabling these metrics is not a pending release task. The broader hosting privacy/compliance review remains open.
 
 Balance, physical controller behavior, speaker/headphone output, native Safari, lower-end/high-refresh hardware and sustained human play remain under review. Touch controls are incomplete, online multiplayer is unavailable, and saves are local to one browser/device. Artwork/branding clearance and hosting privacy configuration remain separate reviews. The limitations page distinguishes these gaps from verified automated coverage.
 
 Beta 2 revises Betty toward the documented 1930 canine reference, simplifies Minnie’s skirt, replaces Popeye’s canned prop and familiar tagline, and serves all fonts from this site. Combat mechanics and saved data are compatible with [Beta 1](https://github.com/AaronFaby/pdcf/releases/tag/v0.1.0-beta.1).
 
+The approved development follow-up refines Betty's face across all 48 drawings: rounded cheeks, a smaller dark nose, large eyes, a curled bob, slender hanging ears and character-specific lip shapes. It replaces the initial redraw's exaggerated dog muzzle. This is a post-release change; the published Beta 2 tag retains its original artwork.
+
 ## Privacy and legal notices
 
-The [character and privacy review follow-up](docs/legal-review.md) documents Beta 2: source-backed character cleanup, local font hosting and the status of optional browser-metrics reduction. It records the distinction between engineering changes and unresolved legal judgments; these changes are not a clearance certificate.
+The [character and privacy review follow-up](docs/legal-review.md) documents Beta 2: source-backed character cleanup, local font hosting and the decision to retain disclosed Cloudflare browser metrics. It records the distinction between engineering changes and unresolved legal judgments; these changes are not a clearance certificate.
 
 The casting screen carries a prominent independent-project/non-endorsement notice. A site-wide footer links to the [privacy policy](assets/privacy.html) and [legal and character notices](assets/legal.html), opening in a new tab to preserve an ongoing game. Both pages work without JavaScript and match the game’s paper-and-ink presentation.
 
