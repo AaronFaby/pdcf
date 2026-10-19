@@ -8,6 +8,14 @@ Beta 3 (`v0.1.0-beta.3`) gives the approved Betty drawings and retained-metrics 
 
 The release candidate updates package/lockfile versions, the main title/header/footer, public beta guide and browser assertions to Beta 3. Require build, balance and all five browser jobs on that candidate and again on main, then verify the live version/build and unchanged approved atlas before creating an annotated tag and GitHub prerelease. Final commit and CI links belong in the prerelease; these instructions do not claim unfinished checks passed. Preserve the published Beta 1 and Beta 2 tags. No new endurance, physical-controller, listening or native Safari run is represented by this release-label work.
 
+## Automatic deployment follow-up
+
+Beta 3 commit `1952046` passed all seven GitHub Actions jobs but had no Cloudflare build check and did not automatically replace the live build. It was published manually with the existing Wrangler login. The precise reason that the native integration missed that push is not established by the available evidence; no build-command, token or repository-access failure was demonstrated for that event.
+
+A source-unchanged push, `37f7884`, subsequently deployed through the native integration without configuration or credential changes. Cloudflare reported [build e301f633](https://dash.cloudflare.com/6f263dcdbbfa7b7e5f419114d4c8880b/workers/services/view/pdcf/production/builds/e301f633-6b48-415f-8dff-fa171c57c03b) successful; its version was `2de39d40-caf0-4ccb-9fcb-1b3680568e56`. A separate live browser check confirmed Beta 3/build `37f7884`. This demonstrates that automatic pushes worked again; it does not identify the cause of the earlier missing trigger or prove every branch-promotion path.
+
+Delivery verification now explicitly requires the exact commit’s **Workers Builds: pdcf** check from the `cloudflare-workers-and-pages` app and a matching live footer. Missing Cloudflare checks must not be treated as successful automatic deployment merely because the Actions matrix is green. The README records the diagnostic query and source-unchanged retrigger procedure. Game behavior, metrics settings and published beta tags are unaffected.
+
 ## Historical Beta 2 follow-up
 
 The published release is `v0.1.0-beta.2`, commit `12ec60e`. It follows the [character and privacy review](legal-review.md), preserving combat rules and save schemas while changing three character atlases, Popeye's copy and font delivery. The production manifest has 57 files: eight added font/license files. Public notices link both font licenses, and the local-reference check covers those links plus all six CSS font URLs.

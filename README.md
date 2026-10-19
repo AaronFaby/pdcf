@@ -250,7 +250,14 @@ Serve `dist/` as static assets. Keep the relative directory structure: runtime m
 
 Builds copy only `ROOT_FILES` and `ASSET_FILES` from `scripts/build.mjs`; add new runtime helpers to that asset manifest. The manifest derives fighter, venue and audio asset names from their catalogs. Unlisted local metadata and assets stay out. Build checks reject extra/missing files (including Foley WAVs), verify static and literal dynamic import targets, and reject a Cloudflare revision that differs from an available Git checkout. See [issue #1 validation](docs/issue-1-review.md) for the review findings and regressions.
 
-Pushing starts the configured deployment; verify its result separately before reporting a release as live.
+After pushing, require a successful **Workers Builds: pdcf** check from the `cloudflare-workers-and-pages` GitHub app on that exact commit, then verify the live footer. The seven GitHub Actions jobs test the game separately; their success does not prove that Cloudflare received the push. Inspect the Cloudflare check with:
+
+```sh
+gh api "repos/AaronFaby/pdcf/commits/$(git rev-parse origin/main)/check-runs" \
+  --jq '[.check_runs[] | select(.app.slug == "cloudflare-workers-and-pages") | {name, status, conclusion, details_url}]'
+```
+
+An empty array means there is no Cloudflare check for that revision. Check the Worker’s production branch, enabled builds, watch paths and GitHub connection before changing the build command. If no build is queued and the connection is healthy, a source-unchanged commit on clean, synchronized `main` can retrigger the native integration. Verify the new commit’s Cloudflare check and live footer; retrying an older build can deploy its older source. See the [deployment investigation](docs/release-checks.md#automatic-deployment-follow-up) for the Beta 3 incident and recovery evidence.
 
 ## Character references and rights
 
