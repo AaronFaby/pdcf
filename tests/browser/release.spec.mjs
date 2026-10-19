@@ -6,15 +6,25 @@ import { ROSTER, CPU_TACTICS } from '../../engine.mjs';
 test('packaged game starts all stages, plays Training, pauses and keeps legal pages separate', async ({ page }) => {
   const errors=[];page.on('pageerror',error=>errors.push(error.message));
   await page.goto('/');await expect(page.locator('#start-button')).toBeEnabled();
+  const version=JSON.parse(await readFile(new URL('../../package.json',import.meta.url),'utf8')).version;
+  await expect(page.locator('#beta-version')).toHaveText(`Beta 1 · v${version}`);await expect(page.locator('#beta-badge')).toBeVisible();
+  await expect(page.locator('#beta-feedback')).toHaveAttribute('href','https://github.com/AaronFaby/pdcf/issues');await expect(page.locator('#beta-feedback')).toHaveAttribute('target','_blank');
   const commit=process.env.WORKERS_CI_COMMIT_SHA||execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim();
   const buildLink=page.locator('#build-info a');
   await expect(buildLink).toContainText(`Build ${commit.slice(0,7)}`);await expect(buildLink).toHaveAttribute('href',`https://github.com/AaronFaby/pdcf/commit/${commit}`);
   await page.setViewportSize({width:390,height:844});await buildLink.scrollIntoViewIfNeeded();
   const bounds=await buildLink.boundingBox();expect(bounds.x).toBeGreaterThanOrEqual(0);expect(bounds.x+bounds.width).toBeLessThanOrEqual(390);
+  await page.locator('#beta-badge').scrollIntoViewIfNeeded();await expect(page.locator('#beta-badge')).toBeVisible();
+  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
   await page.setViewportSize({width:1280,height:720});
+  const betaPopup=page.waitForEvent('popup');await page.locator('#beta-limitations').click();
+  const beta=await betaPopup;await expect(beta).toHaveTitle('Beta 1 & Known Limitations — Public Domain Cartoon Fighters');
+  await expect(beta.locator('.notice-heading')).toContainText(`v${version}`);await expect(beta.locator('#limitations li')).toHaveCount(9);await expect(beta.locator('#feedback')).toContainText('Issues are public');await expect(beta.locator('script')).toHaveCount(0);
+  await beta.setViewportSize({width:390,height:844});expect(await beta.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);await beta.close();
   for(const stage of ['ink-harbor','silverscreen-theater','moonlight-midway','midnight-junction']) {
     await page.locator('[data-mode="training"]').click();await page.locator(`[data-stage="${stage}"]`).click();await page.locator('#start-button').click();
     await expect(page.locator('#game')).toBeVisible();await expect(page.locator('#timer')).toHaveText('∞');
+    await expect(page.locator('#beta-badge')).toBeVisible();
     await page.keyboard.press('KeyF');await expect(page.locator('#practice-hit')).toContainText('PUNCH');
     await page.keyboard.press('Escape');await expect(page.locator('#pause-dialog')).toBeVisible();
     const popupPromise=page.waitForEvent('popup');await page.locator('#resume-button').click();await page.locator('#site-footer a[href="assets/privacy.html"]').click();

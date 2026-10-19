@@ -12,6 +12,8 @@ The beta packaging adds the script-free limitations page to the explicit manifes
 
 The pre-beta baseline `71c930f22d571b45538bf61aa6c447b6d4cd6783` passed all seven jobs in [hosted run 39179760975](https://github.com/AaronFaby/pdcf/actions/runs/39179760975): build, balance and all five browser projects (95 browser scenarios). A separate live Chromium smoke check confirmed that build's artwork, connected Training punch and pause/resume without page errors. These results establish the baseline; the beta presentation candidate still requires its own checks before publication.
 
+Initial beta presentation validation passed 97 Node tests and the 49-file/123-reference build check, plus the extended packaged-game scenario in Chromium, Firefox and WebKit. That scenario checks the package/beta version, header badge during Training, public feedback destination, script-free limitations page, nine stated limitations, separate-tab behavior and 390px layouts. Final hosted run links and publication identity belong to the GitHub prerelease; preserve the dated baseline evidence below.
+
 ## Repeatable checks
 
 1. Run `npm run check` for the Node regressions, clean production copy, and local references.

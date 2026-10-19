@@ -131,6 +131,13 @@ button,dialog {
   letter-spacing:.7px;
 }
 
+.brand .beta-badge { display:inline-block; padding:1px 4px; margin-left:3px; background:var(--ink); color:var(--paper); font:800 9px/1.4 var(--body); letter-spacing:.2px; vertical-align:middle; }
+.beta-notice { display:flex; flex-wrap:wrap; align-items:center; gap:12px 20px; padding:16px 20px; margin-top:24px; border:2px solid var(--ink); background:#e5dcc8; }
+.beta-notice>strong { font:800 16px var(--display); }
+.beta-notice p { flex:1 1 280px; margin:0; font-size:13px; line-height:1.7; }
+.beta-notice nav { display:flex; flex-wrap:wrap; gap:8px 20px; font-size:12px; font-weight:700; }
+.beta-notice a { padding:4px 0; text-decoration:underline; text-underline-offset:3px; }
+
 .brand-mark {
   display:grid;
   place-items:center;

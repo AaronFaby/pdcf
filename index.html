@@ -5,14 +5,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#eee6d3">
   <meta name="description" content="Six cartoon legends. Four animated stages. A playable rubber-hose fighting game with original period-inspired music.">
-  <title>Public Domain Cartoon Fighters</title>
+  <title>Public Domain Cartoon Fighters — Beta 1</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <a class="skip-link" href="#main-content">Skip to game</a>
   <div class="paper-grain" aria-hidden="true"></div>
   <header class="masthead">
-    <a class="brand" href="./" aria-label="Public Domain Cartoon Fighters home"><span class="brand-mark" aria-hidden="true">✦</span><span>PUBLIC DOMAIN<br><b>CARTOON FIGHTERS</b></span></a>
+    <a class="brand" href="./" aria-label="Public Domain Cartoon Fighters Beta 1 home"><span class="brand-mark" aria-hidden="true">✦</span><span>PUBLIC DOMAIN <small class="beta-badge" id="beta-badge">BETA 1</small><br><b>CARTOON FIGHTERS</b></span></a>
     <span class="edition">AN ALL-INK AFFAIR <span>•</span> EST. 2026</span>
     <nav aria-label="Game options">
       <button class="text-button" id="help-button">HOW TO PLAY <span aria-hidden="true">↗</span></button>
@@ -27,6 +27,11 @@
   <main id="main-content" tabindex="-1">
     <button id="audio-unlock" class="audio-unlock" hidden>LET THE BAND PLAY — CLICK TO ENABLE AUDIO ♪</button>
     <section id="selection" aria-label="Choose your fighters">
+      <aside class="beta-notice" aria-labelledby="beta-version">
+        <strong id="beta-version">Beta 1 · v0.1.0-beta.1</strong>
+        <p>A desktop dress rehearsal. Balance and device coverage are still developing.</p>
+        <nav aria-label="Beta information"><a id="beta-limitations" href="assets/beta.html" target="_blank" rel="noopener noreferrer">Known limitations <span aria-hidden="true">↗</span><span class="sr-only"> (opens in a new tab)</span></a><a id="beta-feedback" href="https://github.com/AaronFaby/pdcf/issues" target="_blank" rel="noopener noreferrer">Report a bug / feedback <span aria-hidden="true">↗</span><span class="sr-only"> (public GitHub Issues; opens in a new tab)</span></a></nav>
+      </aside>
       <aside class="independence-notice" aria-label="Independent project notice">
         <strong>AN INDEPENDENT CARTOON GAME</strong>
         <p>Drawing on early U.S. public-domain character versions. Not affiliated with or endorsed by Disney, King Features/Hearst, Fleischer Studios, or any other rights holder. <a href="assets/legal.html" target="_blank" rel="noopener noreferrer">Character versions &amp; legal notices <span aria-hidden="true">↗</span><span class="sr-only"> (opens in a new tab)</span></a></p>
@@ -102,11 +107,12 @@
   </main>
 
   <footer class="site-footer" id="site-footer">
-    <p><strong>INDEPENDENT WORK. NO STUDIO AFFILIATION.</strong><br>Early character references concern U.S. copyright status; later versions and trademarks may remain protected.</p>
-    <nav aria-label="Privacy and legal information">
+    <p><strong>INDEPENDENT WORK. NO STUDIO AFFILIATION.</strong><br>Beta 1 · v0.1.0-beta.1 · Desktop browser beta.<br>Early character references concern U.S. copyright status; later versions and trademarks may remain protected.</p>
+    <nav aria-label="Beta, privacy and legal information">
+      <a href="assets/beta.html" target="_blank" rel="noopener noreferrer">Beta &amp; known limitations <span aria-hidden="true">↗</span><span class="sr-only"> (opens in a new tab)</span></a>
       <a href="assets/privacy.html" target="_blank" rel="noopener noreferrer">Privacy policy <span aria-hidden="true">↗</span><span class="sr-only"> (opens in a new tab)</span></a>
       <a href="assets/legal.html" target="_blank" rel="noopener noreferrer">Legal &amp; character notices <span aria-hidden="true">↗</span><span class="sr-only"> (opens in a new tab)</span></a>
-      <a href="https://github.com/AaronFaby/pdcf/issues" target="_blank" rel="noopener noreferrer">Contact via GitHub <span aria-hidden="true">↗</span><span class="sr-only"> (public; opens in a new tab)</span></a>
+      <a href="https://github.com/AaronFaby/pdcf/issues" target="_blank" rel="noopener noreferrer">Report a bug / beta feedback <span aria-hidden="true">↗</span><span class="sr-only"> (public GitHub Issues; opens in a new tab)</span></a>
     </nav>
     <p class="build-info" id="build-info"><!-- BUILD_INFO -->Local development<!-- /BUILD_INFO --></p>
   </footer>
