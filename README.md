@@ -18,6 +18,8 @@ Balance, physical controller behavior, speaker/headphone output, native Safari, 
 
 ## Privacy and legal notices
 
+The approved [character and privacy review follow-up](docs/legal-review.md) targets Beta 2: source-backed character cleanup, local font hosting and optional browser-metrics reduction. It records the distinction between engineering changes and unresolved legal judgments; these changes are not a clearance certificate.
+
 The casting screen carries a prominent independent-project/non-endorsement notice. A site-wide footer links to the [privacy policy](assets/privacy.html) and [legal and character notices](assets/legal.html), opening in a new tab to preserve an ongoing game. Both pages work without JavaScript and match the game’s paper-and-ink presentation.
 
 The privacy policy documents the four local-storage entries, temporary inputs/Training state, Cloudflare hosting/security requests, Google Fonts, external links, retention, deletion choices, applicable privacy rights, and children/family considerations. Contact uses public GitHub Issues; no email address is published. Do not post sensitive information there. The legal notice identifies intended early character versions, U.S./international limits, ongoing trademark rights, Popeye’s separate spinach-source limitation, asset provenance/reuse, and qualified game-use/warranty notices. It does not certify rights clearance.

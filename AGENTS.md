@@ -81,6 +81,8 @@ Keep the existing `.mjs` imports, relative asset URLs, and small function-based 
 
 ## Assets and presentation
 
+For the approved Beta 2 review follow-up, read `docs/legal-review.md`. Match character changes to verified publication/frame references recorded in `assets/provenance.md`; supplied screenshots and filenames alone are not provenance. Keep Betty's 1930 canine features distinct from earrings and a human-style nose. Preserve original 1929 Popeye features, and keep the separate qualified spinach source analysis. These engineering decisions must not be described as proof of infringement or completed legal clearance.
+
 Maintain the 1930s/1940s rubber-hose look and the existing warm monochrome palette. The six SVG atlases have 48 complete drawings each, 288 total. Keep atlas registration, transparent cell margins, and attack impact poses aligned with `moveFor` and `CEL_STATES`.
 
 Edit the generator source, then regenerate and include the corresponding SVG/WAV files; avoid manual edits that the next generation would overwrite. Preview changed actions in `animation-reel.html`, including mirrored poses. Listen to changed audio as well as checking its samples when audio output is available.
