@@ -4,13 +4,23 @@ A browser-based, side-view 2D fighter with six cartoon stars, rubber-hose animat
 
 **[Play the game](https://pdcf.aaronfaby.com)** · [Contributor guidance](AGENTS.md) · [Asset provenance](assets/provenance.md)
 
+## First desktop beta
+
+**Beta 1 · `v0.1.0-beta.1`** targets desktop browser play with a keyboard, Arcade, Training, single CPU matches, and local multiplayer. Standard controller support is included for beta testing. The game displays its beta version separately from the exact build commit in the footer.
+
+Read the [known limitations and feedback guide](assets/beta.html), [beta release notes](docs/beta-release.md), and [verification record](docs/release-checks.md). Release tags and GitHub prereleases are published only after the candidate passes the build, balance and all five hosted browser jobs. The website follows `main`; its build number identifies the version currently served even after a later beta update.
+
+[Report a bug or share beta feedback on GitHub Issues](https://github.com/AaronFaby/pdcf/issues). Include the build number, browser/OS, keyboard or controller, mode/difficulty, matchup/stage, steps, and expected/actual behavior. Issues are public and posting requires a GitHub account; do not include private information. No automatic feedback uploads or new player storage are added for the beta.
+
+Balance, physical controller behavior, speaker/headphone output, native Safari, lower-end/high-refresh hardware and sustained human play remain under review. Touch controls are incomplete, online multiplayer is unavailable, and saves are local to one browser/device. Artwork/branding clearance and hosting privacy configuration remain separate reviews. The limitations page distinguishes these gaps from verified automated coverage.
+
 ## Privacy and legal notices
 
 The casting screen carries a prominent independent-project/non-endorsement notice. A site-wide footer links to the [privacy policy](assets/privacy.html) and [legal and character notices](assets/legal.html), opening in a new tab to preserve an ongoing game. Both pages work without JavaScript and match the game’s paper-and-ink presentation.
 
 The privacy policy documents the four local-storage entries, temporary inputs/Training state, Cloudflare hosting/security requests, Google Fonts, external links, retention, deletion choices, applicable privacy rights, and children/family considerations. Contact uses public GitHub Issues; no email address is published. Do not post sensitive information there. The legal notice identifies intended early character versions, U.S./international limits, ongoing trademark rights, Popeye’s separate spinach-source limitation, asset provenance/reuse, and qualified game-use/warranty notices. It does not certify rights clearance.
 
-The pages live under `assets/` so the existing Cloudflare copy command includes them without a dashboard change. Keep the policy accurate when adding network services, telemetry, storage keys, accounts, or purchases. Hosting-level analytics, security cookies and log retention depend on Cloudflare configuration and must be checked separately before treating the policy as a full operational/compliance review. No legal review of the notices or finished art is implied.
+The pages live under `assets/` and are included in the explicit production manifest. Keep the policy accurate when adding network services, telemetry, storage keys, accounts, or purchases. Hosting-level analytics, security cookies and log retention depend on Cloudflare configuration and must be checked separately before treating the policy as a full operational/compliance review. No legal review of the notices or finished art is implied.
 
 The bottom of the game page shows **Build `<short commit ID>`**, linked to the exact GitHub commit used by the build. Compare it with the commit from a push to confirm which release is displayed. The label is embedded in the built HTML and works without JavaScript or a separate version request. Local builds with uncommitted changes say **local changes**; the development server shows **Local development**.
 
@@ -169,6 +179,7 @@ The game uses native ES modules, Canvas 2D, Web Audio, and the Gamepad API. Ther
 | `tests/` | Node regression tests and the browser-only outcome fixture |
 | `controller-simulator.html` | Development harness for two virtual standard controllers |
 | `animation-reel.html` / `reel.mjs` | Animation preview and scrubbing tool |
+| `assets/beta.html` / `docs/beta-release.md` | Public beta limitations/feedback and the first prerelease notes |
 
 Edit the generator sources before rebuilding their checked-in assets:
 
@@ -227,7 +238,7 @@ This runs tests, makes a clean static build, stamps the footer with its commit I
 
 The build uses Cloudflare's [`WORKERS_CI_COMMIT_SHA`](https://developers.cloudflare.com/workers/ci-cd/builds/configuration/#default-variables), falling back to the local Git HEAD. It shows **Unversioned build** if neither is available, and rejects malformed commit metadata. It never asks GitHub for the latest commit at runtime, so an old page cannot label itself as the latest release.
 
-Serve `dist/` as static assets. Keep the relative directory structure: runtime modules under `assets/runtime/` import the root engine. New root runtime files must be added to `ROOT_FILES` in `scripts/build.mjs`. The simulator, tests/fixtures, generators, documentation, and development server are excluded. Do not use `server.mjs` as a production backend or commit the generated `dist/` directory.
+Serve `dist/` as static assets. Keep the relative directory structure: runtime modules under `assets/runtime/` import the root engine. New root runtime files must be added to `ROOT_FILES` in `scripts/build.mjs`. The simulator, tests/fixtures, generators, repository development docs, and development server are excluded. The named public information pages and asset provenance are included through `ASSET_FILES`. Do not use `server.mjs` as a production backend or commit the generated `dist/` directory.
 
 Builds copy only `ROOT_FILES` and `ASSET_FILES` from `scripts/build.mjs`; add new runtime helpers to that asset manifest. The manifest derives fighter, venue and audio asset names from their catalogs. Unlisted local metadata and assets stay out. Build checks reject extra/missing files (including Foley WAVs), verify static and literal dynamic import targets, and reject a Cloudflare revision that differs from an available Git checkout. See [issue #1 validation](docs/issue-1-review.md) for the review findings and regressions.
 
@@ -247,4 +258,4 @@ Popeye's spinach mechanic relies on Duke's finding that the relevant 1931 strip 
 
 ## Remaining work
 
-Online multiplayer and a larger story campaign are future work. Art direction, accessibility, browser/device coverage, controller calibration, speaker listening, and sustained balance playtests still need production review.
+Beta feedback now guides combat readability, Easy-to-Hard progression, match balance, and repeat-play appeal. The public [limitations page](assets/beta.html) tracks current coverage gaps. Online multiplayer and a larger story campaign remain future work. Art direction, accessibility, browser/device coverage, controller calibration, speaker listening, and sustained balance playtests still need production review.

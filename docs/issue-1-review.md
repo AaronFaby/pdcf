@@ -1,6 +1,6 @@
 # Issue #1 validation and repairs
 
-Reviewed [the external findings](https://github.com/AaronFaby/pdcf/issues/1) against the current checkout, including the fullscreen follow-up after the reviewed `5dfa4ba` commit.
+Historical review of [the external findings](https://github.com/AaronFaby/pdcf/issues/1), including the fullscreen follow-up after the reviewed `5dfa4ba` commit. The repairs were committed in `82586ec`; issue #1 was closed on October 18, 2026 after its release checks passed. The original evidence below is retained, including its then-current test/file counts. For Beta 1 status and subsequent simulator repairs, use [release verification](release-checks.md) and [beta notes](beta-release.md).
 
 | Finding | Validation and resolution |
 | --- | --- |
@@ -23,7 +23,7 @@ Reviewed [the external findings](https://github.com/AaronFaby/pdcf/issues/1) aga
 
 The four proposed `restoreArcade` bad-data examples were already rejected: lost with zero losses, too few attempts, ready at index six, and a non-mirror finale. Added explicit cases to preserve that behavior. Projectile interruption already had a throw regression; strengthened it to assert attack cancellation, prompt release after hitstop, grounded position/velocity and no extra victim damage. No simulation change was needed for either group.
 
-## Verification
+## Historical verification
 
 Local validation on October 18, 2026, on this macOS ARM host:
 

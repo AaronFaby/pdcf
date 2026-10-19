@@ -2,6 +2,8 @@
 
 This milestone gives every fighter a distinct CPU plan, tunes the three difficulties, adds repeatable diagnostics, and makes resolved impacts easier to read. Bot results are diagnostic evidence, not human matchup ratings or proof that the roster is competitively balanced.
 
+These tactics and stats are included in desktop Beta 1 (`v0.1.0-beta.1`). The milestone and review fixes were published in `0dcfed5`; the later `71c930f` adds simulator timing repairs and sustained-play tests. The beta documentation/presentation update does not retune combat. See [release verification](release-checks.md) for current hosted checks and [beta limitations](../assets/beta.html) for human/device follow-up.
+
 ## Tactics
 
 | Fighter | CPU approach |
@@ -72,9 +74,9 @@ A smaller baseline used the old CPU with only independent side support added. On
 
 ## Follow-up review
 
-The guard-recoil and voice-selection findings were each reproduced by a failing regression before repair. Guard coverage exercises both players, immediate and mid-recoil decision expiry, later guard release, and damage recoil. Audio coverage fills all sixteen voices with mixed priorities, checks priority before age, and preserves the cap and equal-priority protection. The simulation job is independent of the static build/browser dependency; its YAML structure was parsed and checked locally. The three new milestone files must be included in the eventual commit together with the modified sources and tests.
+The guard-recoil and voice-selection findings were each reproduced by a failing regression before repair. Guard coverage exercises both players, immediate and mid-recoil decision expiry, later guard release, and damage recoil. Audio coverage fills all sixteen voices with mixed priorities, checks priority before age, and preserves the cap and equal-priority protection. The simulation job is independent of the static build/browser dependency; its YAML structure was parsed and checked locally. All three new milestone files and the related sources/tests were included in `0dcfed5`.
 
-Follow-up validation passed 97 Node tests, the 48-file/105-reference production build, and nine targeted browser checks across Chromium, Firefox and WebKit. Each engine reran all 28 controller flows, real CPU combat for all six fighters, and reduced-motion impact feedback. The seeded measurements above were rerun after repair. Hosted workflow execution, hardware controllers, speaker listening and human balance remain separate checks.
+Follow-up validation passed 97 Node tests, the then-current 48-file/105-reference production build, and nine targeted browser checks across Chromium, Firefox and WebKit. Each engine reran all 28 controller flows, real CPU combat for all six fighters, and reduced-motion impact feedback. The seeded measurements above were rerun after repair. The later pre-beta `71c930f` passed build, balance and all five hosted browser jobs in [run 39179760975](https://github.com/AaronFaby/pdcf/actions/runs/39179760975). Physical controllers, speaker listening and human balance remain separate checks.
 
 ## Human follow-up
 

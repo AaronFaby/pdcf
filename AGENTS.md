@@ -6,6 +6,8 @@ This is a static browser game using native JavaScript ES modules, Canvas 2D, Web
 
 The current game has six fighters (Mickey, Minnie, Oswald, Felix, Betty, Popeye), four stages (Ink Harbor, Silverscreen Theater, Moonlight Midway, Midnight Junction), Arcade, Training, CPU play, and local two-player. Preserve working modes and controls when extending a milestone. Read `README.md` for player-facing behavior and `assets/provenance.md` for asset sources.
 
+The first desktop beta is `v0.1.0-beta.1`. Keep the visible beta version, package/lockfile version, public limitations and release notes consistent. Keyboard desktop play is the baseline; standard controllers are included for beta testing, with physical hardware, native Safari, listening, human balance and other coverage gaps explicitly identified. Preserve the independent-project notice and exact build footer. Beta feedback goes to public GitHub Issues; add no telemetry, private contact claims or storage keys for feedback.
+
 ## Code map
 
 | Path | Owns |
@@ -25,6 +27,7 @@ The current game has six fighters (Mickey, Minnie, Oswald, Felix, Betty, Popeye)
 | `assets/runtime/visuals.mjs` | DOM-free visual preference validation and system/reduced/full motion resolution |
 | `index.html` / `style.css` | Main interface, dialogs, responsive layout, and accessibility markup |
 | `assets/privacy.html` / `assets/legal.html` | Script-free public privacy, independence, character-version, and game-use notices; included by the existing asset copy |
+| `assets/beta.html` / `docs/beta-release.md` | Script-free public beta limitations/feedback and the prerelease notes; the HTML page belongs in `ASSET_FILES` |
 | `scripts/build-cels.mjs` / `scripts/build-audio.mjs` | Sources for the checked-in SVG atlases and WAV assets |
 | `controller-simulator.html` | Browser harness for two virtual pads and repeatable flow checks |
 | `tests/` | Node tests; `tests/fixtures/arcade-engine.mjs` scripts outcomes only for browser checks |
@@ -104,6 +107,8 @@ Report what actually ran. Separate Node tests, scripted browser outcomes, normal
 
 Cloudflare build/deploy settings are managed outside the repository. The required static build command is `npm run check`, documented in `README.md`; it copies only the named root runtime files and the explicit production asset manifest into `dist/` and stamps the footer with the build's commit ID. Keep the source HTML placeholder for local development; never fetch the latest GitHub commit at runtime to label a cached release. Local modified builds must remain marked. New root imports need an update to `ROOT_FILES` in `scripts/build.mjs`; new runtime helpers also need an entry in `ASSET_FILES`; fighter/stage/audio files are derived from their catalogs. Keep unlisted and ignored assets out of production. Preserve the directory structure for their imports of `../../engine.mjs`.
 
-Keep the simulator, tests/fixtures, scripts, docs, and local server out of production assets. Check that a copied build resolves new imports and assets. Do not commit `dist/`, temporary QA pages, or unrelated previews.
+Keep the simulator, tests/fixtures, scripts, repository development docs, and local server out of production assets. Public information pages and asset provenance are explicit manifest exceptions. Check that a copied build resolves new imports and assets. Do not commit `dist/`, temporary QA pages, or unrelated previews.
 
 When asked to commit/push, inspect the working tree, include the requested source and generated assets, run the applicable checks, and verify the remote commit afterward. A push to `main` triggers the configured Cloudflare deployment; verify deployment separately before claiming the live site has updated.
+
+For an authorized beta publication, prepare docs before the visible beta changes. Use a release branch/PR so the candidate's build, balance and all five browser jobs pass before promoting it to `main`. Recheck the resulting main run before creating an annotated version tag and a GitHub prerelease. Never move an existing published tag, bypass failed checks or label unfinished checks as passed. The tag must point to the verified release commit; verify its remote target and the live footer/beta notice separately. These checks do not themselves enforce Cloudflare settings or repository branch protection.

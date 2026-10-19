@@ -8,7 +8,7 @@ import { CUES } from '../assets/runtime/audio.mjs';
 
 export const ROOT_FILES = ['index.html', 'animation-reel.html', 'style.css', 'app.mjs', 'art.mjs', 'cels.mjs', 'engine.mjs', 'reel.mjs'];
 export const ASSET_FILES = [
-  'assets/privacy.html', 'assets/legal.html', 'assets/provenance.md',
+  'assets/privacy.html', 'assets/legal.html', 'assets/beta.html', 'assets/provenance.md',
   ...ROSTER.map(f => `assets/cels/${f.id}.svg`), ...STAGES.map(stage => stage.image),
   ...[...STAGES.map(stage => stage.id), ...CUES].map(name => `assets/audio/${name}.wav`),
   ...['arcade', 'audio', 'bindings', 'control-panel', 'controllers', 'loading', 'move-list', 'stages', 'training', 'visuals'].map(name => `assets/runtime/${name}.mjs`)

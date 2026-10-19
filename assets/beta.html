@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#eee7d6">
+  <meta name="description" content="Desktop Beta 1 scope, known limitations, testing coverage and public feedback for Public Domain Cartoon Fighters.">
+  <title>Beta 1 &amp; Known Limitations — Public Domain Cartoon Fighters</title>
+  <link rel="stylesheet" href="../style.css">
+</head>
+<body class="notice-page">
+  <a class="skip-link" href="#notice-content">Skip to beta information</a>
+  <div class="paper-grain" aria-hidden="true"></div>
+  <header class="masthead">
+    <a class="brand" href="../" aria-label="Public Domain Cartoon Fighters home"><span class="brand-mark" aria-hidden="true">✦</span><span>PUBLIC DOMAIN<br><b>CARTOON FIGHTERS</b></span></a>
+    <nav aria-label="Site navigation"><a href="../">Play the game</a><a href="https://github.com/AaronFaby/pdcf/releases" rel="noreferrer">Release notes</a></nav>
+  </header>
+  <main id="notice-content" class="notice-document">
+    <header class="notice-heading"><p class="eyebrow">BETA 1 · v0.1.0-beta.1</p><h1>A dress rehearsal.<br>A real brawl.</h1><p>This desktop beta includes six fighters, four animated stages, Arcade, Training, single CPU matches and local two-player. Keyboard play is the baseline; standard controllers are included for beta testing. Match balance and device coverage are still developing.</p></header>
+    <div class="notice-summary"><strong>Your feedback shapes the next reel.</strong><p>Try the guided Training lessons, an Arcade run and local matches. Tell us what felt clear, confusing, too easy, too hard or fun to play again. Read the limitations below and include the build number from the game’s footer in a <a href="https://github.com/AaronFaby/pdcf/issues" rel="noreferrer">GitHub issue</a>.</p></div>
+    <div class="notice-layout">
+      <nav class="notice-contents" aria-label="Beta information contents"><strong>IN THIS BETA</strong><ol><li><a href="#coverage">Testing coverage</a></li><li><a href="#limitations">Known limitations</a></li><li><a href="#feedback">Report a bug or share feedback</a></li><li><a href="#privacy">Privacy &amp; character notices</a></li></ol></nav>
+      <article class="notice-copy">
+        <section id="coverage"><h2>Testing coverage</h2><p>Automated checks cover combat, all six CPU personalities, Arcade progression, guided lessons, keyboard and virtual-controller input, loading and audio recovery, saved settings, display options and fullscreen. Hosted release checks run Chromium, Firefox, WebKit, Chrome and Edge. A beta tag is published only after the release candidate’s checks pass.</p><p>Separate local endurance sessions have completed real-time Arcade ladders, CPU and local rematches, and two-minute Training sessions with pauses, nested menus and reconnects. These observe native audio cleanup, bounded runtime state and frame timing. Automated bots are separate from human balance testing; virtual controllers are separate from physical hardware. See the repository’s <a href="https://github.com/AaronFaby/pdcf/blob/main/docs/release-checks.md" rel="noreferrer">verification record</a> for build-specific evidence and limits.</p></section>
+        <section id="limitations"><h2>Known limitations</h2><ul>
+          <li><strong>Combat balance and difficulty:</strong> provisional. Seeded CPU results do not establish human matchup balance or a measured learning curve.</li>
+          <li><strong>Physical controllers:</strong> pairing, latency, real button labels and device-specific reconnect behavior need hands-on verification. Standard mappings are required; identical controllers with changed indexes may need the existing P1/P2 Swap action.</li>
+          <li><strong>Audio listening:</strong> the original synthesized music and Foley have automated playback/cleanup checks; speaker and headphone listening still need review. A browser gesture or Enable audio may be required.</li>
+          <li><strong>Safari and hardware:</strong> automated WebKit is not the native Safari application. Lower-end machines and high-refresh displays need additional testing. Measured frame timings are not a performance guarantee on other devices.</li>
+          <li><strong>Mobile and touch:</strong> this release targets desktop. Touch controls omit throw and dash, and physical touch devices remain unverified.</li>
+          <li><strong>Multiplayer:</strong> local play shares a device. Online multiplayer is unavailable; some keyboards cannot register many simultaneous keys.</li>
+          <li><strong>Saves:</strong> Arcade progress and preferences stay in one browser/device. There is no account or cloud sync, and clearing site data removes saves. Blocked storage limits persistence.</li>
+          <li><strong>Accessibility:</strong> menus, readable HUD, remapping and motion options are available, but the real-time Canvas game is not fully screen-reader playable or formally accessibility-certified.</li>
+          <li><strong>Independent reviews:</strong> artwork/branding clearance and hosting privacy configuration remain open review items. Existing character-version, independence and privacy notices continue to apply.</li>
+        </ul></section>
+        <section id="feedback"><h2>Report a bug or share feedback</h2><p><a href="https://github.com/AaronFaby/pdcf/issues" rel="noreferrer"><strong>Open GitHub Issues →</strong></a></p><p>For a bug, please include:</p><ol><li>The build number from the bottom of the game page.</li><li>Your browser/version, operating system, and keyboard or controller model.</li><li>Mode, difficulty, both fighters and stage.</li><li>Steps to reproduce, what you expected, and what happened. Include whether it repeats; a screenshot or short recording can help.</li></ol><p>For playtest feedback, describe tutorial clarity, attack readability, counterplay, difficulty progression and which matchups stayed enjoyable.</p><p><strong>Issues are public, and posting requires a GitHub account.</strong> Do not post private information. Feedback is submitted manually through GitHub; the game does not automatically upload matches, inputs, diagnostic reports or personal information. No public contact email is listed.</p></section>
+        <section id="privacy"><h2>Privacy &amp; character notices</h2><p>This is an independent project. It is not affiliated with or endorsed by Disney, King Features/Hearst, Fleischer Studios, or any other rights holder. The beta designation is not a rights-clearance claim.</p><p>Read the <a href="privacy.html">privacy policy</a> for local storage, hosting and fonts, and the <a href="legal.html">legal and character notices</a> for intended early character versions, asset sources and remaining rights-review limits. No new player storage or automatic feedback collection was added for this beta.</p></section>
+      </article>
+    </div>
+  </main>
+  <footer class="site-footer"><p>PUBLIC DOMAIN CARTOON FIGHTERS<br>Beta 1 · v0.1.0-beta.1 · Independent project.</p><nav aria-label="Beta, privacy and legal information"><a href="../">Back to the game</a><a href="beta.html" aria-current="page">Beta &amp; limitations</a><a href="privacy.html">Privacy policy</a><a href="legal.html">Legal &amp; character notices</a></nav></footer>
+</body>
+</html>

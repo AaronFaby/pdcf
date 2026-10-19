@@ -2,6 +2,16 @@
 
 The release scope is desktop browser play: CPU, local multiplayer, Arcade, and Training. Simulation remains fixed at 120 Hz. Saved visual-comfort settings and native fullscreen affect presentation only; combat balance is unchanged.
 
+## Beta 1 publication
+
+Version `v0.1.0-beta.1` is a desktop prerelease. Player-facing scope, limitations and manual feedback guidance live in [assets/beta.html](../assets/beta.html); [beta release notes](beta-release.md) summarize the shipped modes and remaining reviews. The visible beta version is separate from the footer's exact Git build identifier.
+
+Prepare documentation before the beta presentation changes. Validate the candidate on a release branch/PR, requiring successful build, balance and Chromium/Firefox/WebKit/Chrome/Edge jobs. Promote the tested source to `main`, verify its hosted run, then create an annotated tag and a GitHub prerelease at that commit. Check that the remote tag resolves to the tested commit. Finally inspect the live version/build, links, Training combat and pause/resume separately; CI does not prove a Cloudflare deployment. Existing tags must not be moved. These are release instructions, not a change to repository protection or Cloudflare configuration.
+
+The beta packaging adds the script-free limitations page to the explicit manifest, bringing the intended copy to 49 files. Older file counts below are dated evidence for earlier manifests. The baseline local suite remains 97 Node tests and nineteen browser scenarios per project; beta checks extend the packaged-game scenario to cover version labels, limitations, feedback links and narrow layouts.
+
+The pre-beta baseline `71c930f22d571b45538bf61aa6c447b6d4cd6783` passed all seven jobs in [hosted run 39179760975](https://github.com/AaronFaby/pdcf/actions/runs/39179760975): build, balance and all five browser projects (95 browser scenarios). A separate live Chromium smoke check confirmed that build's artwork, connected Training punch and pause/resume without page errors. These results establish the baseline; the beta presentation candidate still requires its own checks before publication.
+
 ## Repeatable checks
 
 1. Run `npm run check` for the Node regressions, clean production copy, and local references.
@@ -11,13 +21,13 @@ The release scope is desktop browser play: CPU, local multiplayer, Arcade, and T
 4. For installed branded browsers, use `npm run test:browser -- --project=chrome --project=msedge`. CI installs these channels in its own ephemeral runners; local installation of system browsers is not automatic.
 5. Inspect `playwright-report/` and the attached performance JSON. A failed test retains a screenshot and trace in `test-results/`.
 
-The GitHub Actions workflow runs on pushes and pull requests to `main`, with read-only repository permissions. It uploads the checked static build and separate reports for Chromium, Firefox, WebKit, Chrome, and Edge. It does not deploy or alter Cloudflare/branch protection. The workflow needs to be committed/pushed before a hosted Actions run exists; a local test run is separate evidence.
+The GitHub Actions workflow runs on pushes and pull requests to `main`, with read-only repository permissions. It uploads the checked static build and separate reports for Chromium, Firefox, WebKit, Chrome, and Edge. It does not deploy or alter Cloudflare/branch protection. Verify the run for the specific release commit; a local test run is separate evidence.
 
 ## Browser scenarios
 
 | Scenario | What is verified |
 | --- | --- |
-| Packaged game | Training combat on all four stages, pause/resume, and legal pages opening separately without losing the game |
+| Packaged game | Beta version/feedback links and limitations page, desktop/narrow labels, Training combat on all four stages, pause/resume, and information pages opening separately without losing the game |
 | Missing character | Start is blocked, the failed fighter is named, retry fetches only missing artwork, and cast/stage selections survive |
 | Missing scenery | A bout stays playable, identifies fallback scenery, and can recover the painting without resetting Training readouts |
 | Stalled request | Progress remains visible; controller Start and keyboard activation cannot begin early; completion unlocks play |
@@ -61,7 +71,7 @@ The ready-time measurement starts before fetching the game HTML and ends when St
 
 The baseline on October 18, 2026 used the in-app Chromium browser (reported Chrome 155, macOS/ARM host), a 1280 × 720 outer viewport and the 1200px game iframe. All 24 pairings had a median observed interval of 16.7 ms; the largest per-pair p95 callback time was 2.7 ms, and none of the sampled intervals exceeded 33.5 ms. Initial game-ready time was 320 ms with unspecified browser-cache state. This pass showed enough frame headroom to avoid a speculative renderer rewrite; the focused change is bounded, cached asset recovery.
 
-## Release-candidate harness repair — October 18, 2026
+## Historical release-candidate harness repair — October 18, 2026
 
 Hosted run `39172511099` passed the static build, balance and four browser jobs, but Firefox reported “Move-list inputs leaked after resume.” Three unmodified local Firefox runs passed. A controlled queued-close case then demonstrated the actual failure: the simulator could send Start before a nested dialog's native `close` task cleared input. That clear disarmed the controller, so Start was discarded and the following Training reset was ignored while Pause remained open. The hit readout still contained the punch from before the menu; it was not evidence of a new attack.
 
@@ -81,7 +91,7 @@ Training DOM counts stayed at 638 in all six measured windows for every engine. 
 
 The final Node/build check passed 97 tests and the 48-file/105-reference production copy. All 57 routine browser checks passed: nineteen each in Chromium, Firefox and WebKit, including all 28 controller flows per engine with the controlled close task. That run used three workers and completed in 2.9 minutes. Syntax and diff checks passed. Branded Chrome/Edge are not installed locally; the five-project hosted workflow must still be verified after publication. No new Cloudflare deployment, physical-controller test, native Safari run or speaker/headphone listening is claimed.
 
-## Combat review follow-up — October 18, 2026
+## Historical combat review follow-up — October 18, 2026
 
 The block-recoil guard drop and mixed-priority sound eviction were each reproduced with a failing regression before repair. CPU guard now persists through block recoil on both sides even when a decision expires, then returns to normal tactical choices. Sound eviction chooses the lowest lower priority and the oldest voice within that priority; equal/higher priorities remain protected. The `balance` workflow job runs independently of `build`; browsers depend only on the static build. Local YAML parsing and dependency assertions verified that structure. A failed simulation still fails its own check.
 
