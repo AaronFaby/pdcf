@@ -15,6 +15,10 @@ test('packaged game starts all stages, plays Training, pauses and keeps legal pa
   expect(fonts).toEqual(Array(7).fill(true));expect(fontRequests.size).toBe(6);
   const version=JSON.parse(await readFile(new URL('../../package.json',import.meta.url),'utf8')).version;
   await expect(page).toHaveTitle('Public Domain Cartoon Fighters — Free Browser Fighting Game · Beta 3');
+  await expect(page.locator('.beta-notice')).toHaveCount(0);
+  await expect(page.locator('.selection-notices > aside')).toHaveCount(2);
+  await expect(page.getByRole('complementary',{name:'Independent project notice'})).toBeVisible();
+  await expect(page.getByRole('complementary',{name:'New game address'})).toBeVisible();
   await expect(page.locator('#beta-version')).toHaveText(`Beta 3 · v${version}`);await expect(page.locator('#beta-badge')).toHaveText('BETA 3');await expect(page.locator('#beta-badge')).toBeVisible();
   await expect(page.locator('#site-footer')).toContainText(`Beta 3 · v${version}`);
   await expect(page.locator('#beta-feedback')).toHaveAttribute('href','https://github.com/AaronFaby/pdcf/issues');await expect(page.locator('#beta-feedback')).toHaveAttribute('target','_blank');

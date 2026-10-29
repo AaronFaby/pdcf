@@ -44,16 +44,13 @@
   <main id="main-content" tabindex="-1">
     <button id="audio-unlock" class="audio-unlock" hidden>LET THE BAND PLAY — CLICK TO ENABLE AUDIO ♪</button>
     <section id="selection" aria-label="Choose your fighters">
-      <aside class="beta-notice" aria-labelledby="beta-version">
-        <strong id="beta-version">Beta 3 · v0.1.0-beta.3</strong>
-        <p>A desktop dress rehearsal. Balance and device coverage are still developing.</p>
-        <nav aria-label="Beta information"><a id="beta-limitations" href="assets/beta.html" target="_blank" rel="noopener noreferrer">Known limitations <span aria-hidden="true">↗</span><span class="sr-only"> (opens in a new tab)</span></a><a id="beta-feedback" href="https://github.com/AaronFaby/pdcf/issues" target="_blank" rel="noopener noreferrer">Report a bug / feedback <span aria-hidden="true">↗</span><span class="sr-only"> (public GitHub Issues; opens in a new tab)</span></a></nav>
-      </aside>
-      <aside class="independence-notice" aria-label="Independent project notice">
-        <strong>AN INDEPENDENT CARTOON GAME</strong>
-        <p>Drawing on early U.S. public-domain character versions. Not affiliated with or endorsed by Disney, King Features/Hearst, Fleischer Studios, or any other rights holder. <a href="assets/legal.html" target="_blank" rel="noopener noreferrer">Character versions &amp; legal notices <span aria-hidden="true">↗</span><span class="sr-only"> (opens in a new tab)</span></a></p>
-      </aside>
-      <aside class="move-notice" aria-label="New game address"><strong>OUR NEW HOME: PDCF.DEV</strong><p>Played at the previous address or www.pdcf.dev? <a href="assets/transfer.html" target="_blank" rel="noopener noreferrer">Transfer your Arcade save and settings <span class="sr-only">(opens in a new tab)</span>→</a></p></aside>
+      <div class="selection-notices">
+        <aside class="independence-notice" aria-label="Independent project notice">
+          <strong>AN INDEPENDENT CARTOON GAME</strong>
+          <p>Drawing on early U.S. public-domain character versions. Not affiliated with or endorsed by Disney, King Features/Hearst, Fleischer Studios, or any other rights holder. <a href="assets/legal.html" target="_blank" rel="noopener noreferrer">Character versions &amp; legal notices <span aria-hidden="true">↗</span><span class="sr-only"> (opens in a new tab)</span></a></p>
+        </aside>
+        <aside class="move-notice" aria-label="New game address"><strong>OUR NEW HOME: PDCF.DEV</strong><p>Played before? <a href="assets/transfer.html" target="_blank" rel="noopener noreferrer">Bring your Arcade save and settings <span class="sr-only">(opens in a new tab)</span>→</a></p></aside>
+      </div>
       <div class="hero">
         <div class="hero-copy">
           <p class="eyebrow"><span class="little-star">✦</span> NOW PLAYING IN GLORIOUS BLACK & WHITE</p>
@@ -132,13 +129,13 @@
   </main>
 
   <footer class="site-footer" id="site-footer">
-    <p><strong>INDEPENDENT WORK. NO STUDIO AFFILIATION.</strong><br>Beta 3 · v0.1.0-beta.3 · Desktop browser beta.<br>Early character references concern U.S. copyright status; later versions and trademarks may remain protected.</p>
+    <p><strong>INDEPENDENT WORK. NO STUDIO AFFILIATION.</strong><br><span id="beta-version">Beta 3 · v0.1.0-beta.3</span> · Desktop browser beta.<br>Early character references concern U.S. copyright status; later versions and trademarks may remain protected.</p>
     <nav aria-label="Beta, privacy and legal information">
       <a href="assets/transfer.html" target="_blank" rel="noopener noreferrer">Transfer saves &amp; settings <span class="sr-only">(opens in a new tab)</span></a>
-      <a href="assets/beta.html" target="_blank" rel="noopener noreferrer">Beta &amp; known limitations <span aria-hidden="true">↗</span><span class="sr-only"> (opens in a new tab)</span></a>
+      <a id="beta-limitations" href="assets/beta.html" target="_blank" rel="noopener noreferrer">Beta &amp; known limitations <span aria-hidden="true">↗</span><span class="sr-only"> (opens in a new tab)</span></a>
       <a href="assets/privacy.html" target="_blank" rel="noopener noreferrer">Privacy policy <span aria-hidden="true">↗</span><span class="sr-only"> (opens in a new tab)</span></a>
       <a href="assets/legal.html" target="_blank" rel="noopener noreferrer">Legal &amp; character notices <span aria-hidden="true">↗</span><span class="sr-only"> (opens in a new tab)</span></a>
-      <a href="https://github.com/AaronFaby/pdcf/issues" target="_blank" rel="noopener noreferrer">Report a bug / beta feedback <span aria-hidden="true">↗</span><span class="sr-only"> (public GitHub Issues; opens in a new tab)</span></a>
+      <a id="beta-feedback" href="https://github.com/AaronFaby/pdcf/issues" target="_blank" rel="noopener noreferrer">Report a bug / beta feedback <span aria-hidden="true">↗</span><span class="sr-only"> (public GitHub Issues; opens in a new tab)</span></a>
     </nav>
     <p class="build-info" id="build-info"><!-- BUILD_INFO -->Local development<!-- /BUILD_INFO --></p>
   </footer>
