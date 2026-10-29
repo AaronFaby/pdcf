@@ -8,7 +8,8 @@ const types = { '.html': 'text/html', '.css': 'text/css', '.mjs': 'text/javascri
 createServer(async (req, res) => {
   try {
     const pathname = decodeURIComponent(new URL(req.url, 'http://localhost').pathname);
-    const file = resolve(root, '.' + (pathname === '/' ? '/index.html' : pathname));
+    let file = resolve(root, '.' + (pathname === '/' ? '/index.html' : pathname));
+    if (!extname(file)) file += '.html';
     if (!file.startsWith(root + sep) || pathname.split('/').some(part => part.startsWith('.'))) {
       res.writeHead(403).end('Forbidden');
       return;

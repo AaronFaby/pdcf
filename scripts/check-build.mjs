@@ -21,7 +21,7 @@ export async function checkBuild(directory = resolve(SOURCE, 'dist')) {
   const source = new Map(await Promise.all(files.filter(file => ['.html', '.mjs', '.css'].includes(extname(file))).map(async file => [file, await readFile(file, 'utf8')])));
   const index = source.get(resolve(root, 'index.html'));
   const publicPages = ['index.html', 'assets/beta.html', 'assets/privacy.html', 'assets/legal.html'];
-  const canonicalUrls = publicPages.map(name => 'https://pdcf.dev/' + (name === 'index.html' ? '' : name));
+  const canonicalUrls = publicPages.map(name => 'https://pdcf.dev/' + (name === 'index.html' ? '' : name.replace(/\.html$/, '')));
   for (const [i, name] of publicPages.entries()) {
     const html = source.get(resolve(root, name));
     assert.equal([...html.matchAll(/<link\s+rel="canonical"\s+href="([^"]+)"/g)].map(match => match[1]).join(), canonicalUrls[i], `Incorrect canonical URL: ${name}`);

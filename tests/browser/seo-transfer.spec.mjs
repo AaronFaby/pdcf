@@ -30,8 +30,8 @@ test('packaged SEO metadata, sitemap, social image and utility indexing policies
   const image = await request.get('/assets/social-card.png'); expect(image.status()).toBe(200); expect(image.headers()['content-type']).toContain('image/png');
   const pixels = await image.body(); expect(pixels.readUInt32BE(16)).toBe(1200); expect(pixels.readUInt32BE(20)).toBe(630);
   for (const name of ['beta', 'privacy', 'legal']) {
-    await page.goto(`/assets/${name}.html`);
-    await expect(page.locator('link[rel=canonical]')).toHaveAttribute('href', `https://pdcf.dev/assets/${name}.html`);
+    await page.goto(`/assets/${name}`);
+    await expect(page.locator('link[rel=canonical]')).toHaveAttribute('href', `https://pdcf.dev/assets/${name}`);
     await expect(page.locator('script')).toHaveCount(0);
   }
   for (const path of ['/animation-reel.html', '/assets/transfer.html']) {
@@ -80,7 +80,8 @@ test('legacy recovery remains export-only and handles blocked storage and narrow
     const response = await route.fetch({ url: `http://127.0.0.1:4174${url.pathname}${url.search}` });
     await route.fulfill({ response });
   });
-  await page.goto('https://pdcf.aaronfaby.com/assets/transfer.html');
+  await page.goto('https://pdcf.aaronfaby.com/assets/transfer');
+  expect(page.url()).toBe('https://pdcf.aaronfaby.com/assets/transfer');
   await expect(page.locator('#transfer-origin')).toContainText('https://pdcf.aaronfaby.com');
   await expect(page.locator('#import-save')).toBeDisabled(); await expect(page.locator('#import-button')).toBeDisabled();
   await page.evaluate(values => { for (const [key, value] of Object.entries(values)) localStorage.setItem(key, JSON.stringify(value)); }, data());

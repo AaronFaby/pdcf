@@ -20,11 +20,11 @@ Desired rules are in [`ops/domain-redirects.json`](../ops/domain-redirects.json)
 
 Keep these recovery exceptions on both alias hosts:
 
-- `/assets/transfer.html`
+- `/assets/transfer.html`, `/assets/transfer` and `/assets/transfer/`
 - `/engine.mjs`, `/style.css` and `/robots.txt`
 - `/assets/runtime/`, `/assets/fonts/` and Cloudflare’s `/cdn-cgi/` endpoints
 
-The old-origin tool needs these modules/styles/fonts to read its own storage without cross-origin import failures. Ordinary HTML game/information pages redirect after activation.
+Cloudflare’s static HTML handling redirects `.html` requests to extensionless URLs. Canonicals and the sitemap use the final extensionless information-page URLs; recovery exceptions must include both forms, plus a trailing-slash recovery request. The old-origin tool needs these modules/styles/fonts to read its own storage without cross-origin import failures. Ordinary HTML game/information pages redirect after activation.
 
 Deploy and verify recovery **before enabling** redirects. In each zone, use Rules → Redirect Rules → Single Redirects and the matching expression/dynamic target in the JSON. Add the rule without replacing unrelated rules. The file describes desired configuration; Git alone does not apply or establish live hosting settings. Keep before/after snapshots. A token without Single Redirect write access cannot apply it; use the signed-in dashboard or have the maintainer apply the reviewed rules.
 
