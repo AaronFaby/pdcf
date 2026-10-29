@@ -86,3 +86,7 @@ Three new original 32-bar synthesized scores are authored in `scripts/build-audi
 - `assets/audio/midnight-junction.wav`: **Midnight Rail Shuffle**, 168 BPM, 4/4 brass/reed, banjo and train-rhythm shuffle.
 
 Melodies, chord arrangements, software instrument voices, and percussion were authored for this game. No recordings, third-party tunes, downloaded samples, soundfonts, or character voices were used. The existing Ink Harbor score and thirteen Foley assets retain their previous sources.
+
+## Site identity and sharing artwork
+
+`favicon.svg` is an original ink/star mark based on this game’s existing interface. `social-card.png` is a 1200 × 630 promotional composite produced by `scripts/build-social-card.mjs` using the six approved game atlases, the original Ink Harbor painting and self-hosted fonts listed above. It does not add new character drawings, historic film pixels, studio logos or third-party recordings. Regenerate with `npm run social-card` using the existing development tools. Character/version and rights-review limitations continue to apply.

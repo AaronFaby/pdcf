@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex,follow">
+  <meta name="description" content="Move your Public Domain Cartoon Fighters Arcade save, controls, audio and display preferences between browsers or game addresses using a local backup.">
+  <title>Transfer saves &amp; settings — Public Domain Cartoon Fighters</title>
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="../style.css">
+  <script type="module" src="runtime/transfer-page.mjs"></script>
+</head>
+<body class="notice-page">
+  <a class="skip-link" href="#transfer-content">Skip to save transfer</a>
+  <header class="masthead"><a class="brand" href="https://pdcf.dev/"><span class="brand-mark" aria-hidden="true">✦</span><span>PUBLIC DOMAIN<br><b>CARTOON FIGHTERS</b></span></a><a href="https://pdcf.dev/">Play at pdcf.dev →</a></header>
+  <main id="transfer-content" class="notice-document transfer-document">
+    <header class="notice-heading"><p class="eyebrow">YOUR NEXT REEL</p><h1>Bring your save<br>to the new stage.</h1><p>The game’s new address is <strong>pdcf.dev</strong>. Arcade progress and keyboard/controller, audio and visual preferences belong to each browser and site address. They do not follow a redirect automatically.</p></header>
+    <p class="notice-summary" id="transfer-origin" role="status"></p>
+    <section aria-labelledby="export-title"><h2 id="export-title">1. Download from the address where you played</h2><p>Open this page in the same browser and profile you used for the game. Close other game tabs first so an old tab cannot overwrite imported settings later.</p><p><a href="https://pdcf.aaronfaby.com/assets/transfer.html">Recover from pdcf.aaronfaby.com</a> · <a href="https://www.pdcf.dev/assets/transfer.html">Recover from www.pdcf.dev</a></p><p id="export-summary" role="status"></p><button id="export-save" class="primary-button" disabled>DOWNLOAD LOCAL BACKUP ↓</button></section>
+    <section aria-labelledby="import-title"><h2 id="import-title">2. Import at pdcf.dev</h2><p>Go to <a href="https://pdcf.dev/assets/transfer.html">the transfer page at pdcf.dev</a>, choose your downloaded file, review its categories, and import. The original site’s data is kept. Categories missing from a backup stay unchanged at the destination.</p><label class="backup-picker" for="import-save">Choose a PDCF backup (JSON, up to 32 KB)<input id="import-save" type="file" accept="application/json,.json"></label><p id="import-preview" role="status">No backup selected.</p><label class="replace-backup"><input id="replace-save" type="checkbox"> I understand that importing replaces the listed categories at this address. I have downloaded a backup here if I want to keep the current data.</label><button id="import-button" class="primary-button" disabled>IMPORT LISTED CATEGORIES</button><p id="transfer-status" role="status" aria-live="polite"></p><p><a id="play-after-transfer" href="https://pdcf.dev/">Return to the game →</a></p></section>
+    <section aria-labelledby="transfer-privacy"><h2 id="transfer-privacy">Your backup stays on your device</h2><p>This tool reads only the four game save/preferences entries. It processes chosen files in your browser and does not upload their contents or put saves in URLs. Treat backups as private files and do not post them to GitHub Issues. Cloudflare’s existing page/performance metrics still apply. See the <a href="privacy.html">privacy policy</a>.</p><p>Use the original browser/profile before clearing its site data. A file cannot recover a save that was already deleted. This recovery page remains available on the old address after normal game pages redirect.</p></section>
+    <noscript><p>Save transfer requires JavaScript. Enable it for this page to download or import your local backup.</p></noscript>
+  </main>
+  <footer class="site-footer"><p>Independent project. No studio affiliation or endorsement.</p><nav><a href="https://pdcf.dev/">Play</a><a href="privacy.html">Privacy</a><a href="legal.html">Legal &amp; character notices</a></nav></footer>
+</body>
+</html>

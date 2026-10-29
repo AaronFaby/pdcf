@@ -14,7 +14,8 @@
     "check:build": "node scripts/check-build.mjs",
     "check": "npm test && npm run build && npm run check:build",
     "test:browser": "playwright test",
-    "test:soak": "playwright test --config playwright.soak.config.mjs"
+    "test:soak": "playwright test --config playwright.soak.config.mjs",
+    "social-card": "node scripts/build-social-card.mjs"
   },
   "devDependencies": {
     "@playwright/test": "1.64.1"

@@ -20,6 +20,25 @@ export async function checkBuild(directory = resolve(SOURCE, 'dist')) {
   assert.deepEqual(files.sort(), [...ROOT_FILES, ...ASSET_FILES].map(name => resolve(root, name)).sort(), 'Unexpected or missing production files');
   const source = new Map(await Promise.all(files.filter(file => ['.html', '.mjs', '.css'].includes(extname(file))).map(async file => [file, await readFile(file, 'utf8')])));
   const index = source.get(resolve(root, 'index.html'));
+  const publicPages = ['index.html', 'assets/beta.html', 'assets/privacy.html', 'assets/legal.html'];
+  const canonicalUrls = publicPages.map(name => 'https://pdcf.dev/' + (name === 'index.html' ? '' : name));
+  for (const [i, name] of publicPages.entries()) {
+    const html = source.get(resolve(root, name));
+    assert.equal([...html.matchAll(/<link\s+rel="canonical"\s+href="([^"]+)"/g)].map(match => match[1]).join(), canonicalUrls[i], `Incorrect canonical URL: ${name}`);
+  }
+  const sitemap = await readFile(resolve(root, 'sitemap.xml'), 'utf8');
+  assert.match(sitemap, /<urlset xmlns="http:\/\/www.sitemaps.org\/schemas\/sitemap\/0.9">/);
+  assert.deepEqual([...sitemap.matchAll(/<loc>([^<]+)<\/loc>/g)].map(match => match[1]).sort(), [...canonicalUrls].sort(), 'Sitemap must contain only canonical public pages');
+  assert.match(await readFile(resolve(root, 'robots.txt'), 'utf8'), /^Sitemap: https:\/\/pdcf\.dev\/sitemap\.xml$/m);
+  for (const name of ['animation-reel.html', 'assets/transfer.html']) assert.match(source.get(resolve(root, name)), /<meta name="robots" content="noindex,follow">/);
+  const structured = JSON.parse(index.match(/<script type="application\/ld\+json">([^<]+)<\/script>/)?.[1] || 'null');
+  assert.equal(structured?.['@context'], 'https://schema.org');
+  const game = structured['@graph'].find(item => item['@type'] === 'VideoGame');
+  assert.equal(game.url, 'https://pdcf.dev/');
+  assert.equal(game.softwareVersion, JSON.parse(await readFile(resolve(SOURCE, 'package.json'), 'utf8')).version);
+  assert.equal(game.image, 'https://pdcf.dev/assets/social-card.png');
+  const social = await readFile(resolve(root, 'assets/social-card.png'));
+  assert.equal(social.readUInt32BE(16), 1200); assert.equal(social.readUInt32BE(20), 630);
   assert.doesNotMatch(index, /<!-- BUILD_INFO -->/, 'Build label was not stamped; use npm run build');
   assert.match(index, /id="build-info">(?:<a[^>]+>Build [a-f0-9]{7}|Unversioned build)/i, 'Missing build identity');
   for (const [file, text] of source) if (extname(file) === '.html') {

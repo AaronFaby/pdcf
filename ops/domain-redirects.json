@@ -1,0 +1,48 @@
+{
+  "aaronfaby.com": {
+    "name": "PDCF canonical redirects",
+    "kind": "zone",
+    "phase": "http_request_dynamic_redirect",
+    "rules": [
+      {
+        "ref": "pdcf_canonical_domain",
+        "description": "PDCF canonical domain; preserve local save recovery and its dependencies",
+        "expression": "(http.host eq \"pdcf.aaronfaby.com\" and not (http.request.uri.path in {\"/assets/transfer.html\" \"/engine.mjs\" \"/style.css\" \"/robots.txt\"} or starts_with(http.request.uri.path, \"/assets/runtime/\") or starts_with(http.request.uri.path, \"/assets/fonts/\") or starts_with(http.request.uri.path, \"/cdn-cgi/\")))",
+        "action": "redirect",
+        "action_parameters": {
+          "from_value": {
+            "status_code": 301,
+            "target_url": {
+              "expression": "concat(\"https://pdcf.dev\", raw.http.request.uri.path)"
+            },
+            "preserve_query_string": true
+          }
+        },
+        "enabled": true
+      }
+    ]
+  },
+  "pdcf.dev": {
+    "name": "PDCF canonical redirects",
+    "kind": "zone",
+    "phase": "http_request_dynamic_redirect",
+    "rules": [
+      {
+        "ref": "pdcf_canonical_domain",
+        "description": "PDCF canonical domain; preserve local save recovery and its dependencies",
+        "expression": "((http.host eq \"www.pdcf.dev\" and not (http.request.uri.path in {\"/assets/transfer.html\" \"/engine.mjs\" \"/style.css\" \"/robots.txt\"} or starts_with(http.request.uri.path, \"/assets/runtime/\") or starts_with(http.request.uri.path, \"/assets/fonts/\") or starts_with(http.request.uri.path, \"/cdn-cgi/\"))) or (http.host eq \"pdcf.dev\" and http.request.scheme eq \"http\"))",
+        "action": "redirect",
+        "action_parameters": {
+          "from_value": {
+            "status_code": 301,
+            "target_url": {
+              "expression": "concat(\"https://pdcf.dev\", raw.http.request.uri.path)"
+            },
+            "preserve_query_string": true
+          }
+        },
+        "enabled": true
+      }
+    ]
+  }
+}
