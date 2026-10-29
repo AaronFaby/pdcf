@@ -2,7 +2,7 @@
 
 A browser-based, side-view 2D fighter with six cartoon stars, rubber-hose animation, original period-inspired music, and a warm black-and-white theatrical presentation. Play Arcade, Training, single CPU matches, or local two-player across four animated stages.
 
-**[Play the game](https://pdcf.aaronfaby.com)** · [Contributor guidance](AGENTS.md) · [Asset provenance](assets/provenance.md)
+**[Play the game](https://pdcf.dev)** · [Contributor guidance](AGENTS.md) · [Asset provenance](assets/provenance.md)
 
 ## Desktop beta
 
@@ -234,7 +234,7 @@ Open [the performance pass](http://127.0.0.1:4173/tests/browser/performance.html
 
 ## Static hosting
 
-The existing [release](https://pdcf.aaronfaby.com) uses Cloudflare Workers with GitHub builds on pushes to `main`. The build/deploy settings are managed in the Cloudflare dashboard; this repository contains no Wrangler configuration or deployment workflow.
+The existing [release](https://pdcf.dev) uses Cloudflare Workers with GitHub builds on pushes to `main`. The build/deploy settings are managed in the Cloudflare dashboard; this repository contains no Wrangler configuration or deployment workflow.
 
 Set the Cloudflare dashboard **Build command** to:
 
@@ -249,6 +249,10 @@ The build uses Cloudflare's [`WORKERS_CI_COMMIT_SHA`](https://developers.cloudfl
 Serve `dist/` as static assets. Keep the relative directory structure: runtime modules under `assets/runtime/` import the root engine. New root runtime files must be added to `ROOT_FILES` in `scripts/build.mjs`. The simulator, tests/fixtures, generators, repository development docs, and development server are excluded. The named public information pages and asset provenance are included through `ASSET_FILES`. Do not use `server.mjs` as a production backend or commit the generated `dist/` directory.
 
 Builds copy only `ROOT_FILES` and `ASSET_FILES` from `scripts/build.mjs`; add new runtime helpers to that asset manifest. The manifest derives fighter, venue and audio asset names from their catalogs. Unlisted local metadata and assets stay out. Build checks reject extra/missing files (including Foley WAVs), verify static and literal dynamic import targets, and reject a Cloudflare revision that differs from an available Git checkout. See [issue #1 validation](docs/issue-1-review.md) for the review findings and regressions.
+
+The canonical address is **https://pdcf.dev/**. Canonical URLs, a sitemap, social cards, a favicon, visible game information and WebSite/VideoGame metadata ship with the static game. The animation reel and transfer tool use `noindex`. Regenerate the original sharing image with `npm run social-card` using the existing Playwright/Chromium development tools. See [SEO and domain migration](docs/seo-domain-migration.md) for the reviewed redirects and Search Console steps.
+
+Existing players can [recover saves at the previous address](https://pdcf.aaronfaby.com/assets/transfer.html) in their original browser/profile, download a backup, then [import at pdcf.dev](https://pdcf.dev/assets/transfer.html). This moves Arcade progress and keyboard/controller, audio and visual preferences using a local JSON file. Review the categories and confirm replacement; close other game tabs first. Source data is not deleted, and file contents are not uploaded. Keep old recovery pages and their dependencies reachable when enabling redirects; redirects alone do not transfer browser storage.
 
 After pushing, require a successful **Workers Builds: pdcf** check from the `cloudflare-workers-and-pages` GitHub app on that exact commit, then verify the live footer. The seven GitHub Actions jobs test the game separately; their success does not prove that Cloudflare received the push. Inspect the Cloudflare check with:
 

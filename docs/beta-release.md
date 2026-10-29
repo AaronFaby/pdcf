@@ -1,6 +1,6 @@
 # Beta 3 — v0.1.0-beta.3
 
-[Play Public Domain Cartoon Fighters](https://pdcf.aaronfaby.com/) · [Known limitations](https://pdcf.aaronfaby.com/assets/beta.html) · [Feedback](https://github.com/AaronFaby/pdcf/issues)
+[Play Public Domain Cartoon Fighters](https://pdcf.dev/) · [Known limitations](https://pdcf.dev/assets/beta.html) · [Feedback](https://github.com/AaronFaby/pdcf/issues)
 
 This desktop prerelease follows [Beta 2](https://github.com/AaronFaby/pdcf/releases/tag/v0.1.0-beta.2) with the approved Betty artwork and the decision to retain disclosed Cloudflare browser metrics. Combat rules, controls and saved data remain compatible.
 
@@ -22,6 +22,6 @@ Publish only after the candidate and main each pass build, balance and all five 
 
 Balance is provisional. Physical controllers, speaker/headphone listening, native Safari, lower-end/high-refresh hardware and sustained human play need further verification. Automated WebKit and virtual pads do not establish those results. No new endurance run is claimed for Beta 3. Touch controls omit throw and dash; this beta targets desktop. Multiplayer is local, saves are browser/device-specific, and the Canvas game is not fully screen-reader playable or accessibility-certified.
 
-Independent artwork/branding and privacy/compliance reviews remain open. This release is not legal clearance. Existing [legal](https://pdcf.aaronfaby.com/assets/legal.html) and [privacy](https://pdcf.aaronfaby.com/assets/privacy.html) notices continue to apply.
+Independent artwork/branding and privacy/compliance reviews remain open. This release is not legal clearance. Existing [legal](https://pdcf.dev/assets/legal.html) and [privacy](https://pdcf.dev/assets/privacy.html) notices continue to apply.
 
 Report the build, browser/OS, keyboard/controller, mode/difficulty, matchup/stage, reproduction steps and expected/actual behavior through [GitHub Issues](https://github.com/AaronFaby/pdcf/issues). Issues are public and require an account; do not post private information. The game adds no automatic feedback uploads or new player storage.
